@@ -2,133 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst V6.2 - Dual Core</title>
+    <title>Analyst V6.3 - Timeout</title>
     <style>
-        :root { --bg-color: #000000; --text-primary: #FF0000; --text-secondary: #FF6666; --hr-low: #00FF00; --hr-mid: #0000FF; --hr-high: #FF0000; }
-        body { background-color: var(--bg-color); color: var(--text-primary); font-family: 'Roboto', 'Inter', sans-serif; margin: 0; overflow: hidden; width: 100vw; height: 100vh; position: fixed; }
-        
-        #cockpit { display: grid; grid-template-rows: 15% 60% 25%; height: 100vh; width: 100vw; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid #333; }
-        .main-display { display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .huge-number { font-size: 25vh; font-weight: 900; line-height: 0.9; text-shadow: 0 0 20px rgba(255,0,0,0.3); }
-        .label { font-size: 2vh; color: var(--text-secondary); letter-spacing: 2px; margin-top: 10px; }
-        .footer { display: flex; justify-content: center; align-items: center; background: #111; border-top: 2px solid #333; flex-direction: column; }
-        .zone-text { font-size: 3vh; font-weight: bold; color: white; margin-bottom: 10px; }
-        .hr-container { width: 90%; height: 2vh; background: #333; border-radius: 1vh; overflow: hidden; }
-        .hr-fill { height: 100%; width: 0%; background-color: var(--hr-mid); transition: width 0.2s, background-color 0.2s; }
-        
-        /* TWO BUTTON LAYOUT */
-        .btn-stack { display: flex; flex-direction: column; gap: 20px; width: 80%; max-width: 300px; }
-        .btn { border: none; padding: 15px; font-size: 18px; font-weight: 900; border-radius: 8px; cursor: pointer; width: 100%; }
-        #btnForce { background: var(--text-primary); color: black; }
-        #btnTarget { background: #333; color: white; border: 1px solid #555; }
-        
-        #errorLog { margin-top: 20px; color: #666; font-family: monospace; font-size: 12px; max-width: 90%; text-align: center; word-break: break-all; }
-        .hidden { display: none; }
+        :root { --bg-color: #000000; --text-primary: #FF0000; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; text-align: center; padding: 20px; }
+        button { background: #333; color: white; border: 1px solid red; padding: 20px; font-size: 20px; width: 100%; margin-top: 20px; }
+        #log { text-align: left; margin-top: 30px; color: #888; font-size: 12px; border-top: 1px solid #333; padding-top: 10px; }
     </style>
 </head>
 <body>
-
-    <div id="lobby" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-        <h1 style="font-size:30px;">CARDIO V6.2</h1>
-        <p style="color:#666; margin-bottom:30px;">SELECT CONNECTION MODE</p>
-        
-        <div class="btn-stack">
-            <button id="btnForce" class="btn">OPTION A: UNLOCKED SCAN</button>
-            <button id="btnTarget" class="btn">OPTION B: POLAR TARGET</button>
-        </div>
-
-        <div id="errorLog">Ready.</div>
-    </div>
-
-    <div id="cockpit" class="hidden">
-        <div class="header">
-            <div style="color:#666;">BIO-TELEMETRY <span style="color:var(--text-primary)">ACTIVE</span></div>
-            <div style="color:#666;" id="modeLabel">MODE: --</div>
-        </div>
-        <div class="main-display">
-            <div class="huge-number" id="hrDisplay">--</div>
-            <div class="label">BPM</div>
-        </div>
-        <div class="footer">
-            <div class="zone-text" id="zoneText">WAITING FOR SIGNAL...</div>
-            <div class="hr-container"><div class="hr-fill" id="hrBar"></div></div>
-        </div>
-    </div>
+    <h1>DIAGNOSTIC V6.3</h1>
+    <h2 id="bpm">-- BPM</h2>
+    <button id="btn">CONNECT (5s TIMEOUT)</button>
+    <div id="log">Logs appear here...</div>
 
     <script>
-        const btnForce = document.getElementById('btnForce');
-        const btnTarget = document.getElementById('btnTarget');
-        const errorLog = document.getElementById('errorLog');
-        const hrDisplay = document.getElementById('hrDisplay');
-        const hrBar = document.getElementById('hrBar');
-        const zoneText = document.getElementById('zoneText');
+        const btn = document.getElementById('btn');
+        const log = document.getElementById('log');
+        const bpmDisplay = document.getElementById('bpm');
 
-        const HR_SERVICE = 0x180D;
-        const HR_CHARACTERISTIC = 0x2A37;
+        function print(msg) {
+            log.innerHTML = "> " + msg + "<br>" + log.innerHTML;
+        }
 
-        // --- OPTION A: SKELETON KEY (Accept All) ---
-        btnForce.addEventListener('click', () => startScan('FORCE', {
-            acceptAllDevices: true,
-            optionalServices: [HR_SERVICE]
-        }));
-
-        // --- OPTION B: LASER LOCK (Targeted Service) ---
-        btnTarget.addEventListener('click', () => startScan('TARGET', {
-            filters: [{ services: [HR_SERVICE] }]
-        }));
-
-        async function startScan(modeName, config) {
+        btn.addEventListener('click', async () => {
             try {
-                errorLog.innerText = "Scanning (" + modeName + ")...";
-                
-                const device = await navigator.bluetooth.requestDevice(config);
-                
-                errorLog.innerText = "Connecting to " + device.name + "...";
-                const server = await device.gatt.connect();
-                const service = await server.getPrimaryService(HR_SERVICE);
-                const characteristic = await service.getCharacteristic(HR_CHARACTERISTIC);
+                print("Requesting Device...");
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [0x180D] }]
+                });
 
+                print("Device selected: " + device.name);
+                print("Connecting (5s Timeout)...");
+
+                // TIMEOUT LOGIC
+                const connectPromise = device.gatt.connect();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("TIMEOUT: Device took too long.")), 5000)
+                );
+
+                const server = await Promise.race([connectPromise, timeoutPromise]);
+                
+                print("CONNECTED!");
+                print("Getting Service...");
+                const service = await server.getPrimaryService(0x180D);
+                print("Getting Characteristic...");
+                const characteristic = await service.getCharacteristic(0x2A37);
+                
                 await characteristic.startNotifications();
-                characteristic.addEventListener('characteristicvaluechanged', parseHeartRate);
-
-                // Success
-                document.getElementById('lobby').classList.add('hidden');
-                document.getElementById('cockpit').classList.remove('hidden');
-                document.getElementById('modeLabel').innerText = "MODE: " + modeName;
+                characteristic.addEventListener('characteristicvaluechanged', (e) => {
+                    const val = e.target.value;
+                    const flags = val.getUint8(0);
+                    let hr = (flags & 1) ? val.getUint16(1, true) : val.getUint8(1);
+                    bpmDisplay.innerText = hr + " BPM";
+                    print("Data Rx: " + hr);
+                });
 
             } catch (error) {
-                console.error(error);
-                // Print the FULL error object to screen
-                errorLog.innerText = "FAILED: " + String(error) + " | " + JSON.stringify(error);
+                print("ERROR: " + error.message);
             }
-        }
-
-        function parseHeartRate(event) {
-            const value = event.target.value;
-            const flags = value.getUint8(0);
-            let hr = (flags & 1) ? value.getUint16(1, true) : value.getUint8(1);
-            
-            hrDisplay.innerText = hr;
-            let percentage = (hr / 200) * 100; 
-            if (percentage > 100) percentage = 100;
-            hrBar.style.width = percentage + "%";
-
-            if (hr < 130) {
-                hrBar.style.backgroundColor = "var(--hr-low)"; 
-                zoneText.innerText = "RECOVERY ZONE";
-                zoneText.style.color = "var(--hr-low)";
-            } else if (hr >= 130 && hr < 165) {
-                hrBar.style.backgroundColor = "var(--hr-mid)";
-                zoneText.innerText = "AEROBIC BASE";
-                zoneText.style.color = "var(--hr-mid)";
-            } else {
-                hrBar.style.backgroundColor = "var(--hr-high)";
-                zoneText.innerText = "THRESHOLD WARNING";
-                zoneText.style.color = "var(--hr-high)";
-            }
-        }
+        });
     </script>
 </body>
 </html>
