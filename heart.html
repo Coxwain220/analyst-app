@@ -2,66 +2,176 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Analyst V6.3 - Timeout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Analyst V7 - Cardio Graph</title>
     <style>
-        :root { --bg-color: #000000; --text-primary: #FF0000; }
-        body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; text-align: center; padding: 20px; }
-        button { background: #333; color: white; border: 1px solid red; padding: 20px; font-size: 20px; width: 100%; margin-top: 20px; }
-        #log { text-align: left; margin-top: 30px; color: #888; font-size: 12px; border-top: 1px solid #333; padding-top: 10px; }
+        :root { --bg-color: #000000; --text-primary: #FF0000; --grid-color: #222; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* HEADER */
+        .top-bar { height: 15%; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid #333; }
+        .bpm-box { text-align: right; }
+        .huge-bpm { font-size: 3rem; font-weight: 900; line-height: 1; }
+        .label { font-size: 0.8rem; color: #666; }
+
+        /* CANVAS CONTAINER */
+        .graph-container { flex-grow: 1; position: relative; width: 100%; background: radial-gradient(circle at center, #111 0%, #000 100%); }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* CONTROLS */
+        .controls { height: 10%; background: #111; display: flex; align-items: center; justify-content: center; border-top: 1px solid #333; }
+        button { background: var(--text-primary); color: black; border: none; padding: 10px 20px; font-weight: bold; border-radius: 4px; font-size: 1rem; cursor: pointer; }
+        
+        #statusLog { position: absolute; top: 10px; left: 10px; font-family: monospace; color: #444; font-size: 0.7rem; pointer-events: none; }
     </style>
 </head>
 <body>
-    <h1>DIAGNOSTIC V6.3</h1>
-    <h2 id="bpm">-- BPM</h2>
-    <button id="btn">CONNECT (5s TIMEOUT)</button>
-    <div id="log">Logs appear here...</div>
+
+    <div class="top-bar">
+        <div>
+            <div style="font-weight:bold; color:white;">CARDIO <span style="color:var(--text-primary)">V7</span></div>
+            <div class="label">LIVE TELEMETRY</div>
+        </div>
+        <div class="bpm-box">
+            <div class="huge-bpm" id="bpmDisplay">--</div>
+            <div class="label">BEATS / MIN</div>
+        </div>
+    </div>
+
+    <div class="graph-container">
+        <div id="statusLog">READY TO SCAN</div>
+        <canvas id="heartChart"></canvas>
+    </div>
+
+    <div class="controls">
+        <button id="btnConnect">CONNECT SENSOR</button>
+    </div>
 
     <script>
-        const btn = document.getElementById('btn');
-        const log = document.getElementById('log');
-        const bpmDisplay = document.getElementById('bpm');
+        // --- CONFIG ---
+        const MAX_POINTS = 100; // How much history to show on screen
+        const HR_SERVICE = 0x180D;
+        const HR_CHAR = 0x2A37;
 
-        function print(msg) {
-            log.innerHTML = "> " + msg + "<br>" + log.innerHTML;
+        // --- DOM ---
+        const btn = document.getElementById('btnConnect');
+        const bpmDisplay = document.getElementById('bpmDisplay');
+        const log = document.getElementById('statusLog');
+        const canvas = document.getElementById('heartChart');
+        const ctx = canvas.getContext('2d');
+
+        // --- STATE ---
+        let dataPoints = new Array(MAX_POINTS).fill(0); // Initialize with flat line
+        let isConnected = false;
+
+        // --- RESIZE CANVAS FIX ---
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
         }
+        window.addEventListener('resize', resize);
+        resize();
 
+        // --- CHART LOOP (60fps) ---
+        function draw() {
+            requestAnimationFrame(draw);
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            // Clear
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw Grid Lines
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); // Midline
+            ctx.moveTo(0, h*0.25); ctx.lineTo(w, h*0.25);
+            ctx.moveTo(0, h*0.75); ctx.lineTo(w, h*0.75);
+            ctx.stroke();
+
+            // Draw Heart Rate Line
+            if (!isConnected) return;
+
+            ctx.strokeStyle = '#FF0000';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(255, 0, 0, 0.5)';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            
+            // Map data to canvas coordinates
+            // Assuming HR range 40 (bottom) to 200 (top)
+            const minHR = 40;
+            const maxHR = 200;
+            const range = maxHR - minHR;
+            const step = w / (MAX_POINTS - 1);
+
+            for (let i = 0; i < MAX_POINTS; i++) {
+                let hr = dataPoints[i];
+                if (hr === 0) continue; // Skip empty startup data
+
+                // Normalize: 0 (bottom) to 1 (top)
+                let normalized = (hr - minHR) / range; 
+                // Invert Y because Canvas 0 is at top
+                let y = h - (normalized * h);
+
+                if (i === 0) ctx.moveTo(0, y);
+                else ctx.lineTo(i * step, y);
+            }
+            ctx.stroke();
+        }
+        draw(); // Start Animation Loop
+
+        // --- BLUETOOTH LOGIC (V6.3 ENGINE) ---
         btn.addEventListener('click', async () => {
             try {
-                print("Requesting Device...");
+                log.innerText = "SCANNING...";
+                
                 const device = await navigator.bluetooth.requestDevice({
-                    filters: [{ services: [0x180D] }]
+                    acceptAllDevices: true,
+                    optionalServices: [HR_SERVICE]
                 });
 
-                print("Device selected: " + device.name);
-                print("Connecting (5s Timeout)...");
+                log.innerText = "CONNECTING (5s TIMEOUT)...";
 
-                // TIMEOUT LOGIC
                 const connectPromise = device.gatt.connect();
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error("TIMEOUT: Device took too long.")), 5000)
-                );
-
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 5000));
+                
                 const server = await Promise.race([connectPromise, timeoutPromise]);
                 
-                print("CONNECTED!");
-                print("Getting Service...");
-                const service = await server.getPrimaryService(0x180D);
-                print("Getting Characteristic...");
-                const characteristic = await service.getCharacteristic(0x2A37);
+                log.innerText = "GETTING SERVICE...";
+                const service = await server.getPrimaryService(HR_SERVICE);
+                const char = await service.getCharacteristic(HR_CHAR);
                 
-                await characteristic.startNotifications();
-                characteristic.addEventListener('characteristicvaluechanged', (e) => {
-                    const val = e.target.value;
-                    const flags = val.getUint8(0);
-                    let hr = (flags & 1) ? val.getUint16(1, true) : val.getUint8(1);
-                    bpmDisplay.innerText = hr + " BPM";
-                    print("Data Rx: " + hr);
-                });
+                await char.startNotifications();
+                char.addEventListener('characteristicvaluechanged', handleHeartRate);
+                
+                isConnected = true;
+                log.innerText = "LIVE STREAM ACTIVE";
+                btn.style.display = 'none'; // Hide button on success
 
-            } catch (error) {
-                print("ERROR: " + error.message);
+            } catch (err) {
+                console.error(err);
+                log.innerText = "ERROR: " + err.message;
+                alert("Connection Failed: " + err.message);
             }
         });
+
+        function handleHeartRate(event) {
+            const val = event.target.value;
+            const flags = val.getUint8(0);
+            let hr = (flags & 1) ? val.getUint16(1, true) : val.getUint8(1);
+            
+            bpmDisplay.innerText = hr;
+            
+            // Push new data, shift old data out
+            dataPoints.push(hr);
+            dataPoints.shift();
+        }
+
     </script>
 </body>
 </html>
