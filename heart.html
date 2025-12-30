@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Analyst V6 - Cardio Unit</title>
+    <style>
+        :root { --bg-color: #000000; --text-primary: #FF0000; --text-secondary: #FF6666; --hr-low: #00FF00; --hr-mid: #0000FF; --hr-high: #FF0000; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: 'Roboto', 'Inter', sans-serif; margin: 0; overflow: hidden; width: 100vw; height: 100vh; position: fixed; }
+        
+        /* LAYOUT */
+        #cockpit {
+            display: grid;
+            grid-template-rows: 15% 60% 25%;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid #333; }
+        
+        /* HEART RATE DISPLAY */
+        .main-display {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .huge-number { font-size: 25vh; font-weight: 900; line-height: 0.9; text-shadow: 0 0 20px rgba(255,0,0,0.3); }
+        .label { font-size: 2vh; color: var(--text-secondary); letter-spacing: 2px; margin-top: 10px; }
+
+        /* ZONE BAR */
+        .footer { display: flex; justify-content: center; align-items: center; background: #111; border-top: 2px solid #333; flex-direction: column; }
+        .zone-text { font-size: 3vh; font-weight: bold; color: white; margin-bottom: 10px; }
+        .hr-container { width: 90%; height: 2vh; background: #333; border-radius: 1vh; overflow: hidden; }
+        .hr-fill { height: 100%; width: 0%; background-color: var(--hr-mid); transition: width 0.2s, background-color 0.2s; }
+
+        /* CONNECT BUTTON */
+        #connectBtn {
+            background: var(--text-primary); color: black; border: none; padding: 15px 30px; 
+            font-size: 20px; font-weight: 900; border-radius: 8px; cursor: pointer;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="lobby" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <h1 style="font-size:30px;">CARDIO UNIT V6</h1>
+        <p style="color:#666; margin-bottom:30px;">POLAR VERITY SENSE TEST</p>
+        <button id="connectBtn">CONNECT SENSOR</button>
+    </div>
+
+    <div id="cockpit" class="hidden">
+        <div class="header">
+            <div style="color:#666;">BIO-TELEMETRY <span style="color:var(--text-primary)">ACTIVE</span></div>
+            <div id="batteryLevel" style="color:#666;">BAT: --%</div>
+        </div>
+
+        <div class="main-display">
+            <div class="huge-number" id="hrDisplay">--</div>
+            <div class="label">BPM</div>
+        </div>
+
+        <div class="footer">
+            <div class="zone-text" id="zoneText">WAITING FOR SIGNAL...</div>
+            <div class="hr-container">
+                <div class="hr-fill" id="hrBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const connectBtn = document.getElementById('connectBtn');
+        const hrDisplay = document.getElementById('hrDisplay');
+        const hrBar = document.getElementById('hrBar');
+        const zoneText = document.getElementById('zoneText');
+
+        // STANDARD BLUETOOTH HEART RATE UUIDs
+        const HR_SERVICE = 0x180D;
+        const HR_CHARACTERISTIC = 0x2A37;
+
+        connectBtn.addEventListener('click', async () => {
+            try {
+                connectBtn.innerText = "SEARCHING...";
+                
+                // Scan for ANY device advertising Heart Rate Service
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [HR_SERVICE] }]
+                });
+
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(HR_SERVICE);
+                const characteristic = await service.getCharacteristic(HR_CHARACTERISTIC);
+
+                await characteristic.startNotifications();
+                characteristic.addEventListener('characteristicvaluechanged', parseHeartRate);
+
+                // Switch Screens
+                document.getElementById('lobby').classList.add('hidden');
+                document.getElementById('cockpit').classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                connectBtn.innerText = "FAILED: " + error;
+            }
+        });
+
+        function parseHeartRate(event) {
+            const value = event.target.value;
+            const flags = value.getUint8(0);
+            
+            // Determine if HR is 8-bit or 16-bit based on the flags
+            let hr = 0;
+            if (flags & 1) { 
+                // 16-bit Heart Rate
+                hr = value.getUint16(1, true); 
+            } else {
+                // 8-bit Heart Rate
+                hr = value.getUint8(1); 
+            }
+
+            updateUI(hr);
+        }
+
+        function updateUI(hr) {
+            hrDisplay.innerText = hr;
+            
+            // Visual Bar Logic
+            let percentage = (hr / 200) * 100; // Assume 200 is max for viz
+            if (percentage > 100) percentage = 100;
+            hrBar.style.width = percentage + "%";
+
+            // Zone Logic (Simple 3-Zone)
+            if (hr < 130) {
+                hrBar.style.backgroundColor = "var(--hr-low)"; // Green
+                zoneText.innerText = "RECOVERY ZONE";
+                zoneText.style.color = "var(--hr-low)";
+            } else if (hr >= 130 && hr < 165) {
+                hrBar.style.backgroundColor = "var(--hr-mid)"; // Blue
+                zoneText.innerText = "AEROBIC BASE";
+                zoneText.style.color = "var(--hr-mid)";
+            } else {
+                hrBar.style.backgroundColor = "var(--hr-high)"; // Red
+                zoneText.innerText = "THRESHOLD WARNING";
+                zoneText.style.color = "var(--hr-high)";
+            }
+        }
+    </script>
+</body>
+</html>
