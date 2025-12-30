@@ -3,355 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst AI - V5 Skeleton Key</title>
+    <title>Analyst PM5 - Aggressive Mode</title>
     <style>
-        /* --- TACTICAL RED/BLACK THEME --- */
-        :root {
-            --bg-color: #000000;
-            --text-primary: #FF0000;
-            --text-secondary: #FF6666;
-            --hr-low: #00FF00;
-            --hr-mid: #0000FF;
-            --hr-high: #FF0000;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: 'Roboto', 'Inter', sans-serif;
-            margin: 0;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            position: fixed;
-        }
-
-        /* SCREEN 1: PORTRAIT LOBBY */
-        #lobby-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            width: 100%;
-            z-index: 100;
-            background: #000;
-            text-align: center;
-        }
-
-        .lobby-btn {
-            background: #333;
-            color: #888;
-            border: none;
-            padding: 20px 40px;
-            font-size: 24px;
-            font-weight: 900;
-            border-radius: 8px;
-            margin-top: 30px;
-            cursor: not-allowed;
-            transition: all 0.3s;
-        }
-
-        .lobby-btn.ready {
-            background: var(--text-primary);
-            color: black;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 20px rgba(255,0,0,0.4); }
-            50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(255,0,0,0.6); }
-            100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,0,0,0.4); }
-        }
-
-        /* SCREEN 2: COCKPIT */
-        #cockpit-container {
-            display: none;
-            width: 100vw;
-            height: 100vh;
-            background: black;
-        }
-
-        .force-landscape-mode {
-            display: grid !important;
-            transform: rotate(90deg);
-            transform-origin: bottom left;
-            width: 100vh !important; 
-            height: 100vw !important;
-            position: absolute;
-            top: -100vw;
-            left: 0;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 15% 60% 20% 5%;
-        }
-
-        .header {
-            grid-column: 1 / span 3;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            border-bottom: 1px solid #333;
-        }
-
-        .data-box {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-right: 1px solid #222;
-        }
-
-        .label { font-size: 1.5vh; color: var(--text-secondary); letter-spacing: 1px; }
-        .huge-number { font-size: 18vh; font-weight: 900; line-height: 0.9; }
-        .big-number { font-size: 8vh; font-weight: 900; }
-
-        .hr-container {
-            width: 80%;
-            height: 1.5vh;
-            background: #333;
-            margin-top: 1vh;
-            border-radius: 5px;
-            overflow: hidden;
-            position: relative;
-        }
-        .hr-fill {
-            height: 100%;
-            width: 50%;
-            background-color: var(--hr-mid);
-            transition: width 0.5s, background-color 0.5s;
-        }
-
-        .analyst-footer {
-            grid-column: 1 / span 3;
-            background-color: #111;
-            border-top: 2px solid var(--text-primary);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            transition: background-color 0.3s;
-        }
-        .analyst-text {
-            font-size: 4vh;
-            font-weight: bold;
-            color: white;
-            font-style: italic;
-            padding: 0 20px;
-        }
+        :root { --bg-color: #000000; --text-primary: #FF0000; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; margin: 0; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        /* DEBUG STREAM */
-        .debug-footer {
-            grid-column: 1 / span 3;
-            background: #000;
-            color: #444;
-            font-family: monospace;
-            font-size: 1.2vh;
-            display: flex;
-            align-items: center;
-            padding-left: 10px;
-            border-top: 1px solid #222;
-            overflow: hidden;
-            white-space: nowrap;
+        #lobby { text-align: center; width: 80%; }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        p { color: #666; margin-bottom: 2rem; }
+        
+        button {
+            background: #222; color: var(--text-primary); border: 2px solid var(--text-primary);
+            padding: 15px 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; width: 100%;
+            margin-bottom: 10px; border-radius: 5px;
+        }
+        button:active { background: var(--text-primary); color: black; }
+        
+        #console {
+            margin-top: 20px; text-align: left; font-size: 0.8rem; color: #444; 
+            border-top: 1px solid #333; padding-top: 10px; width: 100%; height: 100px; overflow-y: auto;
         }
 
-        #connectBtnSmall {
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            padding: 5px 15px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
+        #cockpit { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+        .data-row { font-size: 1.5rem; margin: 10px 0; }
+        .huge { font-size: 4rem; font-weight: 900; }
+        .label { font-size: 0.8rem; color: #666; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <div id="lobby-screen">
-        <h1 style="font-size: 40px; margin-bottom: 10px;">THE ANALYST</h1>
-        <p style="color: #666; margin-bottom: 40px;">V5.0 SKELETON KEY</p>
-        <button id="startBtn" class="lobby-btn">LOADING...</button>
-        <div style="margin-top: 20px; font-size: 12px; color: #444;">TAP TO ROTATE & CONNECT</div>
+    <div id="lobby">
+        <h1>PM5 FLIGHT RECORDER</h1>
+        <p>AGGRESSIVE PROTOCOL (V6.3)</p>
+        <button id="btnConnect">CONNECT TO PM5</button>
+        <div id="console">System Ready...</div>
     </div>
 
-    <div id="cockpit-container">
-        <div class="header">
-            <div style="font-size:2vh; color:#666;">ANALYSIS <span style="color:var(--text-primary)">ACTIVE</span></div>
-            <div>PM5: <span id="btStatus" style="color:#555">●</span> <button id="connectBtnSmall">CONNECT</button></div>
-        </div>
-
-        <div class="data-box">
-            <div class="huge-number" id="splitDisplay">0:00</div>
-            <div class="label">/500M PACE</div>
-        </div>
-
-        <div class="data-box">
-            <div class="big-number" id="wattsDisplay">0</div>
-            <div class="label">WATTS</div>
-            <div style="height:2vh;"></div>
-            <div class="big-number" id="rateDisplay">0</div>
-            <div class="label">STROKE RATE</div>
-        </div>
-
-        <div class="data-box">
-            <div class="big-number" id="hrDisplay">--</div>
-            <div class="label">HEART RATE</div>
-            <div class="hr-container">
-                <div class="hr-fill" id="hrBar"></div>
-            </div>
-            <div class="label" id="hrZoneLabel" style="margin-top:1vh;">WAITING...</div>
-        </div>
-
-        <div class="analyst-footer" id="analystBox">
-            <div class="analyst-text" id="analystText">CONNECT PM5 TO BEGIN</div>
+    <div id="cockpit">
+        <div class="label">STROKE RATE</div>
+        <div class="huge" id="rateDisplay">--</div>
+        
+        <div class="data-row">
+            <span id="wattsDisplay">0</span> W | <span id="paceDisplay">0:00</span>
         </div>
         
-        <div class="debug-footer" id="debugConsole">RAW HEX: Waiting for data...</div>
+        <div class="label" style="margin-top: 30px;">RAW HEX DATA (SCREENSHOT THIS)</div>
+        <div id="hexDisplay" style="font-family: monospace; color: white; background: #222; padding: 10px; margin-top: 5px;">WAITING FOR STROKES...</div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
+        const btnConnect = document.getElementById('btnConnect');
+        const consoleLog = document.getElementById('console');
         
-        // --- 1. SYSTEM BOOT ---
-        const startBtn = document.getElementById('startBtn');
-        const connectBtn = document.getElementById('connectBtnSmall');
-        
-        setTimeout(() => {
-            startBtn.innerText = "START SESSION";
-            startBtn.classList.add('ready');
-            startBtn.disabled = false;
-        }, 500);
-
-        // --- 2. LISTENERS ---
-        startBtn.addEventListener('click', enterCockpit);
-        
-        function enterCockpit() {
-            document.getElementById('lobby-screen').style.display = 'none';
-            const cockpit = document.getElementById('cockpit-container');
-            cockpit.style.display = 'grid';
-            cockpit.classList.add('force-landscape-mode');
-        }
-
-        // --- 3. ANALYST LOGIC ---
-        const TARGET_PACE_SECONDS = 112; 
-        
-        // V5 CHANGE: We define the service UUID but don't filter by it immediately
+        // PM5 UUIDs
         const PM5_SERVICE = 'ce060000-43e5-11e4-916c-0800200c9a66';
-        const ROWING_STATUS_CHARACTERISTIC = 'ce060031-43e5-11e4-916c-0800200c9a66';
+        const ROWING_STATUS = 'ce060031-43e5-11e4-916c-0800200c9a66';
 
-        function runAnalystLogic(pace, watts, rate) {
-            const analystText = document.getElementById('analystText');
-            const analystBox = document.getElementById('analystBox');
-            if (rate === 0) {
-                analystText.innerText = "READY. PULL TO START.";
-                analystBox.style.backgroundColor = "#111";
-                return;
-            }
-            if (pace > (TARGET_PACE_SECONDS + 3)) {
-                analystText.innerText = "POWER LEAK. RESET LEGS.";
-                analystBox.style.backgroundColor = "#440000"; 
-                return;
-            }
-            if (rate > 30 && watts < 200) {
-                analystText.innerText = "SPINNING. LENGTHEN STROKE.";
-                analystBox.style.backgroundColor = "#663300"; 
-                return;
-            }
-            analystText.innerText = "RHYTHM LOCKED. DRIVE.";
-            analystBox.style.backgroundColor = "#002200"; 
+        function log(msg) {
+            consoleLog.innerHTML = "> " + msg + "<br>" + consoleLog.innerHTML;
         }
 
-        // --- 4. DATA PARSER ---
-        function handleData(event) {
-            const value = event.target.value;
-            const data = new DataView(value.buffer);
-            
-            // PRINT RAW HEX (THE EVIDENCE)
-            let hexStr = Array.from(new Uint8Array(value.buffer))
-                .map(b => b.toString(16).padStart(2,'0').toUpperCase())
-                .join(' ');
-            document.getElementById('debugConsole').innerText = "RAW HEX: " + hexStr;
-            
-            // ATTEMPT PARSE
-            let realRate = 0;
-            if (data.byteLength >= 9) {
-                realRate = data.getUint8(8); 
-            }
-
-            let estimatedWatts = 0;
-            let estimatedPace = 0;
-            if (realRate > 15) {
-                estimatedWatts = 150 + ((realRate - 18) * 9); 
-                let paceSeconds = 500 * (2.8 / Math.pow(estimatedWatts, 0.333));
-                estimatedPace = Math.floor(paceSeconds);
-            }
-
-            document.getElementById('rateDisplay').innerText = realRate;
-            if (realRate > 0) {
-                document.getElementById('wattsDisplay').innerText = Math.floor(estimatedWatts);
-                let mins = Math.floor(estimatedPace / 60);
-                let secs = Math.floor(estimatedPace % 60);
-                document.getElementById('splitDisplay').innerText = mins + ":" + (secs < 10 ? "0" : "") + secs;
-                runAnalystLogic(estimatedPace, estimatedWatts, realRate);
-            }
-        }
-
-        // --- 5. V5 BLUETOOTH UNLOCKED ---
-        connectBtn.addEventListener('click', async () => {
+        btnConnect.addEventListener('click', async () => {
             try {
-                document.getElementById('analystText').innerText = "SEARCHING (NO FILTERS)...";
+                log("Scanning (Accept All)...");
                 
-                // V5 CHANGE: Accept ALL devices (The Skeleton Key)
+                // 1. SELECT DEVICE
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: [PM5_SERVICE]
                 });
+                
+                log("Selected: " + device.name);
+                log("Connecting (5s Timeout)...");
 
-                const server = await device.gatt.connect();
+                // 2. CONNECT WITH TIMEOUT (THE FIX)
+                const connectPromise = device.gatt.connect();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("TIMEOUT: PM5 Handshake Stuck.")), 5000)
+                );
+                
+                const server = await Promise.race([connectPromise, timeoutPromise]);
+                
+                log("Connected! Finding Service...");
                 const service = await server.getPrimaryService(PM5_SERVICE);
-                const characteristic = await service.getCharacteristic(ROWING_STATUS_CHARACTERISTIC);
+                
+                log("Finding Characteristic...");
+                const characteristic = await service.getCharacteristic(ROWING_STATUS);
+                
+                log("Starting Stream...");
                 await characteristic.startNotifications();
                 characteristic.addEventListener('characteristicvaluechanged', handleData);
-                
-                document.getElementById('btStatus').style.color = "#00FF00";
-                connectBtn.style.display = 'none';
-                document.getElementById('analystText').innerText = "CONNECTED. ROW.";
+
+                // SWITCH SCREENS
+                document.getElementById('lobby').style.display = 'none';
+                document.getElementById('cockpit').style.display = 'flex';
+
             } catch (error) {
-                console.log(error);
-                document.getElementById('analystText').innerText = "FAILED: " + error;
+                log("ERROR: " + error.message);
+                alert("CONNECTION FAILED: " + error.message + "\n\nTry forgetting device in Settings > Bluetooth.");
             }
         });
 
-        // --- 6. HR SIMULATION ---
-        let testHR = 110;
-        setInterval(() => {
-            testHR += 1;
-            if (testHR > 180) testHR = 110;
-            const hrDisplay = document.getElementById('hrDisplay');
-            const hrBar = document.getElementById('hrBar');
-            const zoneLabel = document.getElementById('hrZoneLabel');
-            hrDisplay.innerText = testHR;
-            let barWidth = (testHR / 200) * 100;
-            if (barWidth > 100) barWidth = 100;
-            hrBar.style.width = barWidth + "%";
-            if (testHR < 130) {
-                hrBar.style.backgroundColor = "var(--hr-low)";
-                zoneLabel.innerText = "RECOVERY";
-                zoneLabel.style.color = "var(--hr-low)";
-            } else if (testHR >= 130 && testHR < 165) {
-                hrBar.style.backgroundColor = "var(--hr-mid)";
-                zoneLabel.innerText = "AEROBIC BASE";
-                zoneLabel.style.color = "var(--hr-mid)";
-            } else {
-                hrBar.style.backgroundColor = "var(--hr-high)";
-                zoneLabel.innerText = "THRESHOLD";
-                zoneLabel.style.color = "var(--hr-high)";
-            }
-        }, 1000);
+        function handleData(event) {
+            const value = event.target.value;
+            const data = new DataView(value.buffer);
+            
+            // 1. RAW HEX (THE GOLD)
+            let hexStr = Array.from(new Uint8Array(value.buffer))
+                .map(b => b.toString(16).padStart(2,'0').toUpperCase())
+                .join(' ');
+            document.getElementById('hexDisplay').innerText = hexStr;
 
-    });
+            // 2. BASIC PARSE (Visual Confirmation)
+            // PM5 usually sends Stroke Rate in byte 8 (if message is long enough)
+            // This is just a 'Quick Look' parser, the real work happens on backend
+            if (data.byteLength >= 9) {
+                let rate = data.getUint8(8); 
+                document.getElementById('rateDisplay').innerText = rate;
+            }
+        }
     </script>
 </body>
 </html>
