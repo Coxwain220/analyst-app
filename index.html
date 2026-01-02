@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst PM5 - Aggressive Mode</title>
+    <title>Analyst PM5 - Targeted Mode</title>
     <style>
         :root { --bg-color: #000000; --text-primary: #FF0000; }
         body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; margin: 0; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -34,7 +34,7 @@
 
     <div id="lobby">
         <h1>PM5 FLIGHT RECORDER</h1>
-        <p>AGGRESSIVE PROTOCOL (V6.3)</p>
+        <p>TARGETED PROTOCOL (V7.1)</p>
         <button id="btnConnect">CONNECT TO PM5</button>
         <div id="console">System Ready...</div>
     </div>
@@ -65,18 +65,17 @@
 
         btnConnect.addEventListener('click', async () => {
             try {
-                log("Scanning (Accept All)...");
+                log("Scanning (Targeted Filter)...");
                 
-                // 1. SELECT DEVICE
+                // --- THE CRITICAL FIX: USE FILTERS, NOT ACCEPT ALL ---
                 const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: [PM5_SERVICE]
+                    filters: [{ services: [PM5_SERVICE] }]
                 });
                 
                 log("Selected: " + device.name);
                 log("Connecting (5s Timeout)...");
 
-                // 2. CONNECT WITH TIMEOUT (THE FIX)
+                // 2. CONNECT WITH TIMEOUT
                 const connectPromise = device.gatt.connect();
                 const timeoutPromise = new Promise((_, reject) => 
                     setTimeout(() => reject(new Error("TIMEOUT: PM5 Handshake Stuck.")), 5000)
@@ -116,7 +115,6 @@
 
             // 2. BASIC PARSE (Visual Confirmation)
             // PM5 usually sends Stroke Rate in byte 8 (if message is long enough)
-            // This is just a 'Quick Look' parser, the real work happens on backend
             if (data.byteLength >= 9) {
                 let rate = data.getUint8(8); 
                 document.getElementById('rateDisplay').innerText = rate;
