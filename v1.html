@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE ANALYST V1.0</title>
+    <style>
+        :root { 
+            --bg-color: #000000; 
+            --text-main: #FFFFFF; 
+            --accent: #00FF00; 
+            --dim: #444444; 
+        }
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            font-family: 'Roboto', 'Helvetica', sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+            width: 100vw; 
+            height: 100vh; 
+            display: grid;
+            grid-template-rows: 10% 55% 25% 10%;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #222;
+        }
+        .status-dot {
+            height: 12px; width: 12px; 
+            background-color: #333; 
+            border-radius: 50%; 
+            display: inline-block;
+            box-shadow: 0 0 5px #333;
+        }
+        .status-dot.active { background-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        /* MAIN METRICS (Split & Watts) */
+        .main-deck {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .primary-stat {
+            font-size: 20vh;
+            font-weight: 900;
+            line-height: 0.9;
+            letter-spacing: -2px;
+        }
+        .sub-stat {
+            font-size: 8vh;
+            color: #888;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        .label {
+            font-size: 2vh;
+            color: var(--dim);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* SECONDARY METRICS (Rate & HR) */
+        .lower-deck {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid #222;
+        }
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid #111;
+        }
+        .stat-val { font-size: 6vh; font-weight: bold; }
+        .stat-lbl { font-size: 1.5vh; color: #666; }
+
+        /* FOOTER / CONTROLS */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+        }
+        #connectBtn {
+            background: #222; color: white; border: 1px solid #444;
+            padding: 10px 30px; font-size: 16px; font-weight: bold;
+            border-radius: 4px; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div style="font-weight:900; letter-spacing:1px;">ANALYST <span style="color:var(--accent)">V1.0</span></div>
+        <div>
+            PM5 <span id="pm5Dot" class="status-dot"></span>
+        </div>
+    </div>
+
+    <div class="main-deck">
+        <div class="label">SPLIT / 500M</div>
+        <div class="primary-stat" id="splitDisplay">0:00</div>
+        <div class="sub-stat"><span id="wattsDisplay">0</span> <span style="font-size:3vh;">W</span></div>
+    </div>
+
+    <div class="lower-deck">
+        <div class="stat-box">
+            <div class="stat-val" id="rateDisplay">--</div>
+            <div class="stat-lbl">S/M (RATE)</div>
+        </div>
+        <div class="stat-box" style="border:none;">
+            <div class="stat-val" id="hrDisplay" style="color:var(--text-main)">--</div>
+            <div class="stat-lbl">HEART RATE</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="connectBtn">INITIALIZE SYSTEM</button>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
+        const PM5_CHAR    = 'ce060031-43e5-11e4-916c-0800200c9a66';
+
+        // --- STATE VARIABLES ---
+        let lastTime = 0;
+        let lastDist = 0;
+        let lastUpdate = Date.now();
+
+        // --- DOM ELEMENTS ---
+        const connectBtn = document.getElementById('connectBtn');
+        const splitDisp = document.getElementById('splitDisplay');
+        const wattsDisp = document.getElementById('wattsDisplay');
+        const rateDisp  = document.getElementById('rateDisplay');
+        const hrDisp    = document.getElementById('hrDisplay');
+        const pm5Dot    = document.getElementById('pm5Dot');
+
+        // --- CONNECTION LOGIC ---
+        connectBtn.addEventListener('click', async () => {
+            try {
+                connectBtn.innerText = "SCANNING...";
+                
+                // TARGETED SCAN (Proven V11 Logic)
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'PM5' }],
+                    optionalServices: [PM5_SERVICE]
+                });
+
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(PM5_SERVICE);
+                const char = await service.getCharacteristic(PM5_CHAR);
+                
+                await char.startNotifications();
+                char.addEventListener('characteristicvaluechanged', handleHexData);
+
+                // UI UPDATE
+                pm5Dot.classList.add('active');
+                connectBtn.style.display = 'none'; // Hide button on success
+
+            } catch (err) {
+                console.error(err);
+                connectBtn.innerText = "FAILED: " + err.message;
+                setTimeout(() => connectBtn.innerText = "RETRY INITIALIZE", 2000);
+            }
+        });
+
+        // --- PHYSICS ENGINE (THE BRAIN) ---
+        function handleHexData(event) {
+            const data = event.target.value;
+            
+            // 1. DECODE RAW BYTES (Based on your successful F9 04... packet)
+            // Time = Bytes 0-2 (0.01s)
+            let timeRaw = data.getUint8(0) | (data.getUint8(1) << 8) | (data.getUint8(2) << 16);
+            let timeSec = timeRaw * 0.01;
+
+            // Dist = Bytes 3-5 (0.1m)
+            let distRaw = data.getUint8(3) | (data.getUint8(4) << 8) | (data.getUint8(5) << 16);
+            let distMeters = distRaw * 0.1;
+
+            // Flags / Stroke Count
+            // Byte 10 is Stroke Count
+            let strokeCount = data.getUint8(10); 
+            
+            // Byte 18 is usually HR (if available) - check length first
+            let hr = "--";
+            if (data.byteLength > 18) {
+                let hrVal = data.getUint8(18);
+                if (hrVal > 0 && hrVal < 250) {
+                    hr = hrVal;
+                    // Color code HR
+                    if (hr < 140) hrDisp.style.color = "#00FF00";
+                    else if (hr < 170) hrDisp.style.color = "#FFAA00";
+                    else hrDisp.style.color = "#FF0000";
+                }
+            }
+
+            // 2. CALCULATE PHYSICS (Watts & Split)
+            // We calculate speed based on the DELTA between updates
+            let now = Date.now();
+            let dt = (now - lastUpdate) / 1000; // Seconds since last JS frame
+            
+            // Only update calculation if new data arrived from PM5
+            if (timeSec > lastTime) {
+                let dDist = distMeters - lastDist;
+                let dTime = timeSec - lastTime;
+
+                // Avoid divide by zero or noise
+                if (dTime > 0.1) { 
+                    let speedMS = dDist / dTime; // Speed in m/s
+                    
+                    if (speedMS > 1.0) { // Only calculate if moving
+                        // Watts = 2.8 * v^3
+                        let watts = 2.8 * Math.pow(speedMS, 3);
+                        
+                        // Pace = 500 / speed
+                        let paceSec = 500 / speedMS;
+                        
+                        updateDashboard(Math.round(watts), paceSec);
+                    }
+                }
+                
+                // Update Memory
+                lastTime = timeSec;
+                lastDist = distMeters;
+                lastUpdate = now;
+            }
+
+            // Update Rate & HR immediately from packet
+            // Note: Stroke Rate is usually Byte 14 or derived. 
+            // For V1.0, we will use your Byte 10 (Count) to confirm life, 
+            // but future versions will calculate rate.
+            hrDisp.innerText = hr;
+            rateDisp.innerText = strokeCount; // Showing count for now to verify "4 vs 10" bug
+        }
+
+        function updateDashboard(watts, paceSec) {
+            // FORMAT PACE (MM:SS)
+            let mins = Math.floor(paceSec / 60);
+            let secs = Math.floor(paceSec % 60);
+            let paceStr = mins + ":" + (secs < 10 ? "0" : "") + secs;
+
+            splitDisp.innerText = paceStr;
+            wattsDisp.innerText = watts;
+        }
+    </script>
+</body>
+</html>
