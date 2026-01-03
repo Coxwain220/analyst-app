@@ -2,116 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst V8 - OMNI SCANNER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyst V9 - DEEP PROBE</title>
     <style>
         :root { --bg-color: #000000; --text-primary: #FF0000; }
-        body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; margin: 0; padding: 20px; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
         #lobby { width: 100%; max-width: 400px; text-align: center; }
-        h1 { font-size: 1.5rem; margin-bottom: 20px; border-bottom: 1px solid red; padding-bottom: 10px; }
-        
         button {
             background: #222; color: white; border: 1px solid #555;
             padding: 15px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%;
-            margin-bottom: 15px; border-radius: 5px; text-transform: uppercase;
+            margin-bottom: 15px; border-radius: 5px;
         }
-        button:active { background: var(--text-primary); color: black; }
-        
         #console {
-            background: #111; color: #888; padding: 10px; width: 100%; height: 150px; 
+            background: #111; color: #888; padding: 10px; width: 100%; height: 200px; 
             overflow-y: auto; border: 1px solid #333; font-size: 0.8rem; text-align: left;
             margin-top: 20px; white-space: pre-wrap;
         }
-
         #cockpit { display: none; width: 100%; flex-direction: column; align-items: center; }
-        .huge { font-size: 3rem; font-weight: 900; margin: 20px 0; }
+        .huge { font-size: 2rem; font-weight: 900; margin: 20px 0; word-break: break-all; }
     </style>
 </head>
 <body>
 
     <div id="lobby">
-        <h1>V8 OMNI-SCANNER</h1>
-        
-        <button id="btnName">OPTION A: SCAN BY NAME ("PM5")</button>
-        <button id="btnGeneric">OPTION B: SCAN GENERIC (INFO)</button>
-        <button id="btnForce">OPTION C: FORCE (ACCEPT ALL)</button>
-        
-        <div id="console">Ready for triage...</div>
+        <h1>V9 DEEP PROBE</h1>
+        <button id="btnScan">START DIAGNOSTIC SCAN</button>
+        <div id="console">Ready...</div>
     </div>
 
     <div id="cockpit">
-        <h1>DATA LINK OPEN</h1>
-        <div class="huge" id="hexDisplay">WAITING FOR DATA...</div>
-        <p style="color:#666">ROW TO GENERATE NUMBERS</p>
-        <button onclick="location.reload()">DISCONNECT / RETRY</button>
+        <h1>CONNECTED</h1>
+        <div class="huge" id="hexDisplay">WAITING FOR STROKES...</div>
+        <p>Take screenshot when numbers change</p>
     </div>
 
     <script>
-        const btnName = document.getElementById('btnName');
-        const btnGeneric = document.getElementById('btnGeneric');
-        const btnForce = document.getElementById('btnForce');
+        const btnScan = document.getElementById('btnScan');
         const consoleLog = document.getElementById('console');
         
-        // PM5 UUIDs
-        const PM5_SERVICE = 'ce060000-43e5-11e4-916c-0800200c9a66';
-        const ROWING_STATUS = 'ce060031-43e5-11e4-916c-0800200c9a66';
+        // STANDARD C2 UUIDs
+        const C2_SERVICE = 'ce060000-43e5-11e4-916c-0800200c9a66';
+        const C2_CHAR    = 'ce060031-43e5-11e4-916c-0800200c9a66';
+        
+        // COMMON SERVICES (To keep the connection pipe open)
+        const DEVICE_INFO = 0x180A;
+        const HR_SERVICE  = 0x180D;
 
         function log(msg) {
             consoleLog.innerHTML = "> " + msg + "\n" + consoleLog.innerHTML;
         }
 
-        // --- OPTION A: NAME PREFIX (Best for iOS) ---
-        btnName.addEventListener('click', () => runScan('NAME', {
-            filters: [{ namePrefix: 'PM5' }],
-            optionalServices: [PM5_SERVICE]
-        }));
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
 
-        // --- OPTION B: GENERIC SERVICE (0x180A) ---
-        btnGeneric.addEventListener('click', () => runScan('GENERIC', {
-            filters: [{ services: ['device_information'] }],
-            optionalServices: [PM5_SERVICE]
-        }));
-
-        // --- OPTION C: ACCEPT ALL (Risky) ---
-        btnForce.addEventListener('click', () => runScan('FORCE', {
-            acceptAllDevices: true,
-            optionalServices: [PM5_SERVICE]
-        }));
-
-        async function runScan(mode, config) {
+        btnScan.addEventListener('click', async () => {
             try {
-                log(`Starting ${mode} Scan...`);
+                log("1. Requesting Device...");
                 
-                const device = await navigator.bluetooth.requestDevice(config);
-                log(`Found: ${device.name} (${device.id})`);
+                // WIDE NET CONFIGURATION
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'PM5' }],
+                    optionalServices: [C2_SERVICE, DEVICE_INFO, HR_SERVICE]
+                });
+
+                log(`2. Found: ${device.name}`);
+                log("3. Connecting...");
                 
-                log("Connecting...");
                 const server = await device.gatt.connect();
+                log("4. CONNECTED. PAUSING 2s (Stabilizing)...");
                 
-                log("Connected. Finding PM5 Service...");
-                // Note: The device might be connected, but we need the specific PM5 service to read data
-                const service = await server.getPrimaryService(PM5_SERVICE);
+                // CRITICAL PAUSE FOR PM5
+                await delay(2000);
+
+                log("5. Enumerating Services...");
+                const services = await server.getPrimaryServices();
                 
-                log("Found Service. Finding Char...");
-                const characteristic = await service.getCharacteristic(ROWING_STATUS);
+                let targetService = null;
+
+                for (const s of services) {
+                    log(`   - Found Service: ${s.uuid}`);
+                    if (s.uuid === C2_SERVICE || s.uuid.startsWith('ce060000')) {
+                        targetService = s;
+                        log("   *** MATCH FOUND! ***");
+                    }
+                }
+
+                if (!targetService) {
+                    throw new Error("Connected, but C2 Service (ce06...) not found in list.");
+                }
+
+                log("6. Getting Characteristic...");
+                const characteristic = await targetService.getCharacteristic(C2_CHAR);
                 
-                log("Starting Notifications...");
+                log("7. Starting Stream...");
                 await characteristic.startNotifications();
                 characteristic.addEventListener('characteristicvaluechanged', handleData);
                 
-                // Success
                 document.getElementById('lobby').style.display = 'none';
                 document.getElementById('cockpit').style.display = 'flex';
 
             } catch (error) {
                 log(`FAIL: ${error.message}`);
-                // If it fails to find the service specifically
-                if (error.message.includes("Service")) {
-                    log("TIP: The PM5 is connected, but not sharing Data. Try turning the PM5 Bluetooth OFF/ON in the menu.");
-                }
+                log("DEBUG: " + JSON.stringify(error));
             }
-        }
+        });
 
         function handleData(event) {
             const value = event.target.value;
