@@ -36,19 +36,17 @@
         const input = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
 
-        // STATE MACHINE
         let step = 0;
         let profile = { name: "", weight: "", maxHr: 185 };
 
-        // 1. BOOT SEQUENCE
         window.onload = async () => {
-            await speak("System Initializing...", 1000);
-            await speak("Analyst Core Online.", 1000);
-            await speak("I need to calibrate the physics engine.", 1200);
+            // Updated Timing Logic to prevent hanging
+            await speak("System Initializing...");
+            await speak("Analyst Core Online.");
+            await speak("I need to calibrate the physics engine.");
             ask("Identify yourself. What is your name?");
         };
 
-        // 2. INTERACTION LOGIC
         sendBtn.addEventListener('click', handleInput);
         input.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleInput(); });
 
@@ -56,39 +54,36 @@
             const val = input.value.trim();
             if (!val) return;
 
-            // Display User Text
             addText(val, 'user-line');
             input.value = "";
-            inputArea.classList.add('hidden'); // Hide input while AI thinks
+            inputArea.classList.add('hidden');
 
-            // Process Logic
             if (step === 0) {
                 profile.name = val;
-                await speak(`Acknowledged, ${profile.name}.`, 1000);
-                ask("Enter your bodyweight in Kilograms (KG). This affects Watt calculations.");
+                await speak(`Acknowledged, ${profile.name}.`);
+                ask("Enter your bodyweight in Kilograms (KG).");
                 step++;
             } 
             else if (step === 1) {
                 profile.weight = val;
-                // Save to Phone Memory
                 localStorage.setItem('analyst_profile', JSON.stringify(profile));
                 
-                await speak("Metric saved.", 1000);
-                await speak("Calibration complete.", 1000);
-                await speak("Launching Flight Deck...", 2000);
+                await speak("Metric saved.");
+                await speak("Launching Flight Deck...");
                 
-                // REDIRECT TO DASHBOARD
-                window.location.href = 'v1.html';
+                // FORCE REDIRECT after short delay
+                setTimeout(() => {
+                    window.location.href = 'v1.html';
+                }, 1500);
             }
         }
 
-        // UTILITIES
         function addText(text, className) {
             const div = document.createElement('div');
             div.className = className;
             div.innerText = text;
             consoleDiv.appendChild(div);
-            consoleDiv.scrollTop = consoleDiv.scrollHeight; // Auto scroll
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
         }
 
         function ask(text) {
@@ -98,36 +93,32 @@
             });
         }
 
-        function speak(text, delayAfter = 0) {
+        // --- THE FIX: SAFETY TIMER ---
+        function speak(text) {
             return new Promise(resolve => {
-                // Visual Typewriter
                 addText(text, 'ai-line cursor');
                 let currentLine = consoleDiv.lastChild;
                 
-                // Audio TTS
+                // 1. Try to Speak
                 if (window.speechSynthesis) {
                     const utt = new SpeechSynthesisUtterance(text);
                     utt.rate = 1.0; 
-                    utt.pitch = 1.0; 
-                    
-                    // Try to find a "Computer" voice
-                    const voices = window.speechSynthesis.getVoices();
-                    const aiVoice = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google US English'));
-                    if (aiVoice) utt.voice = aiVoice;
-
                     window.speechSynthesis.speak(utt);
                     
+                    // Normal Completion
                     utt.onend = () => {
-                        currentLine.classList.remove('cursor'); // Stop blinking
-                        setTimeout(resolve, delayAfter);
-                    };
-                } else {
-                    // Fallback if no voice
-                    setTimeout(() => {
                         currentLine.classList.remove('cursor');
                         resolve();
-                    }, 2000);
+                    };
                 }
+
+                // 2. Safety Timer (The Fix)
+                // If 'onend' never fires (Bluefy bug), we force resolve after 2 seconds
+                // This ensures the app NEVER hangs.
+                setTimeout(() => {
+                    currentLine.classList.remove('cursor');
+                    resolve();
+                }, 2000); 
             });
         }
     </script>
