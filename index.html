@@ -3,56 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst PM5 - Targeted Mode</title>
+    <title>Analyst V8 - OMNI SCANNER</title>
     <style>
         :root { --bg-color: #000000; --text-primary: #FF0000; }
-        body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; margin: 0; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; margin: 0; padding: 20px; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; }
         
-        #lobby { text-align: center; width: 80%; }
-        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-        p { color: #666; margin-bottom: 2rem; }
+        #lobby { width: 100%; max-width: 400px; text-align: center; }
+        h1 { font-size: 1.5rem; margin-bottom: 20px; border-bottom: 1px solid red; padding-bottom: 10px; }
         
         button {
-            background: #222; color: var(--text-primary); border: 2px solid var(--text-primary);
-            padding: 15px 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; width: 100%;
-            margin-bottom: 10px; border-radius: 5px;
+            background: #222; color: white; border: 1px solid #555;
+            padding: 15px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%;
+            margin-bottom: 15px; border-radius: 5px; text-transform: uppercase;
         }
         button:active { background: var(--text-primary); color: black; }
         
         #console {
-            margin-top: 20px; text-align: left; font-size: 0.8rem; color: #444; 
-            border-top: 1px solid #333; padding-top: 10px; width: 100%; height: 100px; overflow-y: auto;
+            background: #111; color: #888; padding: 10px; width: 100%; height: 150px; 
+            overflow-y: auto; border: 1px solid #333; font-size: 0.8rem; text-align: left;
+            margin-top: 20px; white-space: pre-wrap;
         }
 
-        #cockpit { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
-        .data-row { font-size: 1.5rem; margin: 10px 0; }
-        .huge { font-size: 4rem; font-weight: 900; }
-        .label { font-size: 0.8rem; color: #666; letter-spacing: 2px; }
+        #cockpit { display: none; width: 100%; flex-direction: column; align-items: center; }
+        .huge { font-size: 3rem; font-weight: 900; margin: 20px 0; }
     </style>
 </head>
 <body>
 
     <div id="lobby">
-        <h1>PM5 FLIGHT RECORDER</h1>
-        <p>TARGETED PROTOCOL (V7.1)</p>
-        <button id="btnConnect">CONNECT TO PM5</button>
-        <div id="console">System Ready...</div>
+        <h1>V8 OMNI-SCANNER</h1>
+        
+        <button id="btnName">OPTION A: SCAN BY NAME ("PM5")</button>
+        <button id="btnGeneric">OPTION B: SCAN GENERIC (INFO)</button>
+        <button id="btnForce">OPTION C: FORCE (ACCEPT ALL)</button>
+        
+        <div id="console">Ready for triage...</div>
     </div>
 
     <div id="cockpit">
-        <div class="label">STROKE RATE</div>
-        <div class="huge" id="rateDisplay">--</div>
-        
-        <div class="data-row">
-            <span id="wattsDisplay">0</span> W | <span id="paceDisplay">0:00</span>
-        </div>
-        
-        <div class="label" style="margin-top: 30px;">RAW HEX DATA (SCREENSHOT THIS)</div>
-        <div id="hexDisplay" style="font-family: monospace; color: white; background: #222; padding: 10px; margin-top: 5px;">WAITING FOR STROKES...</div>
+        <h1>DATA LINK OPEN</h1>
+        <div class="huge" id="hexDisplay">WAITING FOR DATA...</div>
+        <p style="color:#666">ROW TO GENERATE NUMBERS</p>
+        <button onclick="location.reload()">DISCONNECT / RETRY</button>
     </div>
 
     <script>
-        const btnConnect = document.getElementById('btnConnect');
+        const btnName = document.getElementById('btnName');
+        const btnGeneric = document.getElementById('btnGeneric');
+        const btnForce = document.getElementById('btnForce');
         const consoleLog = document.getElementById('console');
         
         // PM5 UUIDs
@@ -60,66 +58,69 @@
         const ROWING_STATUS = 'ce060031-43e5-11e4-916c-0800200c9a66';
 
         function log(msg) {
-            consoleLog.innerHTML = "> " + msg + "<br>" + consoleLog.innerHTML;
+            consoleLog.innerHTML = "> " + msg + "\n" + consoleLog.innerHTML;
         }
 
-        btnConnect.addEventListener('click', async () => {
-            try {
-                log("Scanning (Targeted Filter)...");
-                
-                // --- THE CRITICAL FIX: USE FILTERS, NOT ACCEPT ALL ---
-                const device = await navigator.bluetooth.requestDevice({
-                    filters: [{ services: [PM5_SERVICE] }]
-                });
-                
-                log("Selected: " + device.name);
-                log("Connecting (5s Timeout)...");
+        // --- OPTION A: NAME PREFIX (Best for iOS) ---
+        btnName.addEventListener('click', () => runScan('NAME', {
+            filters: [{ namePrefix: 'PM5' }],
+            optionalServices: [PM5_SERVICE]
+        }));
 
-                // 2. CONNECT WITH TIMEOUT
-                const connectPromise = device.gatt.connect();
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error("TIMEOUT: PM5 Handshake Stuck.")), 5000)
-                );
+        // --- OPTION B: GENERIC SERVICE (0x180A) ---
+        btnGeneric.addEventListener('click', () => runScan('GENERIC', {
+            filters: [{ services: ['device_information'] }],
+            optionalServices: [PM5_SERVICE]
+        }));
+
+        // --- OPTION C: ACCEPT ALL (Risky) ---
+        btnForce.addEventListener('click', () => runScan('FORCE', {
+            acceptAllDevices: true,
+            optionalServices: [PM5_SERVICE]
+        }));
+
+        async function runScan(mode, config) {
+            try {
+                log(`Starting ${mode} Scan...`);
                 
-                const server = await Promise.race([connectPromise, timeoutPromise]);
+                const device = await navigator.bluetooth.requestDevice(config);
+                log(`Found: ${device.name} (${device.id})`);
                 
-                log("Connected! Finding Service...");
+                log("Connecting...");
+                const server = await device.gatt.connect();
+                
+                log("Connected. Finding PM5 Service...");
+                // Note: The device might be connected, but we need the specific PM5 service to read data
                 const service = await server.getPrimaryService(PM5_SERVICE);
                 
-                log("Finding Characteristic...");
+                log("Found Service. Finding Char...");
                 const characteristic = await service.getCharacteristic(ROWING_STATUS);
                 
-                log("Starting Stream...");
+                log("Starting Notifications...");
                 await characteristic.startNotifications();
                 characteristic.addEventListener('characteristicvaluechanged', handleData);
-
-                // SWITCH SCREENS
+                
+                // Success
                 document.getElementById('lobby').style.display = 'none';
                 document.getElementById('cockpit').style.display = 'flex';
 
             } catch (error) {
-                log("ERROR: " + error.message);
-                alert("CONNECTION FAILED: " + error.message + "\n\nTry forgetting device in Settings > Bluetooth.");
+                log(`FAIL: ${error.message}`);
+                // If it fails to find the service specifically
+                if (error.message.includes("Service")) {
+                    log("TIP: The PM5 is connected, but not sharing Data. Try turning the PM5 Bluetooth OFF/ON in the menu.");
+                }
             }
-        });
+        }
 
         function handleData(event) {
             const value = event.target.value;
-            const data = new DataView(value.buffer);
-            
-            // 1. RAW HEX (THE GOLD)
             let hexStr = Array.from(new Uint8Array(value.buffer))
                 .map(b => b.toString(16).padStart(2,'0').toUpperCase())
                 .join(' ');
             document.getElementById('hexDisplay').innerText = hexStr;
-
-            // 2. BASIC PARSE (Visual Confirmation)
-            // PM5 usually sends Stroke Rate in byte 8 (if message is long enough)
-            if (data.byteLength >= 9) {
-                let rate = data.getUint8(8); 
-                document.getElementById('rateDisplay').innerText = rate;
-            }
         }
     </script>
 </body>
 </html>
+
