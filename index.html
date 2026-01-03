@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyst V10 - Service Hunter</title>
+    <title>Analyst V11 - PRECISION STRIKE</title>
     <style>
         :root { --bg-color: #000000; --text-primary: #00FF00; }
         body { background-color: var(--bg-color); color: var(--text-primary); font-family: monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -15,86 +15,65 @@
         }
         
         #logWindow {
-            background: #111; color: #888; padding: 15px; width: 100%; height: 300px; 
+            background: #111; color: #888; padding: 15px; width: 100%; height: 250px; 
             overflow-y: auto; border: 1px solid #333; font-size: 0.9rem; text-align: left;
             white-space: pre-wrap;
         }
 
-        #cockpit { display: none; width: 100%; text-align: center; }
+        #cockpit { display: none; width: 100%; text-align: center; border: 2px solid green; padding: 20px; margin-top: 20px; }
         .huge { font-size: 2rem; font-weight: 900; margin: 20px 0; color: white; word-break: break-all; }
+        .label { color: #666; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-    <button id="btnScan">START V10 SCAN</button>
+    <button id="btnScan">CONNECT TO SERVICE 30</button>
     
     <div id="cockpit">
-        <h2 style="color:white">DATA LINK ESTABLISHED</h2>
-        <div class="huge" id="hexDisplay">WAITING FOR DATA...</div>
-        <p>ROW NOW.</p>
+        <h2 style="color:white; margin:0;">DATA FLOWING</h2>
+        <div class="label">RAW HEX STREAM</div>
+        <div class="huge" id="hexDisplay">WAITING...</div>
+        <p style="color:#888">SCREENSHOT THIS NOW</p>
     </div>
 
-    <div id="logWindow">System Ready.</div>
+    <div id="logWindow">System Ready. Target: CE060030...</div>
 
     <script>
         const btnScan = document.getElementById('btnScan');
         const logWindow = document.getElementById('logWindow');
         
-        // PM5 UUIDs (All strings to prevent Bluefy crash)
-        const C2_SERVICE_UUID = 'ce060000-43e5-11e4-916c-0800200c9a66';
-        const C2_CHAR_UUID    = 'ce060031-43e5-11e4-916c-0800200c9a66';
+        // UPDATED TARGETS BASED ON YOUR LOGS
+        // Service 0030 is where the data lives on your firmware
+        const TARGET_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
+        const TARGET_CHAR    = 'ce060031-43e5-11e4-916c-0800200c9a66'; 
 
         function log(msg) {
             logWindow.innerHTML = "> " + msg + "\n" + logWindow.innerHTML;
-        }
-
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         btnScan.addEventListener('click', async () => {
             try {
                 log("1. Scanning for PM5...");
                 
-                // SIMPLIFIED REQUEST (Like V8 Option A)
+                // Request access to the specific service we saw in your logs
                 const device = await navigator.bluetooth.requestDevice({
                     filters: [{ namePrefix: 'PM5' }],
-                    optionalServices: [C2_SERVICE_UUID]
+                    optionalServices: [TARGET_SERVICE]
                 });
 
                 log(`2. Found: ${device.name}`);
                 log("3. Connecting...");
                 
                 const server = await device.gatt.connect();
-                log("4. CONNECTED.");
+                log("4. CONNECTED. Getting Service 30...");
                 
-                // THE HUNT: Wait for services to be ready
-                log("5. WAITING 3s for Service Discovery...");
-                await delay(1000); log("...2s");
-                await delay(1000); log("...1s");
-                await delay(1000);
-
-                log("6. Requesting ALL Services...");
-                const services = await server.getPrimaryServices();
+                // Direct hit on the service you saw
+                const service = await server.getPrimaryService(TARGET_SERVICE);
+                log("5. Found Service 30! Getting Data Char...");
                 
-                let targetService = null;
+                const characteristic = await service.getCharacteristic(TARGET_CHAR);
+                log("6. Subscribing...");
                 
-                // MANUAL SEARCH loop
-                for (const s of services) {
-                    log(`   - Saw Service: ${s.uuid}`);
-                    if (s.uuid === C2_SERVICE_UUID) {
-                        targetService = s;
-                    }
-                }
-
-                if (!targetService) {
-                    throw new Error("PM5 connected, but Rowing Service (ce06...) is hidden. Try turning PM5 Bluetooth OFF/ON.");
-                }
-
-                log("7. Service Found! Getting Characteristic...");
-                const characteristic = await targetService.getCharacteristic(C2_CHAR_UUID);
-                
-                log("8. Subscribing...");
                 await characteristic.startNotifications();
                 characteristic.addEventListener('characteristicvaluechanged', (event) => {
                     const value = event.target.value;
@@ -104,15 +83,15 @@
                     
                     document.getElementById('hexDisplay').innerText = hexStr;
                     
-                    // Show cockpit once data flows
+                    // Unlock Cockpit
                     document.getElementById('cockpit').style.display = 'block';
                     btnScan.style.display = 'none';
+                    log("SUCCESS: DATA RECEIVED.");
                 });
-
-                log("SUCCESS: START ROWING!");
 
             } catch (error) {
                 log(`FAIL: ${error.message}`);
+                // If it fails, print the full error object for debugging
                 console.error(error);
             }
         });
