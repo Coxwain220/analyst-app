@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Analyst - Neural Handshake V2</title>
+    <style>
+        :root { --bg: #000000; --term: #00FF00; --user: #FFFFFF; --dim: #444; }
+        body { background-color: var(--bg); color: var(--term); font-family: 'Courier New', monospace; margin: 0; padding: 20px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* HEADER */
+        #header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--dim); padding-bottom: 10px; margin-bottom: 10px; }
+        .title { font-weight: bold; letter-spacing: 2px; }
+        .audio-toggle { border: 1px solid var(--term); padding: 5px 10px; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; }
+        .audio-toggle.off { border-color: var(--dim); color: var(--dim); }
+
+        /* CONSOLE */
+        #console { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; scroll-behavior: smooth; }
+        .ai-msg { color: var(--term); text-shadow: 0 0 5px rgba(0, 255, 0, 0.3); font-size: 1.1rem; line-height: 1.4; max-width: 90%; }
+        .user-msg { color: var(--user); text-align: right; font-size: 1.1rem; opacity: 0.9; align-self: flex-end; max-width: 80%; border-right: 2px solid var(--user); padding-right: 10px; }
+        .system-msg { color: var(--dim); font-size: 0.9rem; font-style: italic; text-align: center; margin: 10px 0; }
+
+        /* INPUT AREA */
+        #input-area { display: flex; border-top: 1px solid var(--dim); padding-top: 15px; }
+        input { background: #111; border: 1px solid #333; color: white; flex-grow: 1; padding: 15px; font-size: 1.2rem; border-radius: 4px; font-family: 'Courier New', monospace; outline: none; }
+        button { background: var(--term); color: black; border: none; padding: 15px 25px; font-weight: bold; font-size: 1.2rem; cursor: pointer; margin-left: 10px; }
+        
+        /* UTILS */
+        .cursor::after { content: '█'; animation: blink 1s infinite; margin-left: 5px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .hidden { display: none !important; }
+        
+        /* REVIEW TABLE */
+        .dossier-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid var(--dim); }
+        .dossier-table td { padding: 8px; border-bottom: 1px solid var(--dim); color: var(--user); }
+        .dossier-table td:first-child { color: var(--term); width: 40%; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <div class="title">NEURAL HANDSHAKE <span style="font-size:0.8em">V2.0</span></div>
+        <div id="audioBtn" class="audio-toggle">AUDIO: ON</div>
+    </div>
+
+    <div id="console"></div>
+
+    <div id="input-area" class="hidden">
+        <input type="text" id="userInput" autocomplete="off" placeholder="Type data...">
+        <button id="sendBtn">ENTER</button>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const QUESTIONS = [
+            { key: 'name',    text: "Identify yourself. Enter Operator Name.", speak: "Identify yourself. Enter Operator Name." },
+            { key: 'age',     text: "Enter biological age (Years). Required for Heart Rate Zones.", speak: "Enter biological age in years." },
+            { key: 'gender',  text: "Biological Gender (M/F). Used for calorie algorithms.", speak: "Enter biological gender, Male or Female." },
+            { key: 'weight',  text: "Current Mass (KG). Critical for Watts/Kg calculation.", speak: "Enter current mass in kilograms." },
+            { key: 'goal',    text: "Primary Objective? (e.g., Strength, Cardio, Weight Loss).", speak: "What is your primary training objective?" }
+        ];
+
+        // --- STATE ---
+        let qIndex = 0;
+        let audioEnabled = true;
+        let db = {
+            profile: {},
+            history: [],
+            context: { created: new Date().toISOString() }
+        };
+
+        // --- DOM ---
+        const consoleDiv = document.getElementById('console');
+        const inputArea = document.getElementById('input-area');
+        const input = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const audioBtn = document.getElementById('audioBtn');
+
+        // --- INIT ---
+        window.onload = async () => {
+            // Load existing audio pref
+            const savedAudio = localStorage.getItem('analyst_audio');
+            if (savedAudio === 'off') toggleAudio(false);
+
+            await speakSystem("Initializing Interface...");
+            await speakSystem("Protocol V2 Loaded.");
+            
+            // Start Interview
+            askNext();
+        };
+
+        // --- INTERACTION ---
+        audioBtn.addEventListener('click', () => toggleAudio(!audioEnabled));
+        
+        sendBtn.addEventListener('click', handleInput);
+        input.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleInput(); });
+
+        async function handleInput() {
+            const val = input.value.trim();
+            if (!val) return;
+
+            // 1. Show User Input
+            addText(val, 'user-msg');
+            input.value = "";
+            inputArea.classList.add('hidden');
+
+            // 2. Logic
+            const currentQ = QUESTIONS[qIndex];
+            
+            // Store Data
+            db.profile[currentQ.key] = val;
+
+            // Move Next
+            qIndex++;
+            if (qIndex < QUESTIONS.length) {
+                setTimeout(askNext, 500);
+            } else {
+                setTimeout(showReview, 1000);
+            }
+        }
+
+        async function askNext() {
+            const q = QUESTIONS[qIndex];
+            await speakAI(q.text, q.speak);
+            inputArea.classList.remove('hidden');
+            input.focus();
+            // Contextual placeholder
+            if (q.key === 'weight') input.type = 'number';
+            else input.type = 'text';
+        }
+
+        // --- REVIEW PHASE ---
+        async function showReview() {
+            await speakAI("Data collection complete. Reviewing Dossier.", "Data collection complete. Please review.");
+            
+            let html = `<table class="dossier-table">`;
+            for (const [key, val] of Object.entries(db.profile)) {
+                html += `<tr><td>${key}</td><td>${val}</td></tr>`;
+            }
+            html += `</table>`;
+            
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            consoleDiv.appendChild(div);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+
+            await speakAI("Type 'CONFIRM' to save, or 'RETRY' to restart.", "Type confirm to save.");
+            
+            // Override Input Handler for Confirmation
+            inputArea.classList.remove('hidden');
+            input.focus();
+            
+            // Remove old listeners to prevent double firing (simple clean way)
+            const newBtn = sendBtn.cloneNode(true);
+            sendBtn.parentNode.replaceChild(newBtn, sendBtn);
+            
+            // Add Confirmation Listener
+            newBtn.addEventListener('click', handleConfirm);
+            input.onkeypress = (e) => { if(e.key === 'Enter') handleConfirm(); };
+        }
+
+        async function handleConfirm() {
+            const val = input.value.trim().toUpperCase();
+            addText(val, 'user-msg');
+            input.value = "";
+            inputArea.classList.add('hidden');
+
+            if (val === 'RETRY') {
+                location.reload();
+            } else {
+                // SAVE TO MEMORY
+                localStorage.setItem('analyst_db', JSON.stringify(db));
+                // Backwards compatibility for V1 Dashboard
+                localStorage.setItem('analyst_profile', JSON.stringify({
+                    name: db.profile.name,
+                    weight: db.profile.weight
+                }));
+
+                await speakAI("Dossier Encrypted & Saved.", "Dossier saved.");
+                await speakSystem("Launching Flight Deck...");
+                
+                setTimeout(() => {
+                    window.location.href = 'v1.html';
+                }, 1500);
+            }
+        }
+
+        // --- UI UTILS ---
+        function addText(text, className) {
+            const div = document.createElement('div');
+            div.className = className;
+            div.innerText = text;
+            consoleDiv.appendChild(div);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            return div;
+        }
+
+        // --- AUDIO ENGINE ---
+        function toggleAudio(state) {
+            audioEnabled = state;
+            audioBtn.innerText = state ? "AUDIO: ON" : "AUDIO: OFF";
+            audioBtn.className = state ? "audio-toggle" : "audio-toggle off";
+            localStorage.setItem('analyst_audio', state ? 'on' : 'off');
+        }
+
+        function speakAI(displayText, speechText) {
+            return new Promise(resolve => {
+                // 1. Show Text
+                const bubble = addText(displayText, 'ai-msg cursor');
+                
+                // 2. Speak (if enabled)
+                if (audioEnabled && window.speechSynthesis) {
+                    const utt = new SpeechSynthesisUtterance(speechText || displayText);
+                    utt.rate = 1.0; 
+                    
+                    // Voice Selection
+                    const voices = window.speechSynthesis.getVoices();
+                    const aiVoice = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google US English'));
+                    if (aiVoice) utt.voice = aiVoice;
+
+                    window.speechSynthesis.speak(utt);
+                    
+                    // Resolve on end (with safety timer from V1.3)
+                    let resolved = false;
+                    utt.onend = () => { if(!resolved) { resolved=true; bubble.classList.remove('cursor'); resolve(); }};
+                    setTimeout(() => { if(!resolved) { resolved=true; bubble.classList.remove('cursor'); resolve(); }}, 2500); 
+                } else {
+                    // No Audio - Text Only Delay
+                    setTimeout(() => {
+                        bubble.classList.remove('cursor');
+                        resolve();
+                    }, 1000);
+                }
+            });
+        }
+
+        function speakSystem(text) {
+            return new Promise(resolve => {
+                addText(`> ${text}`, 'system-msg');
+                setTimeout(resolve, 500);
+            });
+        }
+    </script>
+</body>
+</html>
