@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst - Gemini Link</title>
+    <title>Analyst - Gemini Link (DEBUG)</title>
     <style>
         :root { --bg: #050505; --ai-bubble: #1e293b; --user-bubble: #00FF00; --text: #e0e0e0; --dim: #64748b; }
         body { background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -23,7 +23,7 @@
         .message { max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 16px; line-height: 1.5; position: relative; animation: popIn 0.3s ease-out; word-wrap: break-word; }
         .message.ai { align-self: flex-start; background-color: var(--ai-bubble); color: #e2e8f0; border-bottom-left-radius: 2px; border: 1px solid #334155; }
         .message.user { align-self: flex-end; background-color: var(--user-bubble); color: #000; font-weight: 600; border-bottom-right-radius: 2px; }
-        .message.system { align-self: center; background: none; color: var(--dim); font-size: 12px; font-style: italic; padding: 5px; border-radius: 0; text-align: center; }
+        .message.system { align-self: center; background: none; color: var(--dim); font-size: 12px; font-style: italic; padding: 5px; border-radius: 0; text-align: center; border: 1px solid #333; width: 90%; }
 
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -59,6 +59,7 @@
             <input type="password" id="apiKeyInput" class="api-input" placeholder="Paste Key Here...">
             <button class="save-btn" id="saveKeyBtn">ESTABLISH LINK</button>
             <div style="margin-top:10px;"><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#444; font-size:10px;">GET KEY</a></div>
+            <div id="debugLog" style="color:red; font-size:10px; margin-top:10px; word-break: break-all;"></div>
         </div>
     </div>
 
@@ -82,16 +83,25 @@
     </div>
 
     <script>
+        // --- LOGGER (DEBUG) ---
+        function logDebug(msg) {
+            console.log(msg);
+            // Print to chat
+            const div = document.createElement('div');
+            div.className = 'message system';
+            div.innerText = "DEBUG: " + msg;
+            document.getElementById('chat-window').appendChild(div);
+            // Also print to modal debug line
+            document.getElementById('debugLog').innerText = msg;
+        }
+
         // --- CONFIGURATION ---
         const SYSTEM_PROMPT = `
         You are 'The Analyst', an elite Rowing Performance Coach AI.
         Your goal is to onboard a new athlete ('Operator').
-        
         PHASE 1 (DATA): You MUST extract: Name, Weight (kg), Age, and Gender.
         PHASE 2 (CONTEXT): Ask about their training history, injuries, and goals. Be conversational.
-        
         TONE: Professional, concise, data-driven, encouraging.
-        
         CRITICAL: When you have Name, Weight, Age, and Gender, output a final JSON block at the end of your message like this:
         :::JSON:::{"name":"X","weight":0,"age":0,"gender":"M/F"}:::END:::
         Do not output this JSON until you have ALL 4 variables confirmed.
@@ -114,19 +124,25 @@
 
         // --- INIT ---
         window.onload = () => {
-            const savedKey = localStorage.getItem('gemini_key');
-            if (savedKey) {
-                apiKey = savedKey;
-                modal.style.display = 'none';
-                statusDot.classList.add('connected');
-                // Auto-start
-                if(history.length === 0) {
-                    addMessage("Connection Established. Analyst Core Online.", "system");
-                    history.push({ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nHello, I am ready to begin onboarding." }] });
-                    triggerGemini(); 
+            logDebug("System Loaded");
+            try {
+                const savedKey = localStorage.getItem('gemini_key');
+                if (savedKey) {
+                    logDebug("Found Key in Memory");
+                    apiKey = savedKey;
+                    modal.style.display = 'none';
+                    statusDot.classList.add('connected');
+                    if(history.length === 0) {
+                        addMessage("Connection Established. Analyst Core Online.", "system");
+                        history.push({ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nHello, I am ready to begin onboarding." }] });
+                        triggerGemini(); 
+                    }
+                } else {
+                    logDebug("No Key Found. Showing Modal.");
+                    modal.style.display = 'flex';
                 }
-            } else {
-                // Force modal if no key
+            } catch (e) {
+                logDebug("Storage Access Error: " + e.message);
                 modal.style.display = 'flex';
             }
         };
@@ -138,42 +154,13 @@
         });
 
         saveKeyBtn.addEventListener('click', () => {
-            const val = keyInput.value.trim();
-            if (val.length > 10) {
-                apiKey = val;
-                localStorage.setItem('gemini_key', apiKey);
-                modal.style.display = 'none';
-                statusDot.classList.add('connected');
-                
-                // Clear history and restart if setting new key
-                history = [];
-                chat.innerHTML = '';
-                addMessage("Initializing Neural Link...", "system");
-                history.push({ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nHello, I am ready to begin onboarding." }] });
-                triggerGemini();
-            } else {
-                alert("Invalid Key Format.");
-            }
-        });
-
-        // --- CHAT LOGIC ---
-        sendBtn.addEventListener('click', handleUserSend);
-        input.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleUserSend(); });
-
-        async function handleUserSend() {
-            const text = input.value.trim();
-            if (!text) return;
-
-            addMessage(text, 'user');
-            input.value = "";
+            logDebug("Button Clicked...");
+            saveKeyBtn.innerText = "CONNECTING...";
             
-            history.push({ role: "user", parts: [{ text: text }] });
-            await triggerGemini();
-        }
-
-        async function triggerGemini() {
-            showTyping(true);
-
             try {
-                // GEMINI API ENDPOINT
-                const url = `
+                const val = keyInput.value.trim();
+                logDebug("Key Length: " + val.length);
+                
+                if (val.length > 10) {
+                    apiKey = val;
+                    localStorage
