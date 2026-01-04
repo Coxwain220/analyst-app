@@ -3,21 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst - Neural Link (LAUNCH KEY)</title>
+    <title>Analyst - Neural Link (MANUAL)</title>
     <style>
         :root { --bg: #050505; --ai-bubble: #1e293b; --user-bubble: #00FF00; --text: #e0e0e0; --dim: #64748b; }
         body { background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
         /* HEADER */
-        .header { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; background: rgba(5,5,5,0.95); z-index: 10; }
+        .header { padding: 10px 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; background: rgba(5,5,5,0.95); z-index: 10; }
         .header-left { display: flex; align-items: center; gap: 10px; }
         .header-title { font-weight: 800; letter-spacing: 1px; font-size: 14px; text-transform: uppercase; color: #4285F4; }
-        .model-tag { font-size: 10px; background: #222; padding: 2px 6px; border-radius: 4px; color: #888; margin-left: 8px; }
         
         .key-btn { background: #222; color: #888; border: 1px solid #444; font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .status-dot { height: 8px; width: 8px; background-color: #333; border-radius: 50%; display: inline-block; }
-        .status-dot.connected { background-color: #4285F4; box-shadow: 0 0 8px #4285F4; }
-        .status-dot.error { background-color: #F00; box-shadow: 0 0 8px #F00; }
+        
+        /* THE LAUNCH BUTTON */
+        .launch-btn { 
+            background: #00FF00; color: black; border: none; 
+            font-size: 12px; padding: 6px 12px; border-radius: 4px; 
+            cursor: pointer; font-weight: 900; letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0,255,0,0.3);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
         /* CHAT AREA */
         #chat-window { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
@@ -70,7 +76,7 @@
             <button class="key-btn" id="manualKeyBtn">KEY</button>
             <div class="header-title">ANALYST <span style="color:#fff">GEMINI</span> <span id="modelTag" class="model-tag">...</span></div>
         </div>
-        <div class="status-dot" id="statusDot"></div>
+        <button class="launch-btn" id="forceLaunchBtn">LAUNCH</button>
     </div>
 
     <div id="chat-window"></div>
@@ -91,7 +97,7 @@
             addMessage(msg, "system");
         }
 
-        // --- CONFIGURATION (LAUNCH KEY PROTOCOL) ---
+        // --- CONFIGURATION (MANUAL OVERRIDE PROTOCOL) ---
         const SYSTEM_PROMPT = `
         You are 'The Analyst', an elite Rowing Performance Coach AI.
         Your goal is to onboard a new athlete ('Operator').
@@ -99,31 +105,29 @@
         PHASE 1 (DATA): Extract Name, Weight (kg), Age, and Gender.
         PHASE 2 (CONTEXT): Discuss training history, injuries, and goals.
 
-        CRITICAL PROTOCOL:
-        1. You are FORBIDDEN from outputting the final JSON block until the user explicitly confirms they are ready.
-        2. When you have gathered sufficient Data and Context, present a brief summary of the profile and ask: 
-           "Profile Locked. Type 'LAUNCH' to initialize."
-        3. Only when the user types the word "LAUNCH" (or similar confirmation), output the final JSON block.
+        CRITICAL RULE:
+        You are FORBIDDEN from outputting the final JSON block on your own.
+        You must continue the conversation indefinitely until you receive the SYSTEM COMMAND: "EXECUTE_LAUNCH_SEQUENCE".
         
-        FINAL OUTPUT FORMAT (Triggered ONLY by 'LAUNCH'):
+        Only when you receive that specific command, output the JSON:
         :::JSON:::{"name":"X","weight":0,"age":0,"gender":"M/F"}:::END:::
         `;
 
         // --- STATE ---
         let apiKey = null;
-        let activeModel = "gemini-1.5-flash"; // Default attempt
+        let activeModel = "gemini-1.5-flash"; 
         let history = []; 
 
         // --- DOM ---
         const chat = document.getElementById('chat-window');
         const input = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
+        const forceLaunchBtn = document.getElementById('forceLaunchBtn'); // The Button
         const typing = document.getElementById('typingIndicator');
         const modal = document.getElementById('api-modal');
         const keyInput = document.getElementById('apiKeyInput');
         const saveKeyBtn = document.getElementById('saveKeyBtn');
         const manualKeyBtn = document.getElementById('manualKeyBtn');
-        const statusDot = document.getElementById('statusDot');
         const modelTag = document.getElementById('modelTag');
 
         // --- INIT ---
@@ -133,7 +137,6 @@
                 if (savedKey) {
                     apiKey = savedKey;
                     modal.style.display = 'none';
-                    statusDot.classList.add('connected');
                     startSession();
                 } else {
                     modal.style.display = 'flex';
@@ -152,10 +155,23 @@
                 apiKey = val;
                 localStorage.setItem('gemini_key', apiKey);
                 modal.style.display = 'none';
-                statusDot.classList.add('connected');
                 startSession();
             } else {
                 alert("Invalid Key Format.");
+            }
+        });
+
+        // --- LAUNCH LOGIC (THE FIX) ---
+        forceLaunchBtn.addEventListener('click', () => {
+            if(confirm("Confirm: Lock Profile and Launch Flight Deck?")) {
+                // Send HIDDEN COMMAND to AI
+                logSys("INITIATING LAUNCH SEQUENCE...");
+                // Add invisible system command to history
+                history.push({ 
+                    role: "user", 
+                    parts: [{ text: "SYSTEM_COMMAND: EXECUTE_LAUNCH_SEQUENCE. Summarize known data into JSON now. Use 0 if unknown." }] 
+                });
+                triggerGemini();
             }
         });
 
@@ -165,9 +181,7 @@
             modelTag.innerText = "SCANNING...";
             logSys("Initializing Neural Link...");
             
-            // Add System Prompt silently
             history.push({ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nHello, I am ready to begin onboarding." }] });
-            
             triggerGemini();
         }
 
@@ -186,7 +200,7 @@
             await triggerGemini();
         }
 
-        // --- CORE AI ENGINE (With Auto-Discovery) ---
+        // --- CORE AI ENGINE ---
         async function triggerGemini() {
             showTyping(true);
             
@@ -199,18 +213,16 @@
                     body: JSON.stringify({ contents: history })
                 });
 
-                // --- 404 HANDLER (SELF-HEALING) ---
                 if (response.status === 404 || response.status === 400) {
-                    logSys(`Model '${activeModel}' unreachable. Scanning for STABLE models...`);
+                    logSys(`Model '${activeModel}' unreachable. Auto-discovering...`);
                     await findValidModel();
-                    return; // Exit and let findValidModel retry
+                    return; 
                 }
 
-                // --- 429 HANDLER (RATE LIMIT) ---
                 if (response.status === 429) {
-                    logSys(`Rate Limited (${activeModel}). Retrying in 2 seconds...`);
+                    logSys(`Rate Limited. Retrying...`);
                     await new Promise(r => setTimeout(r, 2000));
-                    triggerGemini(); // Simple retry
+                    triggerGemini(); 
                     return;
                 }
 
@@ -220,16 +232,19 @@
                 const aiText = data.candidates[0].content.parts[0].text;
 
                 showTyping(false);
-                modelTag.innerText = activeModel.replace("models/", ""); // Update UI
+                modelTag.innerText = activeModel.replace("models/", ""); 
                 
                 // DATA EXTRACTION
                 if (aiText.includes(":::JSON:::")) {
                     const parts = aiText.split(":::JSON:::");
-                    const visibleText = parts[0];
+                    const visibleText = parts[0]; // Text before JSON
                     const jsonRaw = parts[1].split(":::END:::")[0];
                     
-                    addMessage(visibleText, 'ai');
-                    speak(visibleText);
+                    if(visibleText.trim().length > 0) {
+                        addMessage(visibleText, 'ai');
+                        speak(visibleText);
+                    }
+                    
                     history.push({ role: "model", parts: [{ text: visibleText }] });
 
                     try {
@@ -237,6 +252,7 @@
                         completeOnboarding(profile);
                     } catch (e) {
                         console.error("JSON Parse Error", e);
+                        logSys("Error parsing profile. Please try Launch again.");
                     }
                 } else {
                     addMessage(aiText, 'ai');
@@ -247,31 +263,23 @@
             } catch (err) {
                 showTyping(false);
                 logSys("CRITICAL FAILURE: " + err.message);
-                statusDot.classList.remove('connected');
-                statusDot.classList.add('error');
             }
         }
 
-        // --- MODEL DISCOVERY (ROBUST) ---
+        // --- MODEL DISCOVERY ---
         async function findValidModel() {
             try {
                 const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
                 const response = await fetch(listUrl);
                 const data = await response.json();
 
-                if (!data.models) throw new Error("No models returned from Google.");
-
-                // 1. Filter for models that can 'generateContent'
-                // 2. Filter OUT 'experimental' or 'exp' to avoid 429 errors
                 const candidates = data.models.filter(m => 
                     m.supportedGenerationMethods.includes("generateContent") &&
-                    !m.name.includes("exp") && 
-                    !m.name.includes("experimental")
+                    !m.name.includes("exp") && !m.name.includes("experimental")
                 );
 
                 if (candidates.length === 0) throw new Error("No STABLE models found.");
 
-                // 3. Smart Select: Look for 'latest' or 'flash' or 'pro' in order
                 let chosen = null;
                 const pref = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
                 
@@ -280,19 +288,13 @@
                     if (found) { chosen = found.name.replace("models/", ""); break; }
                 }
 
-                // Fallback to first available stable model
                 if (!chosen) chosen = candidates[0].name.replace("models/", "");
 
                 if (chosen) {
                     logSys(`Stable Model Found: ${chosen}`);
                     activeModel = chosen;
-                    
-                    // Wait 1s before retrying to be polite
                     setTimeout(() => triggerGemini(), 1000); 
-                } else {
-                    throw new Error("Model selection failed.");
-                }
-
+                } 
             } catch (e) {
                 logSys("Discovery Failed: " + e.message);
             }
@@ -302,12 +304,10 @@
             localStorage.setItem('analyst_profile', JSON.stringify(profile));
             localStorage.setItem('analyst_transcript', JSON.stringify(history));
 
+            logSys("DATA SECURED. LAUNCHING FLIGHT DECK...");
             setTimeout(() => {
-                logSys("DATA SECURED. LAUNCHING FLIGHT DECK...");
-                setTimeout(() => {
-                    window.location.href = 'v1.html';
-                }, 2000);
-            }, 1000);
+                window.location.href = 'v1.html';
+            }, 2000);
         }
 
         function addMessage(text, type) {
