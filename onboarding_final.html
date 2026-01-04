@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst - Neural Link</title>
+    <title>Analyst - Neural Link (ROBUST)</title>
     <style>
         :root { --bg: #050505; --ai-bubble: #1e293b; --user-bubble: #00FF00; --text: #e0e0e0; --dim: #64748b; }
         body { background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -197,10 +197,18 @@
                 });
 
                 // --- 404 HANDLER (SELF-HEALING) ---
-                if (response.status === 404) {
-                    logSys(`Model '${activeModel}' not found. Auto-discovering valid models...`);
+                if (response.status === 404 || response.status === 400) {
+                    logSys(`Model '${activeModel}' unreachable. Scanning for STABLE models...`);
                     await findValidModel();
                     return; // Exit and let findValidModel retry
+                }
+
+                // --- 429 HANDLER (RATE LIMIT) ---
+                if (response.status === 429) {
+                    logSys(`Rate Limited (${activeModel}). Retrying in 2 seconds...`);
+                    await new Promise(r => setTimeout(r, 2000));
+                    triggerGemini(); // Simple retry
+                    return;
                 }
 
                 if (!response.ok) throw new Error("API Error " + response.status);
@@ -241,7 +249,7 @@
             }
         }
 
-        // --- MODEL DISCOVERY (THE FIX) ---
+        // --- MODEL DISCOVERY (ROBUST) ---
         async function findValidModel() {
             try {
                 const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
@@ -251,28 +259,35 @@
                 if (!data.models) throw new Error("No models returned from Google.");
 
                 // 1. Filter for models that can 'generateContent'
+                // 2. Filter OUT 'experimental' or 'exp' to avoid 429 errors
                 const candidates = data.models.filter(m => 
-                    m.supportedGenerationMethods.includes("generateContent")
+                    m.supportedGenerationMethods.includes("generateContent") &&
+                    !m.name.includes("exp") && 
+                    !m.name.includes("experimental")
                 );
 
-                // 2. Pick the best one (Preference: Flash -> Pro -> 1.0)
+                if (candidates.length === 0) throw new Error("No STABLE models found.");
+
+                // 3. Smart Select: Look for 'latest' or 'flash' or 'pro' in order
                 let chosen = null;
-                const pref = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
+                const pref = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
                 
                 for (let p of pref) {
                     const found = candidates.find(c => c.name.includes(p));
                     if (found) { chosen = found.name.replace("models/", ""); break; }
                 }
 
-                // Fallback to first available if no preference match
-                if (!chosen && candidates.length > 0) chosen = candidates[0].name.replace("models/", "");
+                // Fallback to first available stable model
+                if (!chosen) chosen = candidates[0].name.replace("models/", "");
 
                 if (chosen) {
-                    logSys(`Active Model Found: ${chosen}`);
+                    logSys(`Stable Model Found: ${chosen}`);
                     activeModel = chosen;
-                    triggerGemini(); // RETRY with new model
+                    
+                    // Wait 1s before retrying to be polite
+                    setTimeout(() => triggerGemini(), 1000); 
                 } else {
-                    throw new Error("No compatible models found.");
+                    throw new Error("Model selection failed.");
                 }
 
             } catch (e) {
