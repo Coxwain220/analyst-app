@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst - Neural Link (CONVERSATIONAL)</title>
+    <title>Analyst - Neural Link (LAUNCH KEY)</title>
     <style>
         :root { --bg: #050505; --ai-bubble: #1e293b; --user-bubble: #00FF00; --text: #e0e0e0; --dim: #64748b; }
         body { background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -91,22 +91,21 @@
             addMessage(msg, "system");
         }
 
-        // --- CONFIGURATION (UPDATED PROMPT) ---
+        // --- CONFIGURATION (LAUNCH KEY PROTOCOL) ---
         const SYSTEM_PROMPT = `
         You are 'The Analyst', an elite Rowing Performance Coach AI.
         Your goal is to onboard a new athlete ('Operator').
-        
+
         PHASE 1 (DATA): Extract Name, Weight (kg), Age, and Gender.
-        PHASE 2 (CONTEXT): *After* you have the data, you MUST ask about training history, injuries, and goals. 
+        PHASE 2 (CONTEXT): Discuss training history, injuries, and goals.
+
+        CRITICAL PROTOCOL:
+        1. You are FORBIDDEN from outputting the final JSON block until the user explicitly confirms they are ready.
+        2. When you have gathered sufficient Data and Context, present a brief summary of the profile and ask: 
+           "Profile Locked. Type 'LAUNCH' to initialize."
+        3. Only when the user types the word "LAUNCH" (or similar confirmation), output the final JSON block.
         
-        TONE: Professional, concise, data-driven, encouraging.
-        
-        CRITICAL RULES:
-        1. Even if the user provides all stats immediately, you MUST ask at least one follow-up question about their goals or history before finishing.
-        2. Do NOT output the final JSON block until you are satisfied you have the full picture (Stats + Context).
-        
-        FINAL OUTPUT FORMAT:
-        Only when the interview is truly complete, output:
+        FINAL OUTPUT FORMAT (Triggered ONLY by 'LAUNCH'):
         :::JSON:::{"name":"X","weight":0,"age":0,"gender":"M/F"}:::END:::
         `;
 
