@@ -10,7 +10,10 @@
 
         /* HEADER */
         .header { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; background: rgba(5,5,5,0.95); z-index: 10; }
-        .header-title { font-weight: 800; letter-spacing: 1px; font-size: 14px; text-transform: uppercase; color: #4285F4; /* Google Blue */ }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header-title { font-weight: 800; letter-spacing: 1px; font-size: 14px; text-transform: uppercase; color: #4285F4; }
+        
+        .key-btn { background: #222; color: #888; border: 1px solid #444; font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .status-dot { height: 8px; width: 8px; background-color: #333; border-radius: 50%; display: inline-block; }
         .status-dot.connected { background-color: #4285F4; box-shadow: 0 0 8px #4285F4; }
 
@@ -52,7 +55,7 @@
     <div id="api-modal">
         <div class="modal-box">
             <div class="modal-title">INITIATE GEMINI</div>
-            <div style="font-size:12px; color:#777; margin-bottom:15px;">Enter Google Gemini API Key to activate Real-Time Intelligence.</div>
+            <div style="font-size:12px; color:#777; margin-bottom:15px;">Enter Google Gemini API Key.</div>
             <input type="password" id="apiKeyInput" class="api-input" placeholder="Paste Key Here...">
             <button class="save-btn" id="saveKeyBtn">ESTABLISH LINK</button>
             <div style="margin-top:10px;"><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#444; font-size:10px;">GET KEY</a></div>
@@ -60,7 +63,10 @@
     </div>
 
     <div class="header">
-        <div class="header-title">ANALYST <span style="color:#fff">GEMINI</span></div>
+        <div class="header-left">
+            <button class="key-btn" id="manualKeyBtn">KEY</button>
+            <div class="header-title">ANALYST <span style="color:#fff">GEMINI</span></div>
+        </div>
         <div class="status-dot" id="statusDot"></div>
     </div>
 
@@ -93,7 +99,6 @@
 
         // --- STATE ---
         let apiKey = null;
-        // Gemini Logic: We prepend the system prompt to the chat history
         let history = []; 
 
         // --- DOM ---
@@ -104,6 +109,7 @@
         const modal = document.getElementById('api-modal');
         const keyInput = document.getElementById('apiKeyInput');
         const saveKeyBtn = document.getElementById('saveKeyBtn');
+        const manualKeyBtn = document.getElementById('manualKeyBtn');
         const statusDot = document.getElementById('statusDot');
 
         // --- INIT ---
@@ -113,14 +119,24 @@
                 apiKey = savedKey;
                 modal.style.display = 'none';
                 statusDot.classList.add('connected');
-                // Start with system prompt hidden in logic, send intro triggers
-                addMessage("Connection Established. Analyst Core Online.", "system");
-                history.push({ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nHello, I am ready to begin onboarding." }] });
-                triggerGemini(); 
+                // Auto-start
+                if(history.length === 0) {
+                    addMessage("Connection Established. Analyst Core Online.", "system");
+                    history.push({ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nHello, I am ready to begin onboarding." }] });
+                    triggerGemini(); 
+                }
+            } else {
+                // Force modal if no key
+                modal.style.display = 'flex';
             }
         };
 
         // --- API SETUP ---
+        manualKeyBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+            keyInput.focus();
+        });
+
         saveKeyBtn.addEventListener('click', () => {
             const val = keyInput.value.trim();
             if (val.length > 10) {
@@ -129,7 +145,9 @@
                 modal.style.display = 'none';
                 statusDot.classList.add('connected');
                 
-                // Initialize History with System Prompt
+                // Clear history and restart if setting new key
+                history = [];
+                chat.innerHTML = '';
                 addMessage("Initializing Neural Link...", "system");
                 history.push({ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nHello, I am ready to begin onboarding." }] });
                 triggerGemini();
@@ -149,9 +167,7 @@
             addMessage(text, 'user');
             input.value = "";
             
-            // Add to Gemini History
             history.push({ role: "user", parts: [{ text: text }] });
-
             await triggerGemini();
         }
 
@@ -160,96 +176,4 @@
 
             try {
                 // GEMINI API ENDPOINT
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: history })
-                });
-
-                if (!response.ok) throw new Error("API Error: " + response.status);
-
-                const data = await response.json();
-                
-                // Parse Gemini Response
-                const aiText = data.candidates[0].content.parts[0].text;
-
-                showTyping(false);
-                
-                // Check for HIDDEN JSON (The Data Extraction)
-                if (aiText.includes(":::JSON:::")) {
-                    const parts = aiText.split(":::JSON:::");
-                    const visibleText = parts[0];
-                    const jsonRaw = parts[1].split(":::END:::")[0];
-                    
-                    addMessage(visibleText, 'ai');
-                    speak(visibleText);
-                    history.push({ role: "model", parts: [{ text: visibleText }] }); // Gemini uses 'model' not 'assistant'
-
-                    // PROCESS DATA
-                    try {
-                        const profile = JSON.parse(jsonRaw);
-                        console.log("EXTRACTED:", profile);
-                        completeOnboarding(profile);
-                    } catch (e) {
-                        console.error("JSON Parse Error", e);
-                    }
-
-                } else {
-                    // Normal Chat
-                    addMessage(aiText, 'ai');
-                    speak(aiText);
-                    history.push({ role: "model", parts: [{ text: aiText }] });
-                }
-
-            } catch (err) {
-                showTyping(false);
-                addMessage("SYSTEM FAILURE: " + err.message, 'system');
-            }
-        }
-
-        function completeOnboarding(profile) {
-            // Save Profile
-            localStorage.setItem('analyst_profile', JSON.stringify(profile));
-            
-            // Save Full Transcript
-            localStorage.setItem('analyst_transcript', JSON.stringify(history));
-
-            setTimeout(() => {
-                addMessage("DATA SECURED. INITIALIZING FLIGHT DECK...", 'system');
-                setTimeout(() => {
-                    window.location.href = 'v1.html';
-                }, 2000);
-            }, 1000);
-        }
-
-        // --- UI UTILS ---
-        function addMessage(text, type) {
-            if (!text) return;
-            const div = document.createElement('div');
-            div.className = `message ${type}`;
-            div.innerText = text; 
-            chat.appendChild(div);
-            setTimeout(() => chat.scrollTop = chat.scrollHeight, 50);
-        }
-
-        function showTyping(show) {
-            typing.style.display = show ? 'block' : 'none';
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        // --- VOICE ENGINE ---
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utt = new SpeechSynthesisUtterance(text);
-                const voices = window.speechSynthesis.getVoices();
-                const aiVoice = voices.find(v => v.name.includes('Google') || v.lang.includes('en-US'));
-                if (aiVoice) utt.voice = aiVoice;
-                window.speechSynthesis.speak(utt);
-            }
-        }
-    </script>
-</body>
-</html>
+                const url = `
