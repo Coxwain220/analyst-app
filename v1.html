@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V1.2</title>
+    <title>ANALYST V1.4</title>
     <style>
         :root { 
             --bg-color: #000000; 
@@ -96,7 +96,7 @@
             background: #222; color: white; border: 1px solid #444;
             padding: 10px 30px; font-size: 16px; font-weight: bold;
             border-radius: 4px; text-transform: uppercase;
-            cursor: pointer; /* FRIEND FIX: Added Cursor */
+            cursor: pointer;
         }
     </style>
 </head>
@@ -104,9 +104,7 @@
 
     <div class="header">
         <div class="operator-name">OPERATOR: <span id="opName" class="operator-val">UNKNOWN</span></div>
-        <div>
-            PM5 <span id="pm5Dot" class="status-dot"></span>
-        </div>
+        <div>PM5 <span id="pm5Dot" class="status-dot"></span></div>
     </div>
 
     <div class="main-deck">
@@ -133,10 +131,16 @@
     <script>
         // --- PERSONALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            const profileData = localStorage.getItem('analyst_profile');
-            if (profileData) {
-                const profile = JSON.parse(profileData);
-                document.getElementById('opName').innerText = profile.name;
+            try {
+                const profileData = localStorage.getItem('analyst_profile');
+                if (profileData) {
+                    const profile = JSON.parse(profileData);
+                    if (profile && profile.name) {
+                        document.getElementById('opName').innerText = profile.name;
+                    }
+                }
+            } catch (e) {
+                console.warn('Profile Load Error:', e);
             }
         });
 
@@ -147,7 +151,6 @@
         // --- STATE VARIABLES ---
         let lastTime = 0;
         let lastDist = 0;
-        // FRIEND FIX: Removed unused 'lastUpdate' and 'dt' logic
 
         // --- DOM ---
         const connectBtn = document.getElementById('connectBtn');
@@ -157,8 +160,13 @@
         const hrDisp    = document.getElementById('hrDisplay');
         const pm5Dot    = document.getElementById('pm5Dot');
 
-        // --- CONNECTION ---
+        // --- CONNECTION LOGIC ---
         connectBtn.addEventListener('click', async () => {
+            if (!navigator.bluetooth) {
+                connectBtn.innerText = "BLUETOOTH NOT SUPPORTED";
+                return;
+            }
+
             try {
                 connectBtn.innerText = "SCANNING...";
                 
@@ -166,11 +174,18 @@
                     filters: [{ namePrefix: 'PM5' }],
                     optionalServices: [PM5_SERVICE]
                 });
+                
+                // Add Disconnect Listener
+                device.addEventListener('gattserverdisconnected', handleDisconnect);
 
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(PM5_SERVICE);
                 const char = await service.getCharacteristic(PM5_CHAR);
                 
+                // Reset State
+                lastTime = 0;
+                lastDist = 0;
+
                 await char.startNotifications();
                 char.addEventListener('characteristicvaluechanged', handleHexData);
 
@@ -179,16 +194,31 @@
 
             } catch (err) {
                 console.error(err);
-                connectBtn.innerText = "FAILED: " + err.message;
-                setTimeout(() => connectBtn.innerText = "RETRY INITIALIZE", 2000);
+                // FIXED: Better UX for "User Cancelled"
+                const msg = (err.name === 'NotFoundError') ? 'CANCELLED' : 'FAILED: ' + err.message;
+                connectBtn.innerText = msg;
+                setTimeout(() => connectBtn.innerText = "RETRY INITIALIZE", 1500);
             }
         });
 
-        // --- PHYSICS ENGINE (V1.2) ---
+        function handleDisconnect() {
+            console.log("PM5 Disconnected");
+            pm5Dot.classList.remove('active');
+            connectBtn.style.display = 'inline-block';
+            connectBtn.innerText = "RECONNECT PM5";
+            rateDisp.innerText = "--";
+            hrDisp.innerText = "--";
+            hrDisp.style.color = "var(--text-main)";
+        }
+
+        // --- PHYSICS ENGINE (V1.4) ---
         function handleHexData(event) {
             const data = event.target.value;
             
-            // 1. DECODE RAW BYTES
+            // 1. BYTE GUARD (Prevents crash on malformed packets)
+            if (!data || data.byteLength < 11) return;
+
+            // 2. DECODE RAW BYTES
             let timeRaw = data.getUint8(0) | (data.getUint8(1) << 8) | (data.getUint8(2) << 16);
             let timeSec = timeRaw * 0.01;
 
@@ -197,35 +227,33 @@
 
             let strokeCount = data.getUint8(10); 
             
-            // 2. HR LOGIC (FRIEND FIX: Added Reset)
+            // 3. HR LOGIC
             let hr = "--";
-            let hrColor = "var(--text-main)"; // Default White
+            let hrColor = "var(--text-main)"; 
 
             if (data.byteLength > 18) {
                 let hrVal = data.getUint8(18);
                 if (hrVal > 0 && hrVal < 250) {
                     hr = hrVal;
-                    // Dynamic Color
-                    if (hr < 140) hrColor = "#00FF00";      // Green
-                    else if (hr < 170) hrColor = "#FFAA00"; // Orange
-                    else hrColor = "#FF0000";               // Red
+                    if (hr < 140) hrColor = "#00FF00";      
+                    else if (hr < 170) hrColor = "#FFAA00"; 
+                    else hrColor = "#FF0000";               
                 }
             }
-            // Apply (This resets it to White if HR is lost)
             hrDisp.style.color = hrColor;
             hrDisp.innerText = hr;
 
-            // 3. PHYSICS CALCULATION
+            // 4. PHYSICS CALCULATION
+            // Detect workout reset (Time or Dist jumped backwards)
+            if (timeSec < lastTime || distMeters < lastDist) {
+                lastTime = timeSec;
+                lastDist = distMeters;
+                return; 
+            }
+
             if (timeSec > lastTime) {
                 let dDist = distMeters - lastDist;
                 let dTime = timeSec - lastTime;
 
-                // Physics Guard: Avoid noise and Division by Zero
                 if (dTime > 0.1) { 
-                    let speedMS = dDist / dTime;
-                    
-                    // FRIEND FIX: Explicit Zero Check
-                    if (speedMS > 1.0) {
-                        let watts = 2.8 * Math.pow(speedMS, 3);
-                        let paceSec = 500 / speedMS;
-                        updateDashboard(Math.round(watts), paceSec);
+                    let speedMS
