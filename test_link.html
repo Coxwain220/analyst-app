@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Connection Test</title>
+    <title>API Connection Test V2</title>
     <style>
         body { background: #000; color: #0F0; font-family: monospace; padding: 20px; font-size: 16px; }
         input { width: 100%; padding: 15px; background: #222; color: white; border: 1px solid #444; margin-bottom: 20px; font-family: monospace; }
@@ -13,8 +13,8 @@
 </head>
 <body>
 
-    <h2>GEMINI CONNECTION TEST</h2>
-    <p>Paste your AIza... key below:</p>
+    <h2>GEMINI CONNECTION TEST V2</h2>
+    <p>Using model: <b>gemini-pro</b></p>
     
     <input type="text" id="keyInput" placeholder="Paste API Key here...">
     <button id="btn">TEST CONNECTION</button>
@@ -31,28 +31,32 @@
             console.log(msg);
         }
 
-        // 1. Verify JS is running immediately
-        log("System Ready. Waiting for input...");
+        // Auto-fill if saved
+        const savedKey = localStorage.getItem('gemini_key');
+        if(savedKey) {
+            input.value = savedKey;
+            log("Loaded saved key.");
+        }
 
         btn.addEventListener('click', async () => {
             log("Button Clicked.");
             const key = input.value.trim();
 
             if (key.length < 20) {
-                log("ERROR: Key looks too short. Did you paste the link instead of the key?");
+                log("ERROR: Key looks too short.");
                 return;
             }
 
-            log("Key detected. Contacting Google...");
+            log("Contacting Google (gemini-pro)...");
             btn.innerText = "CONTACTING...";
 
             try {
-                // Simple handshake payload
                 const payload = {
-                    contents: [{ parts: [{ text: "Hello. Reply with 'ONLINE'." }] }]
+                    contents: [{ parts: [{ text: "Reply with the single word: ONLINE" }] }]
                 };
 
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+                // SWITCHED TO GEMINI-PRO (Standard Stable Model)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
 
                 const response = await fetch(url, {
                     method: "POST",
@@ -63,14 +67,15 @@
                 if (response.ok) {
                     const data = await response.json();
                     const reply = data.candidates[0].content.parts[0].text;
-                    log("SUCCESS! Google Replied:");
-                    log(reply);
-                    btn.style.background = "white";
-                    btn.innerText = "SUCCESS - GO TO ONBOARDING";
                     
-                    // Save working key
+                    log("SUCCESS! Google Replied:");
+                    log(reply); // Should say "ONLINE"
+                    
+                    btn.style.background = "white";
+                    btn.innerText = "SUCCESS - SYSTEM ONLINE";
+                    
+                    // Update Memory
                     localStorage.setItem('gemini_key', key);
-                    log("Key saved to memory.");
                 } else {
                     log("API ERROR: " + response.status);
                     const errText = await response.text();
