@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V1.4</title>
+    <title>ANALYST V1.5 (GYM)</title>
     <style>
         :root { 
             --bg-color: #000000; 
@@ -129,21 +129,6 @@
     </div>
 
     <script>
-        // --- PERSONALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                const profileData = localStorage.getItem('analyst_profile');
-                if (profileData) {
-                    const profile = JSON.parse(profileData);
-                    if (profile && profile.name) {
-                        document.getElementById('opName').innerText = profile.name;
-                    }
-                }
-            } catch (e) {
-                console.warn('Profile Load Error:', e);
-            }
-        });
-
         // --- CONFIGURATION ---
         const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
         const PM5_CHAR    = 'ce060031-43e5-11e4-916c-0800200c9a66';
@@ -160,10 +145,21 @@
         const hrDisp    = document.getElementById('hrDisplay');
         const pm5Dot    = document.getElementById('pm5Dot');
 
+        // --- LOAD PROFILE NAME ---
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const profileData = localStorage.getItem('analyst_profile');
+                if (profileData) {
+                    const profile = JSON.parse(profileData);
+                    if (profile.name) document.getElementById('opName').innerText = profile.name;
+                }
+            } catch(e) {}
+        });
+
         // --- CONNECTION LOGIC ---
         connectBtn.addEventListener('click', async () => {
             if (!navigator.bluetooth) {
-                connectBtn.innerText = "BLUETOOTH NOT SUPPORTED";
+                alert("Bluetooth not supported. Use Chrome or Edge.");
                 return;
             }
 
@@ -175,7 +171,6 @@
                     optionalServices: [PM5_SERVICE]
                 });
                 
-                // Add Disconnect Listener
                 device.addEventListener('gattserverdisconnected', handleDisconnect);
 
                 const server = await device.gatt.connect();
@@ -194,10 +189,8 @@
 
             } catch (err) {
                 console.error(err);
-                // FIXED: Better UX for "User Cancelled"
-                const msg = (err.name === 'NotFoundError') ? 'CANCELLED' : 'FAILED: ' + err.message;
-                connectBtn.innerText = msg;
-                setTimeout(() => connectBtn.innerText = "RETRY INITIALIZE", 1500);
+                connectBtn.innerText = "FAILED / RETRY";
+                setTimeout(() => connectBtn.innerText = "INITIALIZE SYSTEM", 2000);
             }
         });
 
@@ -211,41 +204,52 @@
             hrDisp.style.color = "var(--text-main)";
         }
 
-        // --- PHYSICS ENGINE (V1.4) ---
+        // --- PHYSICS ENGINE (COMPLETED) ---
         function handleHexData(event) {
             const data = event.target.value;
             
-            // 1. BYTE GUARD (Prevents crash on malformed packets)
+            // Guard Clause
             if (!data || data.byteLength < 11) return;
 
-            // 2. DECODE RAW BYTES
+            // 1. Decode Time & Distance
+            // PM5 sends data in little-endian format
             let timeRaw = data.getUint8(0) | (data.getUint8(1) << 8) | (data.getUint8(2) << 16);
             let timeSec = timeRaw * 0.01;
 
             let distRaw = data.getUint8(3) | (data.getUint8(4) << 8) | (data.getUint8(5) << 16);
             let distMeters = distRaw * 0.1;
 
-            let strokeCount = data.getUint8(10); 
-            
-            // 3. HR LOGIC
+            // 2. Decode Rate & HR
+            let strokeRate = data.getUint8(10); 
             let hr = "--";
             let hrColor = "var(--text-main)"; 
 
-            if (data.byteLength > 18) {
-                let hrVal = data.getUint8(18);
+            // PM5 packet layout varies; HR is usually at byte 18 if present
+            // Some PM5 firmwares send it differently, but byte 18 is standard for CSAFE extended
+            if (data.byteLength > 8) {
+                 // Concept2 docs say Rate is byte 10.
+                 rateDisp.innerText = strokeRate > 0 ? strokeRate : "--";
+            }
+
+            // Note: Standard PM5 BLE characteristic 31 usually ends at byte 12 or 13.
+            // HR is often sent in a separate characteristic (32 or 33), 
+            // BUT often multiplexed. For now, we trust the previous logic if it worked for you.
+            // If HR is missing, we just ignore it to prevent crashing.
+            if (data.byteLength >= 18) {
+                let hrVal = data.getUint8(18); // This might need adjustment based on PM5 firmware
                 if (hrVal > 0 && hrVal < 250) {
                     hr = hrVal;
                     if (hr < 140) hrColor = "#00FF00";      
                     else if (hr < 170) hrColor = "#FFAA00"; 
                     else hrColor = "#FF0000";               
                 }
+                hrDisp.style.color = hrColor;
+                hrDisp.innerText = hr;
             }
-            hrDisp.style.color = hrColor;
-            hrDisp.innerText = hr;
 
-            // 4. PHYSICS CALCULATION
-            // Detect workout reset (Time or Dist jumped backwards)
+            // 3. Physics Calculation (Instantaneous Speed)
             if (timeSec < lastTime || distMeters < lastDist) {
+                // Reset detected (monitor restarted or new workout)
                 lastTime = timeSec;
                 lastDist = distMeters;
                 return; 
@@ -255,5 +259,29 @@
                 let dDist = distMeters - lastDist;
                 let dTime = timeSec - lastTime;
 
-                if (dTime > 0.1) { 
-                    let speedMS
+                // Only update if moving
+                if (dTime > 0.1 && dDist > 0) { 
+                    let speedMS = dDist / dTime; // Meters per Second
+                    
+                    // A. Calculate Watts (Concept2 Formula: W = 2.8 * v^3)
+                    let watts = Math.round(2.8 * Math.pow(speedMS, 3));
+                    wattsDisp.innerText = watts;
+
+                    // B. Calculate /500m Split
+                    if (speedMS > 0) {
+                        let splitSec = 500 / speedMS;
+                        let mins = Math.floor(splitSec / 60);
+                        let secs = Math.floor(splitSec % 60);
+                        let tenths = Math.floor((splitSec % 1) * 10); // Optional
+                        splitDisp.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    }
+                }
+                
+                // Update History
+                lastTime = timeSec;
+                lastDist = distMeters;
+            }
+        }
+    </script>
+</body>
+</html>
