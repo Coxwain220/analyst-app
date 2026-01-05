@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V1.7 (WATTS FIX)</title>
+    <title>ANALYST V1.8 (MATH FALLBACK)</title>
     <style>
         :root { 
             --bg-color: #000000; 
@@ -164,8 +164,6 @@
                 device.addEventListener('gattserverdisconnected', handleDisconnect);
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(PM5_SERVICE);
-                
-                // Get Characteristic 32 (Rowing Additional Status 1)
                 const char = await service.getCharacteristic(PM5_CHAR_32);
 
                 await char.startNotifications();
@@ -189,24 +187,34 @@
             hrDisp.innerText = "--";
         }
 
-        // --- DIRECT READ ENGINE ---
+        // --- DATA ENGINE ---
         function handleDirectData(event) {
             const data = event.target.value;
-            // Need at least 13 bytes for Watts (Bytes 11-12)
-            if (data.byteLength < 13) return;
+            if (data.byteLength < 7) return;
 
-            // --- 1. SPEED & SPLIT (Bytes 3-4) ---
+            // --- 1. SPEED (Bytes 3-4) ---
             let speedRaw = data.getUint8(3) | (data.getUint8(4) << 8);
             let speedMS = speedRaw * 0.001; 
 
-            if (speedMS > 1) { 
+            if (speedMS > 0.1) { 
+                // A. Calculate Split
                 let splitSec = 500 / speedMS;
                 let mins = Math.floor(splitSec / 60);
                 let secs = Math.floor(splitSec % 60);
                 splitDisp.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+                // B. Calculate Watts (The "Math Fix")
+                // Formula: Watts = 2.8 * (Speed in m/s)^3
+                let calculatedWatts = Math.round(2.8 * Math.pow(speedMS, 3));
+                wattsDisp.innerText = calculatedWatts;
+
+            } else {
+                // Stopped
+                // splitDisp.innerText = "0:00";
+                // wattsDisp.innerText = "0";
             }
 
-            // --- 2. STROKE RATE (Byte 5) ---
+            // --- 2. RATE (Byte 5) ---
             let rate = data.getUint8(5);
             rateDisp.innerText = rate > 0 ? rate : "--";
 
@@ -221,11 +229,6 @@
                 hrDisp.innerText = "--";
                 hrDisp.style.color = "var(--text-main)";
             }
-
-            // --- 4. WATTS (Bytes 11-12) -- FIXED ---
-            // Previously read bytes 7-8 (which was Pace). Now reading 11-12 (Instant Power).
-            let watts = data.getUint8(11) | (data.getUint8(12) << 8);
-            wattsDisp.innerText = watts;
         }
     </script>
 </body>
