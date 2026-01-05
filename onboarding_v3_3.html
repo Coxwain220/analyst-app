@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst - Profiler (V3.2 Living)</title>
+    <title>Analyst - Profiler (V3.3 Auto-Retry)</title>
     <style>
         :root { --bg: #050505; --ai-bubble: #1e293b; --user-bubble: #00FF00; --text: #e0e0e0; --dim: #64748b; }
         body { background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -16,6 +16,7 @@
         .status-badge.building { background: #332200; color: #FFaa00; border: 1px solid #FFaa00; }
         .status-badge.locked { background: #004400; color: #00FF00; border: 1px solid #00FF00; }
         .status-badge.updating { background: #002244; color: #00FFFF; border: 1px solid #00FFFF; }
+        .status-badge.error { background: #440000; color: #FF0000; border: 1px solid #FF0000; }
 
         /* CHAT AREA */
         #chat-window { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
@@ -45,7 +46,6 @@
         const MODEL = "gemini-2.5-flash"; 
         let API_KEY = "";
         
-        // V3.2 Prompt: explicitly allows UPDATES
         const SYSTEM_PROMPT = `
         You are 'The Analyst', an elite onboarding specialist.
         Your goal: Build a JSON 'Dossier' on the user.
@@ -61,7 +61,7 @@
         
         DATA MANAGEMENT:
         - When you have enough info, output the JSON block with the tag [[PROFILE_UPDATE]].
-        - IF THE USER CORRECTS YOU later, output the JSON block AGAIN with the new values.
+        - IF THE USER CORRECTS YOU later, output the JSON block AGAIN.
         - Do not say "The profile is locked." Say "Profile updated."
         
         FORMAT:
@@ -108,43 +108,66 @@
             win.scrollTop = win.scrollHeight;
         }
 
+        // --- 3. ROBUST API HANDLER (With Retry) ---
         async function callGemini() {
+            if(!API_KEY) { addMsg("system", "API Key Missing."); return; }
+
+            updateBadge("updating", "ANALYZING...");
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+            
+            const payload = {
+                contents: history,
+                generationConfig: { maxOutputTokens: 500 }
+            };
+
+            let attempts = 0;
+            let retryDelay = 2000; // 2 seconds
+
             try {
-                if(!API_KEY) throw new Error("API Key missing.");
+                while(attempts < 3) {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
 
-                // Show "Thinking" status
-                updateBadge("updating", "ANALYZING...");
+                    // SUCCESS
+                    if (response.ok) {
+                        const data = await response.json();
+                        let aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "...";
+                        
+                        // Check for Profile Update
+                        if (aiResponse.includes("[[PROFILE_UPDATE]]")) {
+                            extractAndSaveProfile(aiResponse);
+                            aiResponse = aiResponse.split("[[PROFILE_UPDATE]]")[0] + "\n\n*[System: Dossier Updated]*";
+                        } else {
+                            const existing = localStorage.getItem("analyst_profile");
+                            if(existing) updateBadge("locked", "DOSSIER ACTIVE");
+                            else updateBadge("building", "BUILDING DOSSIER...");
+                        }
 
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
-                
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: history,
-                        generationConfig: { maxOutputTokens: 500 }
-                    })
-                });
+                        addMsg("ai", aiResponse);
+                        history.push({ role: "model", parts: [{ text: aiResponse }] });
+                        return; // Done
+                    }
 
-                if (!response.ok) throw new Error(`Error: ${response.status}`);
+                    // RATE LIMIT (429)
+                    if (response.status === 429) {
+                        attempts++;
+                        updateBadge("error", `RATE LIMIT. RETRYING IN ${retryDelay/1000}s...`);
+                        await new Promise(r => setTimeout(r, retryDelay));
+                        retryDelay *= 2; // Wait longer next time
+                        continue; // Try again
+                    }
 
-                const data = await response.json();
-                let aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "...";
-                
-                // --- INTELLIGENCE EXTRACTION (V3.2) ---
-                if (aiResponse.includes("[[PROFILE_UPDATE]]")) {
-                    extractAndSaveProfile(aiResponse);
-                    // Hide the raw JSON
-                    aiResponse = aiResponse.split("[[PROFILE_UPDATE]]")[0] + "\n\n*[System: Dossier Updated]*";
-                } else {
-                    updateBadge("building", "BUILDING DOSSIER...");
+                    throw new Error(`Error: ${response.status}`);
                 }
-
-                addMsg("ai", aiResponse);
-                history.push({ role: "model", parts: [{ text: aiResponse }] });
+                
+                throw new Error("Connection timed out (Rate Limit).");
 
             } catch (error) {
-                addMsg("system", "CONNECTION ERROR: " + error.message);
+                updateBadge("error", "CONNECTION FAILED");
+                addMsg("system", "ERROR: " + error.message);
             }
         }
 
@@ -155,8 +178,8 @@
                     const profileData = JSON.parse(jsonMatch[1]);
                     localStorage.setItem("analyst_profile", JSON.stringify(profileData));
                     
-                    updateBadge("locked", "DOSSIER LOCKED");
-                    console.log("Profile Updated:", profileData);
+                    updateBadge("locked", "DOSSIER UPDATED");
+                    console.log("Profile Saved:", profileData);
                 }
             } catch (e) {
                 console.error("JSON Parse Error", e);
@@ -173,16 +196,13 @@
             return text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
         }
 
-        // --- 3. INIT ---
+        // --- 4. INIT ---
         window.onload = function() {
             API_KEY = localStorage.getItem("gemini_api_key");
             
             const existingProfile = localStorage.getItem("analyst_profile");
-            if(existingProfile) {
-                updateBadge("locked", "DOSSIER FOUND");
-            } else {
-                updateBadge("building", "NO DOSSIER");
-            }
+            if(existingProfile) updateBadge("locked", "DOSSIER FOUND");
+            else updateBadge("building", "NO DOSSIER");
 
             if (!API_KEY) {
                 let key = prompt("System Initialize: Enter API Key");
@@ -195,8 +215,7 @@
                     addMsg("system", "Authorization Failed.");
                 }
             } else {
-                addMsg("system", "Neural Link Active (v3.2).");
-                // Only start chat automatically if history is empty
+                addMsg("system", "Neural Link Active (v3.3).");
                 if(history.length === 1) callGemini();
             }
         };
