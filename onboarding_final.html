@@ -97,6 +97,10 @@
         let API_KEY = localStorage.getItem("gemini_api_key") || "";
         const SYSTEM_PROMPT = "You are a senior onboarding specialist for a secretive intelligence agency. Your goal is to interview the user to build their psychological profile. Be professional, slightly cryptic, and very thorough. Ask one question at a time. Keep responses concise.";
         
+        // ** MODEL SELECTOR (Updated to fix 404) **
+        // If this fails, change 'gemini-1.5-flash-latest' to 'gemini-pro'
+        const MODEL_NAME = "gemini-1.5-flash-latest";
+
         let chatHistory = [];
         let conversationStarted = false;
 
@@ -183,10 +187,10 @@
             if(enabled) document.getElementById("userInput").focus();
         }
 
-        // --- ROBUST API HANDLER (FIXES RATE LIMIT LOOP) ---
+        // --- ROBUST API HANDLER ---
 
         async function fetchGeminiResponse() {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
             
             const payload = {
                 contents: chatHistory,
@@ -220,22 +224,26 @@
                     if (response.status === 429) {
                         logSystem(`Rate limit hit. Retrying in ${retryDelay/1000}s...`);
                         attempts++;
-                        await new Promise(res => setTimeout(res, retryDelay)); // Wait
-                        retryDelay *= 2; // Double wait time (Exponential Backoff)
-                        continue; // Try loop again
+                        await new Promise(res => setTimeout(res, retryDelay)); 
+                        retryDelay *= 2; 
+                        continue; 
+                    }
+                    
+                    // CASE 3: MODEL NOT FOUND (404)
+                    if (response.status === 404) {
+                         throw new Error(`Model '${MODEL_NAME}' not found (404). Check API settings.`);
                     }
 
-                    // CASE 3: OTHER ERROR
+                    // CASE 4: OTHER ERROR
                     throw new Error(`Server Error: ${response.status}`);
                 }
 
-                // If loop finishes without success
                 throw new Error("Max retries exceeded. System Overload.");
 
             } catch (error) {
                 console.error(error);
                 appendMessage("error", "CONNECTION LOST: " + error.message);
-                toggleInput(true); // Let user try again manually
+                toggleInput(true); 
             }
         }
 
