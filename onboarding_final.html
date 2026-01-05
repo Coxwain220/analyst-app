@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst - Neural Link (MANUAL)</title>
+    <title>Analyst - Neural Link (STABLE)</title>
     <style>
         :root { --bg: #050505; --ai-bubble: #1e293b; --user-bubble: #00FF00; --text: #e0e0e0; --dim: #64748b; }
         body { background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -15,7 +15,7 @@
         
         .key-btn { background: #222; color: #888; border: 1px solid #444; font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
-        /* THE LAUNCH BUTTON */
+        /* LAUNCH BUTTON */
         .launch-btn { 
             background: #00FF00; color: black; border: none; 
             font-size: 12px; padding: 6px 12px; border-radius: 4px; 
@@ -32,6 +32,7 @@
         .message.ai { align-self: flex-start; background-color: var(--ai-bubble); color: #e2e8f0; border-bottom-left-radius: 2px; border: 1px solid #334155; }
         .message.user { align-self: flex-end; background-color: var(--user-bubble); color: #000; font-weight: 600; border-bottom-right-radius: 2px; }
         .message.system { align-self: center; background: none; color: var(--dim); font-size: 12px; font-style: italic; padding: 5px; border-radius: 0; text-align: center; width: 90%; }
+        .message.error { color: #ff4444; border: 1px solid #ff4444; background: rgba(255,0,0,0.1); }
 
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -39,301 +40,15 @@
         .input-deck { padding: 15px; background: #0a0a0a; border-top: 1px solid #222; display: flex; gap: 10px; }
         input { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px 18px; border-radius: 25px; color: white; font-size: 16px; outline: none; transition: border 0.2s; }
         input:focus { border-color: #4285F4; }
+        input:disabled { background: #111; color: #555; border-color: #222; }
+        
         button { background: #4285F4; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; }
         button:active { transform: scale(0.95); }
+        button:disabled { background: #222; cursor: not-allowed; opacity: 0.5; }
 
         /* SETTINGS MODAL */
         #api-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: #111; border: 1px solid #333; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; }
         .modal-title { font-weight: bold; margin-bottom: 15px; color: white; }
         .api-input { width: 90%; padding: 10px; margin-bottom: 20px; background: #000; border: 1px solid #444; color: white; border-radius: 4px; }
-        .save-btn { background: #4285F4; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
-
-        /* TYPING INDICATOR */
-        .typing { display: none; align-self: flex-start; margin-left: 10px; margin-bottom: 10px; padding: 10px; background: var(--ai-bubble); border-radius: 15px; border-bottom-left-radius: 2px; }
-        .dot { height: 6px; width: 6px; background: #94a3b8; border-radius: 50%; display: inline-block; animation: wave 1.3s linear infinite; margin: 0 2px; }
-        .dot:nth-child(2) { animation-delay: -1.1s; }
-        .dot:nth-child(3) { animation-delay: -0.9s; }
-        @keyframes wave { 0%, 60%, 100% { transform: initial; } 30% { transform: translateY(-5px); } }
-
-    </style>
-</head>
-<body>
-
-    <div id="api-modal">
-        <div class="modal-box">
-            <div class="modal-title">INITIATE GEMINI</div>
-            <div style="font-size:12px; color:#777; margin-bottom:15px;">Enter Google Gemini API Key.</div>
-            <input type="password" id="apiKeyInput" class="api-input" placeholder="Paste Key Here...">
-            <button class="save-btn" id="saveKeyBtn">ESTABLISH LINK</button>
-            <div style="margin-top:10px;"><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#444; font-size:10px;">GET KEY</a></div>
-            <div id="debugLog" style="color:red; font-size:10px; margin-top:10px; word-break: break-all;"></div>
-        </div>
-    </div>
-
-    <div class="header">
-        <div class="header-left">
-            <button class="key-btn" id="manualKeyBtn">KEY</button>
-            <div class="header-title">ANALYST <span style="color:#fff">GEMINI</span> <span id="modelTag" class="model-tag">...</span></div>
-        </div>
-        <button class="launch-btn" id="forceLaunchBtn">LAUNCH</button>
-    </div>
-
-    <div id="chat-window"></div>
-
-    <div class="typing" id="typingIndicator">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div>
-
-    <div class="input-deck">
-        <input type="text" id="userInput" placeholder="Message Analyst..." autocomplete="off">
-        <button id="sendBtn">↑</button>
-    </div>
-
-    <script>
-        // --- LOGGER ---
-        function logSys(msg) {
-            console.log(msg);
-            addMessage(msg, "system");
-        }
-
-        // --- CONFIGURATION (MANUAL OVERRIDE PROTOCOL) ---
-        const SYSTEM_PROMPT = `
-        You are 'The Analyst', an elite Rowing Performance Coach AI.
-        Your goal is to onboard a new athlete ('Operator').
-
-        PHASE 1 (DATA): Extract Name, Weight (kg), Age, and Gender.
-        PHASE 2 (CONTEXT): Discuss training history, injuries, and goals.
-
-        CRITICAL RULE:
-        You are FORBIDDEN from outputting the final JSON block on your own.
-        You must continue the conversation indefinitely until you receive the SYSTEM COMMAND: "EXECUTE_LAUNCH_SEQUENCE".
-        
-        Only when you receive that specific command, output the JSON:
-        :::JSON:::{"name":"X","weight":0,"age":0,"gender":"M/F"}:::END:::
-        `;
-
-        // --- STATE ---
-        let apiKey = null;
-        let activeModel = "gemini-1.5-flash"; 
-        let history = []; 
-
-        // --- DOM ---
-        const chat = document.getElementById('chat-window');
-        const input = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const forceLaunchBtn = document.getElementById('forceLaunchBtn'); // The Button
-        const typing = document.getElementById('typingIndicator');
-        const modal = document.getElementById('api-modal');
-        const keyInput = document.getElementById('apiKeyInput');
-        const saveKeyBtn = document.getElementById('saveKeyBtn');
-        const manualKeyBtn = document.getElementById('manualKeyBtn');
-        const modelTag = document.getElementById('modelTag');
-
-        // --- INIT ---
-        window.onload = () => {
-            try {
-                const savedKey = localStorage.getItem('gemini_key');
-                if (savedKey) {
-                    apiKey = savedKey;
-                    modal.style.display = 'none';
-                    startSession();
-                } else {
-                    modal.style.display = 'flex';
-                }
-            } catch (e) {
-                modal.style.display = 'flex';
-            }
-        };
-
-        // --- API SETUP ---
-        manualKeyBtn.addEventListener('click', () => { modal.style.display = 'flex'; keyInput.focus(); });
-
-        saveKeyBtn.addEventListener('click', () => {
-            const val = keyInput.value.trim();
-            if (val.length > 10) {
-                apiKey = val;
-                localStorage.setItem('gemini_key', apiKey);
-                modal.style.display = 'none';
-                startSession();
-            } else {
-                alert("Invalid Key Format.");
-            }
-        });
-
-        // --- LAUNCH LOGIC (THE FIX) ---
-        forceLaunchBtn.addEventListener('click', () => {
-            if(confirm("Confirm: Lock Profile and Launch Flight Deck?")) {
-                // Send HIDDEN COMMAND to AI
-                logSys("INITIATING LAUNCH SEQUENCE...");
-                // Add invisible system command to history
-                history.push({ 
-                    role: "user", 
-                    parts: [{ text: "SYSTEM_COMMAND: EXECUTE_LAUNCH_SEQUENCE. Summarize known data into JSON now. Use 0 if unknown." }] 
-                });
-                triggerGemini();
-            }
-        });
-
-        function startSession() {
-            history = [];
-            chat.innerHTML = '';
-            modelTag.innerText = "SCANNING...";
-            logSys("Initializing Neural Link...");
-            
-            history.push({ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nHello, I am ready to begin onboarding." }] });
-            triggerGemini();
-        }
-
-        // --- CHAT LOGIC ---
-        sendBtn.addEventListener('click', handleUserSend);
-        input.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleUserSend(); });
-
-        async function handleUserSend() {
-            const text = input.value.trim();
-            if (!text) return;
-
-            addMessage(text, 'user');
-            input.value = "";
-            
-            history.push({ role: "user", parts: [{ text: text }] });
-            await triggerGemini();
-        }
-
-        // --- CORE AI ENGINE ---
-        async function triggerGemini() {
-            showTyping(true);
-            
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${apiKey}`;
-
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: history })
-                });
-
-                if (response.status === 404 || response.status === 400) {
-                    logSys(`Model '${activeModel}' unreachable. Auto-discovering...`);
-                    await findValidModel();
-                    return; 
-                }
-
-                if (response.status === 429) {
-                    logSys(`Rate Limited. Retrying...`);
-                    await new Promise(r => setTimeout(r, 2000));
-                    triggerGemini(); 
-                    return;
-                }
-
-                if (!response.ok) throw new Error("API Error " + response.status);
-
-                const data = await response.json();
-                const aiText = data.candidates[0].content.parts[0].text;
-
-                showTyping(false);
-                modelTag.innerText = activeModel.replace("models/", ""); 
-                
-                // DATA EXTRACTION
-                if (aiText.includes(":::JSON:::")) {
-                    const parts = aiText.split(":::JSON:::");
-                    const visibleText = parts[0]; // Text before JSON
-                    const jsonRaw = parts[1].split(":::END:::")[0];
-                    
-                    if(visibleText.trim().length > 0) {
-                        addMessage(visibleText, 'ai');
-                        speak(visibleText);
-                    }
-                    
-                    history.push({ role: "model", parts: [{ text: visibleText }] });
-
-                    try {
-                        const profile = JSON.parse(jsonRaw);
-                        completeOnboarding(profile);
-                    } catch (e) {
-                        console.error("JSON Parse Error", e);
-                        logSys("Error parsing profile. Please try Launch again.");
-                    }
-                } else {
-                    addMessage(aiText, 'ai');
-                    speak(aiText);
-                    history.push({ role: "model", parts: [{ text: aiText }] });
-                }
-
-            } catch (err) {
-                showTyping(false);
-                logSys("CRITICAL FAILURE: " + err.message);
-            }
-        }
-
-        // --- MODEL DISCOVERY ---
-        async function findValidModel() {
-            try {
-                const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-                const response = await fetch(listUrl);
-                const data = await response.json();
-
-                const candidates = data.models.filter(m => 
-                    m.supportedGenerationMethods.includes("generateContent") &&
-                    !m.name.includes("exp") && !m.name.includes("experimental")
-                );
-
-                if (candidates.length === 0) throw new Error("No STABLE models found.");
-
-                let chosen = null;
-                const pref = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
-                
-                for (let p of pref) {
-                    const found = candidates.find(c => c.name.includes(p));
-                    if (found) { chosen = found.name.replace("models/", ""); break; }
-                }
-
-                if (!chosen) chosen = candidates[0].name.replace("models/", "");
-
-                if (chosen) {
-                    logSys(`Stable Model Found: ${chosen}`);
-                    activeModel = chosen;
-                    setTimeout(() => triggerGemini(), 1000); 
-                } 
-            } catch (e) {
-                logSys("Discovery Failed: " + e.message);
-            }
-        }
-
-        function completeOnboarding(profile) {
-            localStorage.setItem('analyst_profile', JSON.stringify(profile));
-            localStorage.setItem('analyst_transcript', JSON.stringify(history));
-
-            logSys("DATA SECURED. LAUNCHING FLIGHT DECK...");
-            setTimeout(() => {
-                window.location.href = 'v1.html';
-            }, 2000);
-        }
-
-        function addMessage(text, type) {
-            if (!text) return;
-            const div = document.createElement('div');
-            div.className = `message ${type}`;
-            div.innerText = text; 
-            chat.appendChild(div);
-            setTimeout(() => chat.scrollTop = chat.scrollHeight, 50);
-        }
-
-        function showTyping(show) {
-            typing.style.display = show ? 'block' : 'none';
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utt = new SpeechSynthesisUtterance(text);
-                const voices = window.speechSynthesis.getVoices();
-                const aiVoice = voices.find(v => v.name.includes('Google') || v.lang.includes('en-US'));
-                if (aiVoice) utt.voice = aiVoice;
-                window.speechSynthesis.speak(utt);
-            }
-        }
-    </script>
-</body>
-</html>
+        .save-btn { background: #4285F4; color: white; border: none; padding: 10px 20px; border-
