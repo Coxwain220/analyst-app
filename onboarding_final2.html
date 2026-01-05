@@ -2,53 +2,107 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst - Neural Link (2026)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyst Debugger (2.5)</title>
     <style>
-        :root { --bg: #050505; --ai-bubble: #1e293b; --user-bubble: #00FF00; --text: #e0e0e0; --dim: #64748b; }
-        body { background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
+        body { background-color: #050505; color: #e0e0e0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        
         /* HEADER */
-        .header { padding: 10px 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; background: rgba(5,5,5,0.95); z-index: 10; }
-        .header-left { display: flex; align-items: center; gap: 10px; }
-        .header-title { font-weight: 800; letter-spacing: 1px; font-size: 14px; text-transform: uppercase; color: #4285F4; }
+        .header { padding: 15px; border-bottom: 1px solid #333; background: #111; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 16px; color: #4285F4; text-transform: uppercase; letter-spacing: 1px; }
         
-        .key-btn { background: #222; color: #888; border: 1px solid #444; font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        
-        /* LAUNCH BUTTON */
-        .launch-btn { 
-            background: #00FF00; color: black; border: none; 
-            font-size: 12px; padding: 6px 12px; border-radius: 4px; 
-            cursor: pointer; font-weight: 900; letter-spacing: 1px;
-            box-shadow: 0 0 10px rgba(0,255,0,0.3);
-            animation: pulse 2s infinite;
+        /* CHAT */
+        #chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 10px; max-width: 85%; line-height: 1.4; }
+        .msg.ai { align-self: flex-start; background: #1e293b; border: 1px solid #333; }
+        .msg.user { align-self: flex-end; background: #00FF00; color: black; font-weight: bold; }
+        .msg.sys { align-self: center; font-size: 12px; color: #666; font-style: italic; }
+
+        /* DEBUG BOX (The Fix) */
+        #debug-console { 
+            display: none; background: #300; color: #ff9999; 
+            padding: 10px; font-family: monospace; font-size: 12px; 
+            border-bottom: 1px solid red; white-space: pre-wrap;
         }
-        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
-        /* CHAT AREA */
-        #chat-window { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        /* INPUT */
+        .controls { padding: 15px; background: #111; display: flex; gap: 10px; border-top: 1px solid #333; }
+        input { flex-grow: 1; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #000; color: white; }
+        button { padding: 10px 20px; background: #4285F4; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="debug-console">DEBUG MODE ACTIVE. NO ERRORS YET.</div>
+
+    <script>
+        // CATCH ALL ERRORS AND SHOW THEM ON SCREEN
+        window.onerror = function(msg, url, line) {
+            const consoleBox = document.getElementById('debug-console');
+            consoleBox.style.display = 'block';
+            consoleBox.innerText += `\n[ERROR] ${msg} (Line ${line})`;
+            return false;
+        };
+    </script>
+
+    <div class="header">
+        <h1>Neural Link v2.5</h1>
+        <button onclick="resetKey()" style="font-size:10px; padding:5px; background:#333;">RESET KEY</button>
+    </div>
+
+    <div id="chat-window">
+        <div class="msg sys">System Ready. Model: gemini-2.5-flash</div>
+    </div>
+
+    <div class="controls">
+        <input type="text" id="userInput" placeholder="Type here..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()">SEND</button>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const MODEL = "gemini-2.5-flash"; // Hardcoded to the one you found
+        let API_KEY = localStorage.getItem("gemini_api_key");
         
-        .message { max-width: 85%; padding: 14px 18px; border-radius: 20px; font-size: 16px; line-height: 1.5; position: relative; animation: popIn 0.3s ease-out; word-wrap: break-word; }
-        .message.ai { align-self: flex-start; background-color: var(--ai-bubble); color: #e2e8f0; border-bottom-left-radius: 2px; border: 1px solid #334155; }
-        .message.user { align-self: flex-end; background-color: var(--user-bubble); color: #000; font-weight: 600; border-bottom-right-radius: 2px; }
-        .message.system { align-self: center; background: none; color: var(--dim); font-size: 12px; font-style: italic; padding: 5px; border-radius: 0; text-align: center; width: 90%; }
-        .message.error { color: #ff4444; border: 1px solid #ff4444; background: rgba(255,0,0,0.1); }
+        let history = [
+            { role: "user", parts: [{ text: "You are an onboarding officer. Interview me." }] } // Hidden System Prompt
+        ];
 
-        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        // --- STARTUP CHECK ---
+        if (!API_KEY) {
+            let key = prompt("Please paste your Google API Key:");
+            if (key) {
+                localStorage.setItem("gemini_api_key", key.trim());
+                API_KEY = key.trim();
+                location.reload(); // Refresh to start clean
+            }
+        } else {
+            // Wake up the AI automatically
+            addMsg("sys", "Connecting to Gemini 2.5...");
+            callGemini("Initialize onboarding.");
+        }
 
-        /* INPUT AREA */
-        .input-deck { padding: 15px; background: #0a0a0a; border-top: 1px solid #222; display: flex; gap: 10px; }
-        input { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px 18px; border-radius: 25px; color: white; font-size: 16px; outline: none; transition: border 0.2s; }
-        input:focus { border-color: #4285F4; }
-        input:disabled { background: #111; color: #555; border-color: #222; }
-        
-        button { background: #4285F4; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; }
-        button:active { transform: scale(0.95); }
-        button:disabled { background: #222; cursor: not-allowed; opacity: 0.5; }
+        function resetKey() {
+            localStorage.removeItem("gemini_api_key");
+            location.reload();
+        }
 
-        /* SETTINGS MODAL */
-        #api-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .modal-box { background: #111; border: 1px solid #333; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; }
-        .modal-title { font-weight: bold; margin-bottom: 15px; color: white; }
-        
-        .api-input { width: 90%; padding: 10px
+        function handleEnter(e) { if(e.key === "Enter") sendMessage(); }
+
+        function sendMessage() {
+            const box = document.getElementById("userInput");
+            const text = box.value.trim();
+            if (!text) return;
+
+            addMsg("user", text);
+            box.value = "";
+            history.push({ role: "user", parts: [{ text: text }] });
+            
+            callGemini(text);
+        }
+
+        function addMsg(role, text) {
+            const div = document.createElement("div");
+            div.className = `msg ${role}`;
+            div.innerText = text; // Simple text, no markdown for safety
+            document.getElementById("chat-window").appendChild(
