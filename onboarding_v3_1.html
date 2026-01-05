@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analyst - Profiler (V3.1)</title>
+    <title>Analyst - Profiler (V3.2 Living)</title>
     <style>
         :root { --bg: #050505; --ai-bubble: #1e293b; --user-bubble: #00FF00; --text: #e0e0e0; --dim: #64748b; }
         body { background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -11,8 +11,11 @@
         /* HEADER */
         .header { padding: 10px 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; background: rgba(5,5,5,0.95); z-index: 10; }
         .header-title { font-weight: 800; letter-spacing: 1px; font-size: 14px; text-transform: uppercase; color: #4285F4; }
-        .status-badge { font-size: 10px; padding: 4px 8px; border-radius: 4px; background: #222; color: #666; font-family: monospace; }
+        .status-badge { font-size: 10px; padding: 4px 8px; border-radius: 4px; background: #222; color: #666; font-family: monospace; transition: all 0.3s; }
+        
+        .status-badge.building { background: #332200; color: #FFaa00; border: 1px solid #FFaa00; }
         .status-badge.locked { background: #004400; color: #00FF00; border: 1px solid #00FF00; }
+        .status-badge.updating { background: #002244; color: #00FFFF; border: 1px solid #00FFFF; }
 
         /* CHAT AREA */
         #chat-window { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
@@ -42,26 +45,27 @@
         const MODEL = "gemini-2.5-flash"; 
         let API_KEY = "";
         
-        // The "Case Officer" Prompt
+        // V3.2 Prompt: explicitly allows UPDATES
         const SYSTEM_PROMPT = `
-        You are 'The Analyst', an elite onboarding specialist for a high-performance training agency. 
-        Your mission: Interview the user to build a comprehensive 'Dossier'.
-        
-        You must capture these specific data points:
+        You are 'The Analyst', an elite onboarding specialist.
+        Your goal: Build a JSON 'Dossier' on the user.
+
+        REQUIRED DATA:
         1. HARD METRICS: Name, Age, Weight, Gender.
-        2. CONTEXT: Occupation (assess stress), Sleep habits, Lifestyle load (family/kids/drinking).
-        3. OBJECTIVE: Specific training goals. (If user is vague, act as a consultant to help them define a goal).
+        2. CONTEXT: Occupation, Stress, Sleep, Injuries.
+        3. OBJECTIVE: Training Goals.
 
         PROTOCOL:
-        - Be professional, slightly cryptic, concise.
-        - Ask 1-2 questions at a time. Do not overwhelm.
-        - If the user provides messy data, clarify it.
-        - DEDUCE information. (e.g., if they say 'I have a newborn', note that sleep is likely compromised).
+        - Be professional, cryptic, concise.
+        - Ask 1 question at a time.
         
-        CRITICAL: 
-        When you have gathered ALL the above information and are satisfied you understand the client, you must output the final profile in a JSON block at the very end of your message like this:
+        DATA MANAGEMENT:
+        - When you have enough info, output the JSON block with the tag [[PROFILE_UPDATE]].
+        - IF THE USER CORRECTS YOU later, output the JSON block AGAIN with the new values.
+        - Do not say "The profile is locked." Say "Profile updated."
         
-        [[PROFILE_LOCKED]]
+        FORMAT:
+        [[PROFILE_UPDATE]]
         \`\`\`json
         {
             "name": "...",
@@ -70,11 +74,10 @@
             "occupation": "...",
             "stress_level": "High/Med/Low",
             "sleep_quality": "Good/Poor",
+            "injuries": "...",
             "goal": "..."
         }
         \`\`\`
-        
-        Start by introducing yourself and asking for their identity.
         `;
 
         let history = [
@@ -109,6 +112,9 @@
             try {
                 if(!API_KEY) throw new Error("API Key missing.");
 
+                // Show "Thinking" status
+                updateBadge("updating", "ANALYZING...");
+
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
                 
                 const response = await fetch(url, {
@@ -125,12 +131,13 @@
                 const data = await response.json();
                 let aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "...";
                 
-                // --- INTELLIGENCE EXTRACTION ---
-                // Check if the AI has decided the profile is complete
-                if (aiResponse.includes("[[PROFILE_LOCKED]]")) {
+                // --- INTELLIGENCE EXTRACTION (V3.2) ---
+                if (aiResponse.includes("[[PROFILE_UPDATE]]")) {
                     extractAndSaveProfile(aiResponse);
-                    // Remove the raw JSON from the chat display so it looks clean
-                    aiResponse = aiResponse.split("[[PROFILE_LOCKED]]")[0] + "\n\n*[System: Dossier Encrypted & Stored]*";
+                    // Hide the raw JSON
+                    aiResponse = aiResponse.split("[[PROFILE_UPDATE]]")[0] + "\n\n*[System: Dossier Updated]*";
+                } else {
+                    updateBadge("building", "BUILDING DOSSIER...");
                 }
 
                 addMsg("ai", aiResponse);
@@ -143,19 +150,23 @@
 
         function extractAndSaveProfile(text) {
             try {
-                // Find the JSON block using regex
                 const jsonMatch = text.match(/```json([\s\S]*?)```/);
                 if (jsonMatch && jsonMatch[1]) {
                     const profileData = JSON.parse(jsonMatch[1]);
                     localStorage.setItem("analyst_profile", JSON.stringify(profileData));
                     
-                    document.getElementById("statusBadge").innerText = "DOSSIER LOCKED";
-                    document.getElementById("statusBadge").className = "status-badge locked";
-                    console.log("Profile Saved:", profileData);
+                    updateBadge("locked", "DOSSIER LOCKED");
+                    console.log("Profile Updated:", profileData);
                 }
             } catch (e) {
-                console.error("Failed to parse profile JSON", e);
+                console.error("JSON Parse Error", e);
             }
+        }
+
+        function updateBadge(type, text) {
+            const badge = document.getElementById("statusBadge");
+            badge.className = `status-badge ${type}`;
+            badge.innerText = text;
         }
 
         function parseMarkdown(text) {
@@ -166,11 +177,11 @@
         window.onload = function() {
             API_KEY = localStorage.getItem("gemini_api_key");
             
-            // Check if we already have a profile
             const existingProfile = localStorage.getItem("analyst_profile");
             if(existingProfile) {
-                document.getElementById("statusBadge").innerText = "DOSSIER FOUND";
-                document.getElementById("statusBadge").className = "status-badge locked";
+                updateBadge("locked", "DOSSIER FOUND");
+            } else {
+                updateBadge("building", "NO DOSSIER");
             }
 
             if (!API_KEY) {
@@ -179,13 +190,14 @@
                     API_KEY = key.trim();
                     localStorage.setItem("gemini_api_key", API_KEY);
                     addMsg("system", "Uplink Established. Initializing...");
-                    callGemini(); // Trigger the first "Hello" from the AI
+                    callGemini(); 
                 } else {
-                    addMsg("system", "Authorization Failed. Refresh to try again.");
+                    addMsg("system", "Authorization Failed.");
                 }
             } else {
-                addMsg("system", "Neural Link Active (v3.1).");
-                if(!history.length || history.length === 1) callGemini(); // Start conversation
+                addMsg("system", "Neural Link Active (v3.2).");
+                // Only start chat automatically if history is empty
+                if(history.length === 1) callGemini();
             }
         };
     </script>
@@ -195,7 +207,7 @@
         <div style="display:flex; flex-direction:column;">
             <span class="header-title">Analyst // Profiler</span>
         </div>
-        <div id="statusBadge" class="status-badge">BUILDING PROFILE...</div>
+        <div id="statusBadge" class="status-badge">INITIALIZING...</div>
     </div>
 
     <div id="chat-window">
