@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyst Debugger (2.5)</title>
+    <title>Analyst Debugger (2.5 Fixed)</title>
     <style>
         body { background-color: #050505; color: #e0e0e0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; }
         
@@ -13,15 +13,15 @@
         
         /* CHAT */
         #chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 15px; border-radius: 10px; max-width: 85%; line-height: 1.4; }
+        .msg { padding: 10px 15px; border-radius: 10px; max-width: 85%; line-height: 1.4; word-wrap: break-word; }
         .msg.ai { align-self: flex-start; background: #1e293b; border: 1px solid #333; }
         .msg.user { align-self: flex-end; background: #00FF00; color: black; font-weight: bold; }
         .msg.sys { align-self: center; font-size: 12px; color: #666; font-style: italic; }
 
-        /* DEBUG BOX (The Fix) */
+        /* DEBUG BOX */
         #debug-console { 
-            display: none; background: #300; color: #ff9999; 
-            padding: 10px; font-family: monospace; font-size: 12px; 
+            display: block; background: #220000; color: #ffaaaa; 
+            padding: 5px; font-family: monospace; font-size: 11px; 
             border-bottom: 1px solid red; white-space: pre-wrap;
         }
 
@@ -30,64 +30,31 @@
         input { flex-grow: 1; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #000; color: white; }
         button { padding: 10px 20px; background: #4285F4; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
     </style>
-</head>
-<body>
-
-    <div id="debug-console">DEBUG MODE ACTIVE. NO ERRORS YET.</div>
 
     <script>
-        // CATCH ALL ERRORS AND SHOW THEM ON SCREEN
+        // --- 1. ERROR CATCHER (Runs first) ---
         window.onerror = function(msg, url, line) {
-            const consoleBox = document.getElementById('debug-console');
-            consoleBox.style.display = 'block';
-            consoleBox.innerText += `\n[ERROR] ${msg} (Line ${line})`;
-            return false;
+            const box = document.getElementById('debug-console');
+            if(box) box.innerText += `\n[CRITICAL] ${msg} (Line ${line})`;
         };
-    </script>
 
-    <div class="header">
-        <h1>Neural Link v2.5</h1>
-        <button onclick="resetKey()" style="font-size:10px; padding:5px; background:#333;">RESET KEY</button>
-    </div>
-
-    <div id="chat-window">
-        <div class="msg sys">System Ready. Model: gemini-2.5-flash</div>
-    </div>
-
-    <div class="controls">
-        <input type="text" id="userInput" placeholder="Type here..." onkeypress="handleEnter(event)">
-        <button onclick="sendMessage()">SEND</button>
-    </div>
-
-    <script>
-        // --- CONFIGURATION ---
-        const MODEL = "gemini-2.5-flash"; // Hardcoded to the one you found
-        let API_KEY = localStorage.getItem("gemini_api_key");
-        
+        // --- 2. GLOBAL VARIABLES ---
+        const MODEL = "gemini-2.5-flash"; 
+        let API_KEY = "";
         let history = [
-            { role: "user", parts: [{ text: "You are an onboarding officer. Interview me." }] } // Hidden System Prompt
+            { role: "user", parts: [{ text: "You are an onboarding officer. Interview me." }] }
         ];
 
-        // --- STARTUP CHECK ---
-        if (!API_KEY) {
-            let key = prompt("Please paste your Google API Key:");
-            if (key) {
-                localStorage.setItem("gemini_api_key", key.trim());
-                API_KEY = key.trim();
-                location.reload(); // Refresh to start clean
-            }
-        } else {
-            // Wake up the AI automatically
-            addMsg("sys", "Connecting to Gemini 2.5...");
-            callGemini("Initialize onboarding.");
+        // --- 3. FUNCTIONS (Defined immediately) ---
+        
+        function logDebug(text) {
+            const box = document.getElementById('debug-console');
+            if(box) box.innerText += "\n" + text;
         }
 
-        function resetKey() {
-            localStorage.removeItem("gemini_api_key");
-            location.reload();
+        function handleEnter(e) {
+            if(e.key === "Enter") sendMessage();
         }
-
-        function handleEnter(e) { if(e.key === "Enter") sendMessage(); }
 
         function sendMessage() {
             const box = document.getElementById("userInput");
@@ -102,7 +69,95 @@
         }
 
         function addMsg(role, text) {
+            const win = document.getElementById("chat-window");
             const div = document.createElement("div");
             div.className = `msg ${role}`;
-            div.innerText = text; // Simple text, no markdown for safety
-            document.getElementById("chat-window").appendChild(
+            div.innerText = text;
+            win.appendChild(div);
+            win.scrollTop = win.scrollHeight; // Auto-scroll
+        }
+
+        async function callGemini(text) {
+            try {
+                if(!API_KEY) { throw new Error("API Key is missing. Click RESET KEY."); }
+
+                logDebug("Sending request to Google...");
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+                
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: history,
+                        generationConfig: { maxOutputTokens: 200 }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "(No response data)";
+                
+                addMsg("ai", aiResponse);
+                history.push({ role: "model", parts: [{ text: aiResponse }] });
+                logDebug("Response received.");
+
+            } catch (error) {
+                addMsg("sys", "ERROR: " + error.message);
+                logDebug("API ERROR: " + error.message);
+            }
+        }
+
+        function resetKey() {
+            localStorage.removeItem("gemini_api_key");
+            location.reload();
+        }
+
+        // --- 4. INITIALIZATION (Runs when page finishes loading) ---
+        window.onload = function() {
+            logDebug("Script Loaded Successfully.");
+            
+            try {
+                API_KEY = localStorage.getItem("gemini_api_key");
+                
+                if (!API_KEY) {
+                    let key = prompt("Please paste your Google API Key:");
+                    if (key) {
+                        API_KEY = key.trim();
+                        localStorage.setItem("gemini_api_key", API_KEY);
+                        addMsg("sys", "Key Saved. Connecting...");
+                        callGemini("Start");
+                    } else {
+                        addMsg("sys", "No API Key provided. System Halted.");
+                    }
+                } else {
+                    addMsg("sys", "System Ready. Model: " + MODEL);
+                    callGemini("Start"); // Auto-trigger first message
+                }
+            } catch (e) {
+                logDebug("INIT ERROR: " + e.message);
+            }
+        };
+    </script>
+</head>
+<body>
+
+    <div id="debug-console">DEBUG ACTIVE. WAITING FOR SCRIPT...</div>
+
+    <div class="header">
+        <h1>Neural Link v2.5 (Stable)</h1>
+        <button onclick="resetKey()" style="font-size:10px; padding:5px; background:#333; color: white; border: 1px solid #555;">RESET KEY</button>
+    </div>
+
+    <div id="chat-window">
+        </div>
+
+    <div class="controls">
+        <input type="text" id="userInput" placeholder="Type here..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()">SEND</button>
+    </div>
+
+</body>
+</html>
