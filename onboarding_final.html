@@ -51,4 +51,206 @@
         .modal-box { background: #111; border: 1px solid #333; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; }
         .modal-title { font-weight: bold; margin-bottom: 15px; color: white; }
         .api-input { width: 90%; padding: 10px; margin-bottom: 20px; background: #000; border: 1px solid #444; color: white; border-radius: 4px; }
-        .save-btn { background: #4285F4; color: white; border: none; padding: 10px 20px; border-
+        .save-btn { background: #4285F4; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+
+        /* MARKDOWN STYLES */
+        .message strong { color: #fff; font-weight: 700; }
+        .message em { font-style: italic; color: #cbd5e1; }
+        .message code { background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #e0e0e0; }
+        .message pre { background: #0d1117; padding: 10px; border-radius: 6px; overflow-x: auto; margin: 10px 0; border: 1px solid #30363d; }
+        .message pre code { background: none; padding: 0; color: #c9d1d9; }
+        .message ul, .message ol { margin: 8px 0; padding-left: 20px; }
+        .message li { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <span class="header-title">Analyst</span>
+            <button class="key-btn" onclick="showApiSettings()">API KEY</button>
+        </div>
+        <button id="launchBtn" class="launch-btn" onclick="startOnboarding()">LAUNCH</button>
+    </div>
+
+    <div id="chat-window">
+        <div class="message system">System Ready. Press LAUNCH to begin initialization.</div>
+    </div>
+
+    <div class="input-deck">
+        <input type="text" id="userInput" placeholder="Waiting for initialization..." disabled onkeypress="handleEnter(event)">
+        <button id="sendBtn" onclick="sendMessage()" disabled>→</button>
+    </div>
+
+    <div id="api-modal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-title">SYSTEM CONFIGURATION</div>
+            <p style="color:#888; font-size: 12px; margin-bottom: 15px;">Enter your Gemini API Key to activate the neural link.</p>
+            <input type="password" id="apiKeyInput" class="api-input" placeholder="Paste API Key here...">
+            <button class="save-btn" onclick="saveApiKey()">AUTHENTICATE</button>
+            <button style="background:none; color:#555; border:none; margin-top:10px; font-size:12px; width:100%;" onclick="closeApiSettings()">CANCEL</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION
+        let API_KEY = localStorage.getItem("gemini_api_key") || "";
+        const SYSTEM_PROMPT = "You are a senior onboarding specialist for a secretive intelligence agency. Your goal is to interview the user to build their psychological profile. Be professional, slightly cryptic, and very thorough. Ask one question at a time. Keep responses concise.";
+        
+        let chatHistory = [];
+        let conversationStarted = false;
+
+        // ON LOAD
+        window.onload = function() {
+            if(!API_KEY) {
+                showApiSettings();
+            }
+        }
+
+        function showApiSettings() { document.getElementById("api-modal").style.display = "flex"; }
+        function closeApiSettings() { document.getElementById("api-modal").style.display = "none"; }
+        
+        function saveApiKey() {
+            const input = document.getElementById("apiKeyInput").value.trim();
+            if(input) {
+                API_KEY = input;
+                localStorage.setItem("gemini_api_key", API_KEY);
+                closeApiSettings();
+                logSystem("API Key Authenticated.");
+            }
+        }
+
+        function logSystem(text) {
+            const div = document.createElement("div");
+            div.className = "message system";
+            div.innerText = text;
+            document.getElementById("chat-window").appendChild(div);
+            scrollToBottom();
+        }
+
+        function appendMessage(role, text) {
+            const div = document.createElement("div");
+            div.className = `message ${role}`;
+            div.innerHTML = parseMarkdown(text); // Simple markdown parser
+            document.getElementById("chat-window").appendChild(div);
+            scrollToBottom();
+            
+            // Add to history
+            if(role === 'user') chatHistory.push({ role: "user", parts: [{ text: text }] });
+            if(role === 'ai') chatHistory.push({ role: "model", parts: [{ text: text }] });
+        }
+
+        function scrollToBottom() {
+            const win = document.getElementById("chat-window");
+            win.scrollTop = win.scrollHeight;
+        }
+
+        function handleEnter(e) { if(e.key === "Enter") sendMessage(); }
+
+        // --- CORE LOGIC ---
+
+        function startOnboarding() {
+            if(conversationStarted) return;
+            if(!API_KEY) { alert("API Key required!"); showApiSettings(); return; }
+
+            conversationStarted = true;
+            document.getElementById("launchBtn").style.display = "none"; // Hide launch button
+            
+            // Initial AI trigger
+            logSystem("Initializing Neural Link...");
+            
+            // Send initial dummy prompt to wake up the AI
+            chatHistory.push({ role: "user", parts: [{ text: "Initialize onboarding sequence. Introduce yourself and ask the first question." }] });
+            
+            fetchGeminiResponse();
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("userInput");
+            const text = input.value.trim();
+            if(!text) return;
+
+            appendMessage("user", text);
+            input.value = "";
+            toggleInput(false);
+
+            fetchGeminiResponse();
+        }
+
+        function toggleInput(enabled) {
+            document.getElementById("userInput").disabled = !enabled;
+            document.getElementById("sendBtn").disabled = !enabled;
+            if(enabled) document.getElementById("userInput").focus();
+        }
+
+        // --- ROBUST API HANDLER (FIXES RATE LIMIT LOOP) ---
+
+        async function fetchGeminiResponse() {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+            
+            const payload = {
+                contents: chatHistory,
+                systemInstruction: { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
+                generationConfig: { maxOutputTokens: 250, temperature: 0.7 }
+            };
+
+            let retryDelay = 2000; // Start waiting 2 seconds
+            let attempts = 0;
+            const maxAttempts = 3;
+
+            try {
+                // Loop for retrying
+                while(attempts < maxAttempts) {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // CASE 1: SUCCESS
+                    if (response.ok) {
+                        const data = await response.json();
+                        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "NO DATA";
+                        appendMessage("ai", aiText);
+                        toggleInput(true);
+                        return; // Exit function successfully
+                    }
+
+                    // CASE 2: RATE LIMITED (429)
+                    if (response.status === 429) {
+                        logSystem(`Rate limit hit. Retrying in ${retryDelay/1000}s...`);
+                        attempts++;
+                        await new Promise(res => setTimeout(res, retryDelay)); // Wait
+                        retryDelay *= 2; // Double wait time (Exponential Backoff)
+                        continue; // Try loop again
+                    }
+
+                    // CASE 3: OTHER ERROR
+                    throw new Error(`Server Error: ${response.status}`);
+                }
+
+                // If loop finishes without success
+                throw new Error("Max retries exceeded. System Overload.");
+
+            } catch (error) {
+                console.error(error);
+                appendMessage("error", "CONNECTION LOST: " + error.message);
+                toggleInput(true); // Let user try again manually
+            }
+        }
+
+        // --- MARKDOWN PARSER ---
+        function parseMarkdown(text) {
+            if (!text) return "";
+            let html = text
+                .replace(/\n/g, "<br>")
+                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Bold
+                .replace(/_(.*?)_/g, "<em>$1</em>") // Italic
+                .replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>") // Code blocks
+                .replace(/`(.*?)`/g, "<code>$1</code>"); // Inline code
+            return html;
+        }
+
+    </script>
+</body>
+</html>
