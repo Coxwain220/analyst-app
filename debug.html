@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>API Key Diagnostic</title>
+    <style>
+        body { background: #111; color: #0f0; font-family: monospace; padding: 20px; }
+        input { padding: 10px; width: 300px; }
+        button { padding: 10px; cursor: pointer; background: #00FF00; border: none; font-weight: bold; }
+        #output { margin-top: 20px; white-space: pre-wrap; border: 1px solid #333; padding: 10px; color: #ddd; }
+        .error { color: red; }
+        .success { color: #00FF00; }
+    </style>
+</head>
+<body>
+    <h2>GOOGLE API KEY DIAGNOSTIC</h2>
+    <p>This tool asks Google: "What models can this key use?"</p>
+    
+    <input type="text" id="apiKey" placeholder="Paste your API Key here">
+    <button onclick="checkKey()">CHECK PERMISSIONS</button>
+
+    <div id="output">Waiting...</div>
+
+    <script>
+        async function checkKey() {
+            const key = document.getElementById("apiKey").value.trim();
+            const out = document.getElementById("output");
+            
+            if (!key) { out.innerText = "Please enter a key."; return; }
+
+            out.innerHTML = "Contacting Google Servers...";
+
+            try {
+                // We use the 'list models' endpoint
+                const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success! List the models
+                    let models = data.models || [];
+                    let names = models.map(m => m.name.replace("models/", "")).join("\n");
+                    
+                    if(names.length === 0) {
+                        out.innerHTML = "<span class='error'>KEY IS VALID BUT HAS NO ACCESS TO MODELS.</span>\n(Check Google Cloud Console -> Enable Generative Language API)";
+                    } else {
+                        out.innerHTML = "<span class='success'>SUCCESS! YOUR KEY CAN ACCESS:</span>\n\n" + names;
+                    }
+                } else {
+                    // Error from Google
+                    out.innerHTML = `<span class='error'>ERROR ${response.status}:</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+
+            } catch (e) {
+                out.innerHTML = "<span class='error'>NETWORK ERROR:</span> " + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
