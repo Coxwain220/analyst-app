@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V1.6 (DIRECT READ)</title>
+    <title>ANALYST V1.7 (WATTS FIX)</title>
     <style>
         :root { 
             --bg-color: #000000; 
@@ -131,8 +131,6 @@
     <script>
         // --- CONFIGURATION ---
         const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
-        
-        // SWITCHED TO "ADDITIONAL STATUS 1" (Contains Speed, Rate, HR, Watts)
         const PM5_CHAR_32 = 'ce060032-43e5-11e4-916c-0800200c9a66'; 
 
         // --- DOM ---
@@ -191,26 +189,21 @@
             hrDisp.innerText = "--";
         }
 
-        // --- DIRECT READ ENGINE (No Math, Just Parsing) ---
+        // --- DIRECT READ ENGINE ---
         function handleDirectData(event) {
             const data = event.target.value;
-            if (data.byteLength < 7) return;
+            // Need at least 13 bytes for Watts (Bytes 11-12)
+            if (data.byteLength < 13) return;
 
-            // --- 1. INSTANTANEOUS SPEED (Bytes 3-4) ---
-            // PM5 sends speed in mm/sec (or cm/sec depending on firmware). 
-            // Standard C2 spec for Char 32: Speed (Low), Speed (High). Unit: 0.001 m/s
+            // --- 1. SPEED & SPLIT (Bytes 3-4) ---
             let speedRaw = data.getUint8(3) | (data.getUint8(4) << 8);
-            let speedMS = speedRaw * 0.001; // Meters per second
+            let speedMS = speedRaw * 0.001; 
 
-            // Calculate Split from Speed (This is accurate because PM5 sends the speed)
-            if (speedMS > 1) { // Only calculate if moving reasonably
+            if (speedMS > 1) { 
                 let splitSec = 500 / speedMS;
                 let mins = Math.floor(splitSec / 60);
                 let secs = Math.floor(splitSec % 60);
                 splitDisp.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
-            } else {
-                // If stopped, keep last value or show 0:00 (Optional)
-                // splitDisp.innerText = "0:00"; 
             }
 
             // --- 2. STROKE RATE (Byte 5) ---
@@ -229,11 +222,10 @@
                 hrDisp.style.color = "var(--text-main)";
             }
 
-            // --- 4. WATTS (Bytes 7-8) ---
-            if(data.byteLength >= 9) {
-                let watts = data.getUint8(7) | (data.getUint8(8) << 8);
-                wattsDisp.innerText = watts;
-            }
+            // --- 4. WATTS (Bytes 11-12) -- FIXED ---
+            // Previously read bytes 7-8 (which was Pace). Now reading 11-12 (Instant Power).
+            let watts = data.getUint8(11) | (data.getUint8(12) << 8);
+            wattsDisp.innerText = watts;
         }
     </script>
 </body>
