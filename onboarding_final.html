@@ -131,7 +131,7 @@
         function appendMessage(role, text) {
             const div = document.createElement("div");
             div.className = `message ${role}`;
-            div.innerHTML = parseMarkdown(text); // Simple markdown parser
+            div.innerHTML = parseMarkdown(text); 
             document.getElementById("chat-window").appendChild(div);
             scrollToBottom();
             
@@ -154,7 +154,7 @@
             if(!API_KEY) { alert("API Key required!"); showApiSettings(); return; }
 
             conversationStarted = true;
-            document.getElementById("launchBtn").style.display = "none"; // Hide launch button
+            document.getElementById("launchBtn").style.display = "none"; 
             
             // Initial AI trigger
             logSystem("Initializing Neural Link...");
