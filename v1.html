@@ -3,36 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V2.3 (SILENT OBSERVER)</title>
+    <title>ANALYST V2.5 (WATCHDOG)</title>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --alert: #FF0000; --rest: #0088FF; --dim: #222; }
+        :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --alert: #FF0000; --dim: #222; }
         body { background: var(--bg); color: var(--text); font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
-        /* UTILS */
         .hidden { display: none !important; }
-        .btn { padding: 15px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; border: none; }
+        .btn { padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; border: none; font-size:12px; }
         .btn-green { background: var(--accent); color: black; }
-        .btn-sim { background: #333; color: #aaa; font-size: 10px; padding: 10px; border: 1px solid #555; }
-        .btn-outline { background: transparent; border: 1px solid #444; color: #888; }
+        .btn-sim { background: #333; color: #aaa; border: 1px solid #555; }
 
-        /* SETUP SCREEN */
+        /* SETUP */
         #setupScreen { display: flex; flex-direction: column; height: 100%; padding: 20px; box-sizing: border-box; justify-content: center; gap: 15px; }
         .setup-card { background: #111; border: 1px solid #333; padding: 20px; border-radius: 8px; }
         .input-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .config-input { background: #000; border: 1px solid #444; color: white; padding: 10px; width: 80px; text-align: center; font-size: 18px; border-radius: 4px; }
+        .config-input { background: #000; border: 1px solid #444; color: white; padding: 8px; width: 80px; text-align: center; font-size: 16px; border-radius: 4px; }
         
         #apiKeyInput { width: 100%; background: #000; border: 1px solid #444; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; box-sizing: border-box; }
+        
+        /* CONTEXT SELECTOR */
+        .context-btn { flex:1; background:#222; border:1px solid #444; color:#666; padding:8px; margin:2px; cursor:pointer; font-size:10px; }
+        .context-btn.active { background: #333; border-color: var(--accent); color: var(--accent); }
 
-        /* DASHBOARD SCREEN */
+        /* DASHBOARD */
         #dashScreen { display: none; height: 100%; grid-template-rows: 15% 55% 20% 10%; }
         #dashScreen.active { display: grid; }
 
-        /* COACHING BAR (AI) */
+        /* COACHING DISPLAY */
         .comms-bar { background: #111; border-bottom: 1px solid #333; padding: 0 20px; display: flex; flex-direction: column; justify-content: center; position: relative; }
         .comms-label { font-size: 10px; color: #666; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-        .comms-text { font-size: 16px; color: var(--accent); font-family: monospace; font-weight: bold; line-height: 1.2; height: 40px; overflow: hidden; transition: color 0.3s; }
-        .phase-badge { position: absolute; right: 20px; top: 15px; font-size: 12px; padding: 4px 8px; background: #333; border-radius: 4px; color: #888; font-weight: bold; }
         
+        /* THE AI VOICE */
+        .comms-text { font-size: 18px; color: var(--accent); font-family: monospace; font-weight: bold; line-height: 1.2; height: auto; min-height:40px; white-space: pre-wrap; transition: color 0.3s; }
+        
+        .trigger-tag { position: absolute; right: 20px; top: 15px; font-size: 10px; padding: 2px 6px; background: #333; border-radius: 4px; color: #888; display:none; }
+        .trigger-tag.active { display:block; animation: flashRed 1s infinite; background: #500; color:#f99; }
+
         /* METRICS */
         .main-deck { display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .primary-stat { font-size: 18vh; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
@@ -44,58 +50,49 @@
         .stat-val { font-size: 6vh; font-weight: bold; }
         .stat-lbl { font-size: 1.5vh; color: #666; }
 
-        /* ANIMATIONS */
         @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        .ai-thinking { color: var(--warn); animation: pulse 1s infinite; }
-        
-        @keyframes flashGreen { 0% { color: #00FF00; text-shadow: 0 0 10px #00FF00; } 100% { color: #555; text-shadow: none; } }
-        .dot-ping { animation: flashGreen 1s ease-out; }
+        @keyframes flashRed { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .ai-thinking { color: var(--warn) !important; animation: pulse 1s infinite; }
 
     </style>
 </head>
 <body>
 
     <div id="setupScreen">
-        <h2 style="color:var(--accent); margin:0;">MISSION CONTROL</h2>
+        <h2 style="color:var(--accent); margin:0;">WATCHDOG SETUP</h2>
         
         <div class="setup-card">
-            <div style="font-size:12px; color:#888; margin-bottom:5px;">NEURAL UPLINK (API KEY)</div>
+            <div style="font-size:12px; color:#888; margin-bottom:5px;">API KEY</div>
             <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key here...">
         </div>
 
         <div class="setup-card">
-            <div class="input-row">
-                <label>SETS</label>
-                <input type="number" id="cfgReps" class="config-input" value="4">
+            <div style="font-size:12px; color:#888; margin-bottom:10px;">USER CONTEXT (SELECT ONE)</div>
+            <div style="display:flex;">
+                <button class="context-btn active" onclick="setContext('FRESH')" id="ctxFresh">FRESH / READY</button>
+                <button class="context-btn" onclick="setContext('TIRED')" id="ctxTired">TIRED / STRESSED</button>
+                <button class="context-btn" onclick="setContext('HANGOVER')" id="ctxHang">HANGOVER / ROUGH</button>
             </div>
-            <div class="input-row">
-                <label>DIST (M)</label>
-                <input type="number" id="cfgDist" class="config-input" value="1500">
-            </div>
-            <div class="input-row">
-                <label>REST (SEC)</label>
-                <input type="number" id="cfgRest" class="config-input" value="240">
-            </div>
-            <div class="input-row">
+            
+            <div style="margin-top:15px;" class="input-row">
                 <label>TARGET PACE</label>
                 <input type="text" id="cfgPace" class="config-input" value="1:54">
             </div>
         </div>
 
         <button class="btn btn-green" onclick="initMission(false)">CONNECT PM5</button>
-        <button class="btn btn-sim" onclick="initMission(true)">SIMULATE ROW (TEST MODE)</button>
-        <div style="text-align:center; font-size:10px; color:#444;">V2.3 // SILENT OBSERVER</div>
+        <button class="btn btn-sim" onclick="initMission(true)">SIMULATE ROW (TEST)</button>
     </div>
 
     <div id="dashScreen">
         <div class="comms-bar">
-            <div class="comms-label">ANALYST AI <span id="aiStatus" style="font-size:14px;">●</span></div>
-            <div class="comms-text" id="coachMsg">SYSTEM ONLINE. WAITING FOR DATA...</div>
-            <div class="phase-badge" id="phaseBadge">STANDBY</div>
+            <div class="comms-label">ANALYST AI <span id="aiStatus">●</span></div>
+            <div class="comms-text" id="coachMsg">WATCHDOG ACTIVE. SILENT.</div>
+            <div class="trigger-tag" id="triggerBadge">ANOMALY DETECTED</div>
         </div>
 
         <div class="main-deck">
-            <div style="font-size:2vh; color:#888; margin-bottom:5px;" id="intervalCounter">SET 1</div>
+            <div style="font-size:2vh; color:#888; margin-bottom:5px;">SET 1</div>
             <div style="font-size:2vh; color:#444;">SPLIT / 500M</div>
             <div class="primary-stat" id="splitDisplay">0:00</div>
             <div class="sub-stat"><span id="wattsDisplay">0</span> W</div>
@@ -111,11 +108,6 @@
                 <div class="stat-lbl">HEART RATE</div>
             </div>
         </div>
-
-        <div style="background:#111; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-             <button class="btn-outline" onclick="triggerAI('MANUAL_CHECK')" style="font-size:12px; padding:8px;">ASK COACH</button>
-             <button class="btn-outline" onclick="downloadSession()" style="font-size:12px; padding:8px; border-color:#333; color:#444;">SAVE LOG</button>
-        </div>
     </div>
 
     <script>
@@ -125,155 +117,119 @@
         const MODEL = "gemini-2.5-flash";
 
         // --- STATE ---
-        let WORKOUT = {
-            reps: 4, dist: 1500, rest: 240, targetPace: "1:54",
-            currentRep: 1, phase: 'IDLE',
-            log: []
+        let CFG = { targetPaceSec: 114, context: "FRESH", apiKey: "" };
+        let STATE = { 
+            phase: 'IDLE', 
+            history: [], // Buffer for anomaly detection
+            lastAiCall: 0,
+            coachingCooldown: false
         };
-        let API_KEY = "";
-        let lastAiTrigger = 0;
-        let isSimulating = false;
-        let aiCheckInterval = null;
 
-        // --- INIT ---
+        // --- SETUP ---
         window.onload = () => {
-            const savedKey = localStorage.getItem("gemini_api_key");
-            if(savedKey) document.getElementById("apiKeyInput").value = savedKey;
+            if(localStorage.getItem("gemini_api_key")) 
+                document.getElementById("apiKeyInput").value = localStorage.getItem("gemini_api_key");
         };
+
+        function setContext(ctx) {
+            CFG.context = ctx;
+            document.querySelectorAll('.context-btn').forEach(b => b.classList.remove('active'));
+            if(ctx === 'FRESH') document.getElementById('ctxFresh').classList.add('active');
+            if(ctx === 'TIRED') document.getElementById('ctxTired').classList.add('active');
+            if(ctx === 'HANGOVER') document.getElementById('ctxHang').classList.add('active');
+        }
 
         async function initMission(simMode) {
-            API_KEY = document.getElementById("apiKeyInput").value.trim();
-            if(API_KEY) localStorage.setItem("gemini_api_key", API_KEY);
+            CFG.apiKey = document.getElementById("apiKeyInput").value.trim();
+            if(CFG.apiKey) localStorage.setItem("gemini_api_key", CFG.apiKey);
 
-            // Capture Config
-            WORKOUT.reps = parseInt(document.getElementById('cfgReps').value);
-            WORKOUT.dist = parseInt(document.getElementById('cfgDist').value);
-            WORKOUT.rest = parseInt(document.getElementById('cfgRest').value);
-            WORKOUT.targetPace = document.getElementById('cfgPace').value;
+            let p = document.getElementById('cfgPace').value.split(':');
+            CFG.targetPaceSec = (parseInt(p[0])*60) + parseInt(p[1]);
 
-            isSimulating = simMode;
-
-            if(isSimulating) {
-                startSimulation();
-            } else {
-                try {
-                    const device = await navigator.bluetooth.requestDevice({
-                        filters: [{ namePrefix: 'PM5' }],
-                        optionalServices: [PM5_SERVICE]
-                    });
-                    const server = await device.gatt.connect();
-                    const service = await server.getPrimaryService(PM5_SERVICE);
-                    const char = await service.getCharacteristic(PM5_CHAR_32);
-                    await char.startNotifications();
-                    char.addEventListener('characteristicvaluechanged', handleBluetoothData);
-                } catch(e) { 
-                    alert("Connection Failed: " + e.message); 
-                    return; 
-                }
-            }
-
-            // Switch Screen
             document.getElementById('setupScreen').style.display = 'none';
             document.getElementById('dashScreen').classList.add('active');
+
+            if(simMode) startSimulation();
+            else connectBluetooth();
             
-            // Start AI Monitor (Every 30s)
-            triggerAI("MISSION_START");
-            aiCheckInterval = setInterval(() => {
-                if(WORKOUT.phase === "WORK") triggerAI("MONITORING");
-            }, 30000); 
+            // Initial Check-in
+            triggerAI("SESSION_START", "Workout initialized. My physical state is: " + CFG.context);
         }
 
-        // --- DATA ---
-        function updateDashboard(speedMS, rate, hr, watts) {
-            let paceStr = "0:00";
-            if(speedMS > 0.1) {
-                let splitSec = 500 / speedMS;
-                let m = Math.floor(splitSec / 60);
-                let s = Math.floor(splitSec % 60);
-                paceStr = `${m}:${s.toString().padStart(2, '0')}`;
+        // --- WATCHDOG ENGINE (The Local Brain) ---
+        function analyzeTelemetry(speedMS, rate, hr, watts) {
+            if (speedMS < 0.1) return; // Stopped
+
+            const now = Date.now();
+            let currentPaceSec = 500 / speedMS;
+            let delta = currentPaceSec - CFG.targetPaceSec; // +ve = SLOW, -ve = FAST
+
+            // Add to history buffer (last 5 seconds)
+            STATE.history.push({ t: now, p: currentPaceSec, r: rate, w: watts });
+            if(STATE.history.length > 10) STATE.history.shift();
+
+            // COOLDOWN CHECK (Don't nag the user)
+            if(STATE.coachingCooldown) {
+                if(now - STATE.lastAiCall > 20000) STATE.coachingCooldown = false; // 20s silence after speaking
+                return;
             }
 
-            document.getElementById('wattsDisplay').innerText = watts;
-            document.getElementById('rateDisplay').innerText = rate;
-            document.getElementById('splitDisplay').innerText = paceStr;
-            
-            const hrEl = document.getElementById('hrDisplay');
-            hrEl.innerText = hr < 250 ? hr : "--";
-            
-            // Phase Logic
-            let newPhase = speedMS > 1.0 ? "WORK" : "REST";
-            
-            if(newPhase !== WORKOUT.phase) {
-                if(newPhase === "WORK") {
-                    document.getElementById('phaseBadge').innerText = "PUSH";
-                    document.getElementById('phaseBadge').style.background = "#00FF00";
-                    document.getElementById('phaseBadge').style.color = "#000";
-                } else {
-                    document.getElementById('phaseBadge').innerText = "RECOVER";
-                    document.getElementById('phaseBadge').style.background = "#0088FF";
-                    document.getElementById('phaseBadge').style.color = "#FFF";
-                    triggerAI("REST_START"); // Always coach recovery
-                }
-                WORKOUT.phase = newPhase;
+            // 1. DETECTION: THE BONK (Slow by >4s for 5 samples)
+            if (delta > 4 && STATE.history.every(h => (h.p - CFG.targetPaceSec) > 4)) {
+                triggerAI("ANOMALY_BONK", `User has slowed significantly (+${delta.toFixed(1)}s) below target.`);
+                return;
             }
 
-            // Logging
-            if(WORKOUT.phase === "WORK" && Date.now() % 1000 < 200) {
-                 WORKOUT.log.push({ time: new Date().toISOString(), watts, hr, rate, pace: paceStr });
+            // 2. DETECTION: FLY AND DIE (Fast by >6s)
+            if (delta < -6 && STATE.history.every(h => (h.p - CFG.targetPaceSec) < -6)) {
+                triggerAI("ANOMALY_TOO_FAST", `User is sprinting too hard (${delta.toFixed(1)}s faster than target). Risk of burnout.`);
+                return;
             }
-        }
 
-        function handleBluetoothData(event) {
-            const data = event.target.value;
-            if (data.byteLength < 13) return;
-            let speedRaw = data.getUint8(3) | (data.getUint8(4) << 8);
-            let speedMS = speedRaw * 0.001; 
-            let rate = data.getUint8(5);
-            let hr = data.getUint8(6);
-            let watts = speedMS > 0.1 ? Math.round(2.8 * Math.pow(speedMS, 3)) : 0;
-            updateDashboard(speedMS, rate, hr, watts);
-        }
-
-        function startSimulation() {
-            let simSpeed = 4.1; 
-            let simRate = 27;
-            let simHr = 160;
-            
-            setInterval(() => {
-                simSpeed += (Math.random() - 0.5) * 0.1;
-                simRate += Math.floor((Math.random() - 0.5) * 2);
-                simHr += 0.2;
-                if(simHr > 180) simHr = 180;
-                let simWatts = Math.round(2.8 * Math.pow(simSpeed, 3));
-                updateDashboard(simSpeed, simRate, Math.floor(simHr), simWatts);
-            }, 1000); 
+            // 3. DETECTION: INEFFICIENCY (Rate up, Watts down)
+            // (Advanced logic would go here, simplified for demo)
+            if (rate > 32 && delta > 0) {
+                 triggerAI("ANOMALY_FLAILING", "Stroke rate is very high (32+) but pace is slow. Inefficient.");
+                 return;
+            }
         }
 
         // --- AI UPLINK ---
-        async function triggerAI(context) {
-            if(!API_KEY) return;
-            
-            // Visuals
+        async function triggerAI(triggerType, telemetryDescription) {
+            if (!CFG.apiKey) return;
+
+            // LOCKOUT
+            STATE.lastAiCall = Date.now();
+            STATE.coachingCooldown = true;
+
+            // UI UPDATES
             const msgBox = document.getElementById('coachMsg');
-            const statusDot = document.getElementById('aiStatus');
-            statusDot.style.color = "yellow";
-            
-            // Capture Snapshot
-            const currentStats = WORKOUT.log.length > 0 ? WORKOUT.log[WORKOUT.log.length-1] : { watts:0, hr:0, rate:0, pace:"0:00" };
-            
+            const tag = document.getElementById('triggerBadge');
+            msgBox.classList.add("ai-thinking");
+            tag.innerText = triggerType.replace("ANOMALY_", "");
+            tag.classList.add("active");
+
+            // NUANCED PROMPT
             const PROMPT = `
-            Act as an Elite Rowing Coach. Context: ${context}.
-            Target: ${WORKOUT.reps}x${WORKOUT.dist}m @ ${WORKOUT.targetPace}.
-            Current Telemetry: Pace ${currentStats.pace}, ${currentStats.watts}W, HR ${currentStats.hr}, ${currentStats.rate}s/m.
+            You are an elite Rowing Coach watching a user in real-time.
             
+            CONTEXT:
+            - User Status: ${CFG.context} (Important!)
+            - Target Pace: ${document.getElementById('cfgPace').value}
+            
+            EVENT TRIGGERED: ${triggerType}
+            TELEMETRY: ${telemetryDescription}
+
             INSTRUCTIONS:
-            1. If context is MONITORING and the rower is close to target (within 2s pace), simply return the word "SILENT".
-            2. If significant drift or error, give ONE punchy command (max 8 words).
-            3. If REST_START, give recovery advice.
+            - Provide ONE sentence of spoken coaching guidance.
+            - If User is FRESH: Be demanding. "Get back on it!"
+            - If User is HANGOVER/TIRED: Be supportive but firm. "I know it hurts, just hold the form."
+            - If TOO FAST: "Patience. Too hot."
+            - Max 15 words. No fluff.
             `;
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${CFG.apiKey}`;
                 const response = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -281,40 +237,93 @@
                 });
 
                 const data = await response.json();
-                let advice = data.candidates?.[0]?.content?.parts?.[0]?.text || "SILENT";
-                advice = advice.trim().replace(/["*]/g, '');
+                const advice = data.candidates?.[0]?.content?.parts?.[0]?.text || "SYSTEM ERROR";
 
-                if(advice === "SILENT") {
-                    // SILENT MODE: Just flash the dot green
-                    statusDot.classList.remove('dot-ping'); 
-                    void statusDot.offsetWidth; // trigger reflow
-                    statusDot.classList.add('dot-ping');
-                    statusDot.style.color = "#555"; // Return to dim
-                } else {
-                    // INTERVENTION: Show message
-                    msgBox.innerText = advice.toUpperCase();
-                    msgBox.style.color = "#FFAA00"; // Orange for alert
-                    setTimeout(() => { msgBox.style.color = "#00FF00"; }, 2000); // Fade back to green
-                    statusDot.style.color = "#00FF00";
-                }
+                // DISPLAY
+                msgBox.innerText = advice.toUpperCase();
+                msgBox.classList.remove("ai-thinking");
+                msgBox.style.color = "#FFAA00";
+                setTimeout(() => msgBox.style.color = "#00FF00", 3000);
 
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
-                statusDot.style.color = "red";
+                msgBox.innerText = "OFFLINE";
             }
         }
 
-        // --- EXPORT ---
-        function downloadSession() {
-            let csv = "Time,Watts,HR,Rate,Pace\n";
-            WORKOUT.log.forEach(r => { csv += `${r.time},${r.watts},${r.hr},${r.rate},${r.pace}\n` });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `ANALYST_SESSION.csv`;
-            a.click();
+        // --- SIMULATOR (SCRIPTED CRASH) ---
+        function startSimulation() {
+            let simPace = CFG.targetPaceSec; 
+            let simRate = 26;
+            let simWatts = 250;
+            let time = 0;
+
+            setInterval(() => {
+                time++;
+                
+                // PHASE 1: START FAST (0-20s)
+                if(time < 20) {
+                    simPace = CFG.targetPaceSec - 8; // Flying!
+                    simRate = 30;
+                } 
+                // PHASE 2: SETTLE (20-40s)
+                else if (time < 40) {
+                    simPace = CFG.targetPaceSec - 1; // Good
+                    simRate = 28;
+                }
+                // PHASE 3: THE CRASH (40s+)
+                else {
+                    simPace = CFG.targetPaceSec + 6; // Bonk!
+                    simRate = 24;
+                }
+
+                // Noise
+                let jitter = (Math.random() - 0.5) * 2;
+                let speedMS = 500 / (simPace + jitter);
+                
+                // Update UI
+                let m = Math.floor((simPace + jitter) / 60);
+                let s = Math.floor((simPace + jitter) % 60);
+                document.getElementById('splitDisplay').innerText = `${m}:${s.toString().padStart(2, '0')}`;
+                document.getElementById('rateDisplay').innerText = simRate;
+                
+                // Run Watchdog
+                analyzeTelemetry(speedMS, simRate, 150, 200);
+
+            }, 1000);
         }
 
+        // --- BLUETOOTH ---
+        async function connectBluetooth() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'PM5' }],
+                    optionalServices: [PM5_SERVICE]
+                });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(PM5_SERVICE);
+                const char = await service.getCharacteristic(PM5_CHAR_32);
+                await char.startNotifications();
+                char.addEventListener('characteristicvaluechanged', (e) => {
+                    let d = e.target.value;
+                    if(d.byteLength < 13) return;
+                    let speed = (d.getUint8(3) | (d.getUint8(4)<<8)) * 0.001;
+                    let rate = d.getUint8(5);
+                    let watts = (d.getUint8(11) | (d.getUint8(12)<<8));
+                    
+                    // Update UI
+                    if(speed > 0.1) {
+                        let split = 500/speed;
+                        let m = Math.floor(split/60);
+                        let s = Math.floor(split%60);
+                        document.getElementById('splitDisplay').innerText = `${m}:${s.toString().padStart(2,'0')}`;
+                        document.getElementById('wattsDisplay').innerText = watts;
+                        document.getElementById('rateDisplay').innerText = rate;
+                        analyzeTelemetry(speed, rate, 0, watts);
+                    }
+                });
+            } catch(e) { alert(e.message); }
+        }
     </script>
 </body>
 </html>
