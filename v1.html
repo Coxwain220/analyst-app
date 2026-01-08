@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V3.0 (COMMANDER)</title>
+    <title>ANALYST V3.1 (FIELD TEST)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --alert: #FF0000; --rest: #0088FF; --dim: #222; }
         body { background: var(--bg); color: var(--text); font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
@@ -29,7 +29,8 @@
         .input-group label { display: block; color: #888; font-size: 10px; margin-bottom: 5px; text-transform: uppercase; }
         .config-input { background: transparent; border: none; color: white; width: 100%; font-size: 20px; font-family: monospace; outline: none; }
         
-        #apiKeyInput { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; box-sizing: border-box; }
+        /* DROPDOWN */
+        select.config-input { -webkit-appearance: none; border-radius: 0; }
 
         /* DASHBOARD SCREEN */
         #dashScreen { display: none; height: 100%; grid-template-rows: 15% 55% 20% 10%; }
@@ -70,13 +71,12 @@
         <div class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('SINGLE')">SINGLE</button>
             <button class="tab-btn" onclick="switchTab('INTERVAL')">INTERVALS</button>
-            <button class="tab-btn" onclick="switchTab('AI_GEN')">AI BUILD</button>
         </div>
 
         <div class="config-area">
             <div style="margin-bottom: 20px;">
-                <label style="font-size:10px; color:#666;">NEURAL UPLINK (API KEY)</label>
-                <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key...">
+                <label style="font-size:10px; color:#666; display:block; margin-bottom:5px;">NEURAL UPLINK (API KEY)</label>
+                <input type="password" id="apiKeyInput" style="width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 4px; box-sizing: border-box;" placeholder="Paste Gemini Key...">
             </div>
 
             <div id="cfgSingle" class="cfg-section">
@@ -86,7 +86,7 @@
                         <label>DISTANCE (M)</label>
                         <input type="number" id="inpDist" class="config-input" value="2000">
                     </div>
-                     </div>
+                </div>
             </div>
 
             <div id="cfgInterval" class="cfg-section hidden">
@@ -102,18 +102,23 @@
             <div class="input-grid">
                 <div class="input-group">
                     <label>TARGET PACE (/500)</label>
-                    <input type="text" id="tgtPace" class="config-input" value="1:55">
+                    <input type="text" id="tgtPace" class="config-input" value="1:54">
                 </div>
                 <div class="input-group">
                     <label>TARGET RATE (S/M)</label>
                     <input type="number" id="tgtRate" class="config-input" value="26">
                 </div>
-                <div class="input-group">
-                    <label>HR CAP (BPM)</label>
-                    <input type="number" id="tgtHR" class="config-input" value="175">
-                </div>
             </div>
-            <div style="font-size:10px; color:#444; margin-top:5px;">*Leave targets blank to disable monitoring</div>
+
+            <div class="section-title">OPERATOR STATUS (CONTEXT)</div>
+            <div class="input-group">
+                <label>HOW DO YOU FEEL?</label>
+                <select id="userContext" class="config-input">
+                    <option value="FRESH">FRESH / READY (Push Me)</option>
+                    <option value="TIRED">TIRED / STRESSED (Support Me)</option>
+                    <option value="HANGOVER">HANGOVER / ROUGH (Survival)</option>
+                </select>
+            </div>
         </div>
 
         <div style="padding: 20px; background: #111; border-top: 1px solid #333; display:flex; flex-direction:column;">
@@ -160,7 +165,6 @@
             <div class="stat-box" style="border:none;">
                 <div class="stat-val" id="dispHR" style="color:white">--</div>
                 <div class="stat-lbl">HEART RATE</div>
-                <div class="stat-target">CAP: <span id="lblTgtHR">--</span></div>
             </div>
         </div>
 
@@ -182,7 +186,8 @@
             sets: 1,
             workDist: 2000,
             restSec: 0,
-            targets: { paceSec: 0, rate: 0, hr: 0 },
+            targets: { paceSec: 0, rate: 0 },
+            context: "FRESH",
             apiKey: ""
         };
 
@@ -208,7 +213,6 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.cfg-section').forEach(s => s.classList.add('hidden'));
             
-            // Activate
             if(tab === 'SINGLE') {
                 document.getElementById('cfgSingle').classList.remove('hidden');
                 event.target.classList.add('active');
@@ -217,17 +221,14 @@
                 document.getElementById('cfgInterval').classList.remove('hidden');
                 event.target.classList.add('active');
                 MISSION.type = 'INTERVAL';
-            } else if (tab === 'AI_GEN') {
-                alert("AI Workout Builder coming in V3.1"); // Placeholder
-                switchTab('SINGLE'); // Fallback
             }
         }
 
         async function launchMission(isSim) {
-            // 1. Capture Config
             MISSION.apiKey = document.getElementById("apiKeyInput").value.trim();
             if(MISSION.apiKey) localStorage.setItem("gemini_api_key", MISSION.apiKey);
 
+            // Capture Setup
             if(MISSION.type === 'SINGLE') {
                 MISSION.sets = 1;
                 MISSION.workDist = parseInt(document.getElementById('inpDist').value);
@@ -238,34 +239,30 @@
                 MISSION.restSec = parseInt(document.getElementById('inpRest').value);
             }
 
-            // Targets
+            // Capture Targets & Context
             let p = document.getElementById('tgtPace').value.split(':');
             MISSION.targets.paceSec = (parseInt(p[0])*60) + parseInt(p[1]);
             MISSION.targets.rate = parseInt(document.getElementById('tgtRate').value) || 0;
-            MISSION.targets.hr = parseInt(document.getElementById('tgtHR').value) || 0;
+            MISSION.context = document.getElementById('userContext').value;
 
-            // 2. Init UI
+            // Init UI
             document.getElementById('setupScreen').style.display = 'none';
             document.getElementById('dashScreen').classList.add('active');
             
             document.getElementById('lblTgtPace').innerText = document.getElementById('tgtPace').value;
             document.getElementById('lblTgtRate').innerText = MISSION.targets.rate || "--";
-            document.getElementById('lblTgtHR').innerText = MISSION.targets.hr || "--";
 
-            // 3. Init State
+            // Init State
             STATE.currentSet = 1;
             STATE.distRemaining = MISSION.workDist;
             STATE.active = true;
             setPhase('WORK');
 
-            // 4. Connect
-            if(isSim) {
-                startSimulator();
-            } else {
-                connectBluetooth();
-            }
+            // Connect
+            if(isSim) startSimulator();
+            else connectBluetooth();
             
-            triggerAI("MISSION_START", "Mission initialized.");
+            triggerAI("MISSION_START", "Mission initialized. User Context: " + MISSION.context);
         }
 
         function setPhase(p) {
@@ -310,19 +307,13 @@
         function processTelemetry(speedMS, rate, hr, watts) {
             if(!STATE.active || STATE.phase !== 'WORK') return;
 
-            // 1. Calc Pace
             let paceSec = speedMS > 0.1 ? 500/speedMS : 0;
             let m = Math.floor(paceSec / 60);
             let s = Math.floor(paceSec % 60);
             let paceStr = speedMS > 0.1 ? `${m}:${s.toString().padStart(2,'0')}` : "0:00";
 
-            // 2. Calc Dist (Simulation of Distance decrement)
-            // PM5 sends total distance. For intervals, we calculate delta.
-            // For V3.0, we use speed integration approx for smoothness
+            // Dist Calculation
             if(speedMS > 0.1) {
-                // Assuming ~0.5s update rate from BT/Sim
-                // Better: Calculate time delta since last update. 
-                // For simplicity: 0.5s chunks
                 STATE.distRemaining -= (speedMS * 0.5); 
                 if(STATE.distRemaining <= 0) {
                     STATE.distRemaining = 0;
@@ -335,66 +326,45 @@
                 }
             }
 
-            // 3. Update UI
+            // Update UI
             document.getElementById('dispPace').innerText = paceStr;
             document.getElementById('dispWatts').innerText = watts;
             document.getElementById('dispRate').innerText = rate;
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
             document.getElementById('dispDist').innerText = Math.floor(STATE.distRemaining);
 
-            // 4. Ghost Boat (Target Deviation)
+            // Ghost Boat
             if(MISSION.targets.paceSec > 0 && paceSec > 0) {
-                // deviation positive = slow
                 let deviation = paceSec - MISSION.targets.paceSec; 
-                // Map -10s to +10s range onto 0-100% width
-                // Center (0 deviation) = 50%
                 let pct = 50 + (deviation * 5); 
                 pct = Math.max(0, Math.min(100, pct));
                 document.getElementById('paceBar').style.width = pct + "%";
-                // Color code
-                if(deviation > 2) document.getElementById('paceBar').style.background = "#FF0000"; // Slow
-                else if (deviation < -2) document.getElementById('paceBar').style.background = "#FFAA00"; // Too fast
-                else document.getElementById('paceBar').style.background = "#00FF00"; // On point
+                if(deviation > 2) document.getElementById('paceBar').style.background = "#FF0000"; 
+                else if (deviation < -2) document.getElementById('paceBar').style.background = "#FFAA00"; 
+                else document.getElementById('paceBar').style.background = "#00FF00"; 
             }
 
-            // 5. Watchdog (AI Trigger)
+            // Watchdog & Logging
             runWatchdog(paceSec, rate, hr);
-
-            // 6. Log
-            if(Date.now() % 1000 < 500) {
-                 STATE.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate, p:paceStr });
-            }
+            if(Date.now() % 1000 < 500) STATE.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate, p:paceStr });
         }
 
         // --- WATCHDOG ---
         function runWatchdog(paceSec, rate, hr) {
-            // Rate limiting AI
             if(Date.now() - STATE.lastAi < 15000) return;
 
-            // Checks
             let alerts = [];
-            
-            // Pace Check
             if(MISSION.targets.paceSec > 0 && paceSec > 0) {
                 let diff = paceSec - MISSION.targets.paceSec;
                 if(diff > 3) alerts.push(`Pace slow by ${diff.toFixed(1)}s`);
                 else if(diff < -4) alerts.push(`Pace too fast by ${Math.abs(diff).toFixed(1)}s`);
             }
-
-            // Rate Check
             if(MISSION.targets.rate > 0 && rate > 0) {
                 if(rate > MISSION.targets.rate + 2) alerts.push(`Rate too high (${rate})`);
                 else if(rate < MISSION.targets.rate - 2) alerts.push(`Rate too low (${rate})`);
             }
 
-            // HR Check
-            if(MISSION.targets.hr > 0 && hr > 0) {
-                if(hr > MISSION.targets.hr) alerts.push(`HR Exceeded Cap (${hr})`);
-            }
-
-            if(alerts.length > 0) {
-                triggerAI("ANOMALY", alerts.join(". "));
-            }
+            if(alerts.length > 0) triggerAI("ANOMALY", alerts.join(". "));
         }
 
         // --- AI UPLINK ---
@@ -408,9 +378,15 @@
             box.classList.add('ai-thinking');
 
             const PROMPT = `
-            Act as a Rowing Coach. Event: ${evt}. Details: ${details}.
+            Act as an Elite Rowing Coach. 
+            User Context: ${MISSION.context} (Important!).
+            Event: ${evt}. Details: ${details}.
             Target: Pace ${MISSION.targets.paceSec}s, Rate ${MISSION.targets.rate}.
-            Guidance: One punchy sentence. Correct errors or Motivate.
+            
+            INSTRUCTIONS:
+            - If Context is FRESH: Be demanding.
+            - If Context is TIRED/HANGOVER: Be supportive, focus on survival/form.
+            - Max 1 sentence. Punchy.
             `;
 
             try {
@@ -432,7 +408,6 @@
 
         // --- SIMULATOR ---
         function startSimulator() {
-            // Target simulation values
             let simPace = MISSION.targets.paceSec || 120;
             let simRate = MISSION.targets.rate || 24;
             let simWatts = 200;
@@ -440,17 +415,12 @@
 
             STATE.simLoop = setInterval(() => {
                 if(STATE.phase !== 'WORK') return;
-
-                // Drift logic
                 let jitter = (Math.random() - 0.5) * 4; 
                 let curPace = simPace + jitter;
                 let curRate = Math.floor(simRate + (Math.random() * 2));
-                
-                // Speed m/s
                 let speed = 500 / curPace;
-                
                 processTelemetry(speed, curRate, simHR, simWatts);
-            }, 500); // 2Hz update
+            }, 500); 
         }
 
         // --- BLUETOOTH ---
