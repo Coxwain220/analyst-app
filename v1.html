@@ -126,4 +126,326 @@
     <div id="dashScreen">
         <div class="comms-bar">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:10px; color:#
+                <span style="font-size:10px; color:#666;">ANALYST AI</span>
+                <span id="aiDot" style="color:#333;">●</span>
+            </div>
+            <div class="comms-text" id="coachMsg">SYSTEM ONLINE.</div>
+            <div class="phase-badge" id="phaseBadge">READY</div>
+        </div>
+
+        <div class="main-deck">
+            <div id="intervalCounter" style="font-size:2vh; color:#666; margin-bottom:5px;">SINGLE</div>
+            
+            <div style="font-size:1.5vh; color:#444;">SPLIT / 500M</div>
+            <div class="primary-stat" id="dispPace">0:00</div>
+            
+            <div class="target-bar">
+                <div class="target-fill" id="paceBar"></div>
+                <div class="target-marker"></div>
+            </div>
+            <div style="font-size:1.2vh; color:#444; margin-top:5px;">TARGET: <span id="lblTgtPace">--</span></div>
+
+            <div class="sub-stat" style="margin-top: 15px;">
+                <span id="dispWatts">0</span> <span style="font-size:2vh; color:#666;">W</span>
+                <span style="margin-left:15px; font-size:4vh; color:#444;">|</span>
+                <span id="dispDist" style="margin-left:15px;">0</span> <span style="font-size:2vh; color:#666;">m</span>
+            </div>
+        </div>
+
+        <div class="lower-deck">
+            <div class="stat-box">
+                <div class="stat-val" id="dispRate">--</div>
+                <div class="stat-lbl">RATE</div>
+                <div class="stat-target">TGT: <span id="lblTgtRate">--</span></div>
+            </div>
+            <div class="stat-box" style="border:none;">
+                <div class="stat-val" id="dispHR" style="color:white">--</div>
+                <div class="stat-lbl">HEART RATE</div>
+            </div>
+        </div>
+
+        <div style="background:#111; display:flex; padding:0 20px; align-items:center;">
+            <button class="btn" style="background:none; color:#666; font-size:10px;" onclick="location.reload()">ABORT MISSION</button>
+            <button class="btn" style="background:none; color:#accent; font-size:10px;" onclick="downloadLog()">SAVE LOG</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS ---
+        const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
+        const PM5_CHAR_32 = 'ce060032-43e5-11e4-916c-0800200c9a66'; 
+        const MODEL = "gemini-2.5-flash";
+
+        // --- MISSION CONFIG ---
+        let MISSION = {
+            type: 'SINGLE', // SINGLE or INTERVAL
+            sets: 1,
+            workDist: 2000,
+            restSec: 0,
+            targets: { paceSec: 0, rate: 0 },
+            context: "", // Natural Language String
+            apiKey: ""
+        };
+
+        // --- RUNTIME STATE ---
+        let STATE = {
+            active: false,
+            currentSet: 1,
+            phase: 'IDLE', // WORK or REST
+            distRemaining: 0,
+            restTimer: 0,
+            log: [],
+            lastAi: 0,
+            simLoop: null
+        };
+
+        // --- SETUP LOGIC ---
+        window.onload = () => {
+            if(localStorage.getItem("gemini_api_key")) 
+                document.getElementById("apiKeyInput").value = localStorage.getItem("gemini_api_key");
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.cfg-section').forEach(s => s.classList.add('hidden'));
+            
+            if(tab === 'SINGLE') {
+                document.getElementById('cfgSingle').classList.remove('hidden');
+                event.target.classList.add('active');
+                MISSION.type = 'SINGLE';
+            } else if (tab === 'INTERVAL') {
+                document.getElementById('cfgInterval').classList.remove('hidden');
+                event.target.classList.add('active');
+                MISSION.type = 'INTERVAL';
+            }
+        }
+
+        async function launchMission(isSim) {
+            MISSION.apiKey = document.getElementById("apiKeyInput").value.trim();
+            if(MISSION.apiKey) localStorage.setItem("gemini_api_key", MISSION.apiKey);
+
+            // Capture Setup
+            if(MISSION.type === 'SINGLE') {
+                MISSION.sets = 1;
+                MISSION.workDist = parseInt(document.getElementById('inpDist').value);
+                MISSION.restSec = 0;
+            } else {
+                MISSION.sets = parseInt(document.getElementById('inpSets').value);
+                MISSION.workDist = parseInt(document.getElementById('inpIntDist').value);
+                MISSION.restSec = parseInt(document.getElementById('inpRest').value);
+            }
+
+            // Capture Targets & Context (NLP)
+            let p = document.getElementById('tgtPace').value.split(':');
+            MISSION.targets.paceSec = (parseInt(p[0])*60) + parseInt(p[1]);
+            MISSION.targets.rate = parseInt(document.getElementById('tgtRate').value) || 0;
+            MISSION.context = document.getElementById('userNotes').value.trim() || "No specific status provided.";
+
+            // Init UI
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('dashScreen').classList.add('active');
+            
+            document.getElementById('lblTgtPace').innerText = document.getElementById('tgtPace').value;
+            document.getElementById('lblTgtRate').innerText = MISSION.targets.rate || "--";
+
+            // Init State
+            STATE.currentSet = 1;
+            STATE.distRemaining = MISSION.workDist;
+            STATE.active = true;
+            setPhase('WORK');
+
+            // Connect
+            if(isSim) startSimulator();
+            else connectBluetooth();
+            
+            triggerAI("MISSION_START", "Operator Brief: " + MISSION.context);
+        }
+
+        function setPhase(p) {
+            STATE.phase = p;
+            const badge = document.getElementById('phaseBadge');
+            if(p === 'WORK') {
+                badge.innerText = `SET ${STATE.currentSet} / ${MISSION.sets}`;
+                badge.className = 'phase-badge work';
+                STATE.distRemaining = MISSION.workDist;
+            } else if (p === 'REST') {
+                badge.innerText = `REST (${MISSION.restSec}s)`;
+                badge.className = 'phase-badge rest';
+                STATE.restTimer = MISSION.restSec;
+                startRestTimer();
+            } else {
+                badge.innerText = "COMPLETE";
+                badge.className = 'phase-badge';
+            }
+        }
+
+        function startRestTimer() {
+            let t = setInterval(() => {
+                if(STATE.phase !== 'REST') { clearInterval(t); return; }
+                STATE.restTimer--;
+                document.getElementById('phaseBadge').innerText = `REST (${STATE.restTimer}s)`;
+                
+                if(STATE.restTimer <= 0) {
+                    clearInterval(t);
+                    STATE.currentSet++;
+                    if(STATE.currentSet > MISSION.sets) {
+                        setPhase('COMPLETE');
+                        triggerAI("MISSION_COMPLETE", "All sets done.");
+                    } else {
+                        setPhase('WORK');
+                        triggerAI("SET_START", `Starting Set ${STATE.currentSet}`);
+                    }
+                }
+            }, 1000);
+        }
+
+        // --- TELEMETRY ENGINE ---
+        function processTelemetry(speedMS, rate, hr, watts) {
+            if(!STATE.active || STATE.phase !== 'WORK') return;
+
+            let paceSec = speedMS > 0.1 ? 500/speedMS : 0;
+            let m = Math.floor(paceSec / 60);
+            let s = Math.floor(paceSec % 60);
+            let paceStr = speedMS > 0.1 ? `${m}:${s.toString().padStart(2,'0')}` : "0:00";
+
+            // Dist Calculation
+            if(speedMS > 0.1) {
+                STATE.distRemaining -= (speedMS * 0.5); 
+                if(STATE.distRemaining <= 0) {
+                    STATE.distRemaining = 0;
+                    if(MISSION.type === 'SINGLE') {
+                        setPhase('COMPLETE');
+                        triggerAI("MISSION_COMPLETE", "Distance Complete.");
+                    } else {
+                        setPhase('REST');
+                    }
+                }
+            }
+
+            // Update UI
+            document.getElementById('dispPace').innerText = paceStr;
+            document.getElementById('dispWatts').innerText = watts;
+            document.getElementById('dispRate').innerText = rate;
+            document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
+            document.getElementById('dispDist').innerText = Math.floor(STATE.distRemaining);
+
+            // Ghost Boat
+            if(MISSION.targets.paceSec > 0 && paceSec > 0) {
+                let deviation = paceSec - MISSION.targets.paceSec; 
+                let pct = 50 + (deviation * 5); 
+                pct = Math.max(0, Math.min(100, pct));
+                document.getElementById('paceBar').style.width = pct + "%";
+                if(deviation > 2) document.getElementById('paceBar').style.background = "#FF0000"; 
+                else if (deviation < -2) document.getElementById('paceBar').style.background = "#FFAA00"; 
+                else document.getElementById('paceBar').style.background = "#00FF00"; 
+            }
+
+            // Watchdog & Logging
+            runWatchdog(paceSec, rate, hr);
+            if(Date.now() % 1000 < 500) STATE.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate, p:paceStr });
+        }
+
+        // --- WATCHDOG ---
+        function runWatchdog(paceSec, rate, hr) {
+            if(Date.now() - STATE.lastAi < 15000) return;
+
+            let alerts = [];
+            if(MISSION.targets.paceSec > 0 && paceSec > 0) {
+                let diff = paceSec - MISSION.targets.paceSec;
+                if(diff > 3) alerts.push(`Pace slow by ${diff.toFixed(1)}s`);
+                else if(diff < -4) alerts.push(`Pace too fast by ${Math.abs(diff).toFixed(1)}s`);
+            }
+            if(MISSION.targets.rate > 0 && rate > 0) {
+                if(rate > MISSION.targets.rate + 2) alerts.push(`Rate too high (${rate})`);
+                else if(rate < MISSION.targets.rate - 2) alerts.push(`Rate too low (${rate})`);
+            }
+
+            if(alerts.length > 0) triggerAI("ANOMALY", alerts.join(". "));
+        }
+
+        // --- AI UPLINK ---
+        async function triggerAI(evt, details) {
+            if(!MISSION.apiKey) return;
+            STATE.lastAi = Date.now();
+
+            const dot = document.getElementById('aiDot');
+            const box = document.getElementById('coachMsg');
+            dot.style.color = "yellow";
+            box.classList.add('ai-thinking');
+
+            const PROMPT = `
+            Act as an Elite Rowing Coach.
+            Operator Briefing: "${MISSION.context}".
+            Event: ${evt}. Details: ${details}.
+            Target: Pace ${MISSION.targets.paceSec}s, Rate ${MISSION.targets.rate}.
+            
+            INSTRUCTIONS:
+            - Analyze the 'Operator Briefing' to determine your coaching persona (Supportive vs. Demanding).
+            - Provide 1 punchy sentence of guidance.
+            `;
+
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${MISSION.apiKey}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
+                });
+                const d = await r.json();
+                const txt = d.candidates?.[0]?.content?.parts?.[0]?.text || "Roger.";
+                
+                box.innerText = txt.toUpperCase();
+                dot.style.color = "#00FF00";
+            } catch(e) {
+                dot.style.color = "red";
+                box.innerText = "OFFLINE";
+            }
+            box.classList.remove('ai-thinking');
+        }
+
+        // --- SIMULATOR ---
+        function startSimulator() {
+            let simPace = MISSION.targets.paceSec || 120;
+            let simRate = MISSION.targets.rate || 24;
+            let simWatts = 200;
+            let simHR = 140;
+
+            STATE.simLoop = setInterval(() => {
+                if(STATE.phase !== 'WORK') return;
+                let jitter = (Math.random() - 0.5) * 4; 
+                let curPace = simPace + jitter;
+                let curRate = Math.floor(simRate + (Math.random() * 2));
+                let speed = 500 / curPace;
+                processTelemetry(speed, curRate, simHR, simWatts);
+            }, 500); 
+        }
+
+        // --- BLUETOOTH ---
+        async function connectBluetooth() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'PM5' }], optionalServices: [PM5_SERVICE] });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(PM5_SERVICE);
+                const char = await service.getCharacteristic(PM5_CHAR_32);
+                await char.startNotifications();
+                char.addEventListener('characteristicvaluechanged', (e) => {
+                    let d = e.target.value;
+                    if(d.byteLength < 13) return;
+                    let speed = (d.getUint8(3) | (d.getUint8(4)<<8)) * 0.001;
+                    let rate = d.getUint8(5);
+                    let watts = (d.getUint8(11) | (d.getUint8(12)<<8));
+                    let hr = d.getUint8(6);
+                    processTelemetry(speed, rate, hr, watts);
+                });
+            } catch(e) { alert(e.message); }
+        }
+
+        function downloadLog() {
+            let csv = "Time,Watts,HR,Rate,Pace\n" + STATE.log.map(r=>`${r.t},${r.w},${r.h},${r.r},${r.p}`).join("\n");
+            const blob = new Blob([csv], {type:'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'analyst_log.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>
