@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V5.4 (DATA CENTER)</title>
+    <title>ANALYST V5.5 (ROBUST AI)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -317,12 +317,14 @@
             const btn = document.querySelector('#screenBuilder .btn-blue');
             btn.innerText = "THINKING...";
             
+            // IMPROVED PROMPT
             const PROMPT = `Parse workout: "${input}". 
             Return JSON: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. 
             RULES:
-            1. If split/pace mentioned (e.g. 1:40), calc seconds (100) -> pace_target.
-            2. If watts mentioned, put in watts.
-            3. If time based, duration in seconds. If dist based, dist in meters.
+            1. If input format is "1.45" or "1:45" refers to pace, convert to seconds (105). set in "pace_target".
+            2. If "watts" mentioned, set "watts".
+            3. If time based, duration in seconds.
+            4. If no specific target, leave as 0.
             `;
 
             try {
@@ -330,15 +332,19 @@
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
                 });
+                
+                // SAFETY: Check response before parsing
                 const d = await r.json();
-                const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
+                if(!d.candidates || !d.candidates[0]) throw new Error("AI returned no results");
+
+                const jsonText = extractJSON(d.candidates[0].content.parts[0].text);
                 MISSION = JSON.parse(jsonText);
                 
                 // POPULATE EDITOR
                 document.getElementById('aiDesc').value = MISSION.description;
                 document.getElementById('aiCount').innerText = MISSION.intervals.filter(i=>i.type==='WORK').length;
                 
-                // Extract targets from first work interval to populate fields
+                // Extract targets from first work interval
                 const firstWork = MISSION.intervals.find(i=>i.type==='WORK');
                 if(firstWork) {
                     if(firstWork.pace_target > 0) {
@@ -352,6 +358,16 @@
                 document.getElementById('missionPreview').classList.remove('hidden');
             } catch(e) { alert("AI Error: " + e.message); }
             btn.innerText = "GENERATE PLAN";
+        }
+
+        // Helper to extract JSON from markdown text
+        function extractJSON(text) {
+            const start = text.indexOf('{');
+            const end = text.lastIndexOf('}');
+            if (start !== -1 && end !== -1) {
+                return text.substring(start, end + 1);
+            }
+            return text; // Fallback
         }
 
         // --- DASHBOARD LOGIC ---
