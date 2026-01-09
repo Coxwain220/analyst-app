@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V6.1 (POLISHED)</title>
+    <title>ANALYST V6.2 (ROBUST)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -67,12 +67,6 @@
         .hr-zone.active { opacity: 1; box-shadow: 0 0 8px currentColor; }
         .z1 { background: #666; } .z2 { background: #0088FF; } .z3 { background: #00FF00; } .z4 { background: #FFAA00; } .z5 { background: #FF0000; } 
 
-        /* NAV BAR */
-        .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; flex-shrink: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-btn { flex: 1; background: transparent; border: none; color: #666; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; }
-        .nav-btn.active { color: var(--accent); background: #1a1a1a; }
-        .nav-icon { font-size: 20px; margin-bottom: 4px; }
-
         /* TABS */
         .manual-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid #333; }
         .m-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; }
@@ -83,6 +77,12 @@
         .h-date { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
         .h-desc { font-weight: bold; font-size: 13px; margin-top: 2px; color: #eee; }
         .h-stat { font-family: monospace; color: var(--accent); font-size: 14px; font-weight: bold; }
+
+        /* NAV BAR */
+        .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; flex-shrink: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-btn { flex: 1; background: transparent; border: none; color: #666; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; }
+        .nav-btn.active { color: var(--accent); background: #1a1a1a; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
 
         @media (max-width: 600px) { .metric-huge { font-size: 18vw; } .metric-sub { font-size: 5vh; } }
     </style>
@@ -364,9 +364,9 @@
             const PROMPT = `Parse workout: "${input}". Return JSON: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. RULES: "1.45" or "1:45" pace = 105s pace_target. Time in seconds.`;
 
             try {
-                // Timeout check
+                // Timeout logic
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s Timeout
 
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] }),
@@ -382,7 +382,10 @@
                 MISSION.intervals = result.intervals;
                 renderBuilderList();
                 showToast("Plan Generated", 'success');
-            } catch(e) { showToast("AI Error: " + e.message, 'error'); }
+            } catch(e) { 
+                if(e.name === 'AbortError') showToast("Timeout: Network too slow", 'error');
+                else showToast("AI Error: " + e.message, 'error'); 
+            }
             btn.innerText = "GENERATE PLAN";
         }
 
