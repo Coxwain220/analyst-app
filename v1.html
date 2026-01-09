@@ -3,21 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V4.6 (MODEL FORCE)</title>
+    <title>ANALYST V5.0 (DIAGNOSTIC)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); font-family: 'Roboto', -apple-system, sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
         /* TOAST */
-        #toast {
-            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
-            background: #222; color: #fff; border: 1px solid #444; border-top: none;
-            padding: 15px 25px; border-radius: 0 0 8px 8px; z-index: 2000;
-            font-size: 13px; font-weight: bold; transition: top 0.3s ease;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 10px;
-            max-width: 90%; white-space: normal; text-align: center;
-        }
+        #toast { position: fixed; top: -50px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 10px 20px; border-radius: 0 0 8px 8px; z-index: 1000; font-size: 12px; font-weight: bold; transition: top 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         #toast.active { top: 0; }
         #toast.success { border-color: var(--accent); color: var(--accent); }
         #toast.error { border-color: var(--danger); color: var(--danger); }
@@ -25,7 +18,6 @@
         /* NAV */
         .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 60px; flex-shrink: 0; }
         .nav-btn { flex: 1; background: transparent; border: none; color: #666; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; }
-        .nav-btn:hover { background: #1a1a1a; color: #888; }
         .nav-btn.active { color: var(--accent); background: #1a1a1a; }
         .nav-icon { font-size: 18px; margin-bottom: 4px; }
 
@@ -37,65 +29,41 @@
         .screen-header { display: flex; align-items: center; padding: 15px; background: var(--panel); border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .header-title { flex-grow: 1; text-align: center; font-weight: bold; font-size: 14px; letter-spacing: 1px; color: #888; }
         .header-btn { background: transparent; border: none; color: var(--accent); font-weight: bold; font-size: 12px; cursor: pointer; padding: 10px; }
-        .header-btn:hover { opacity: 0.8; }
-        .header-btn.cancel { color: #666; }
 
         /* UI */
         .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
         
-        .btn { width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 14px; margin-top: 5px; transition: filter 0.2s, transform 0.1s; }
-        .btn:hover { filter: brightness(1.1); }
-        .btn:active { transform: scale(0.98); }
+        .btn { width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 14px; margin-top: 5px; }
         .btn-green { background: var(--accent); color: black; }
         .btn-outline { background: transparent; border: 1px solid #555; color: #888; }
         .btn-danger { background: #300; border: 1px solid #500; color: #f88; }
         .btn-sim { background: #333; color: #aaa; border: 1px solid #555; font-size: 10px; margin-top: 10px; }
 
         input, textarea, select { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; width: 100%; font-family: inherit; margin-bottom: 10px; }
-        textarea { resize: none; }
         
-        /* MANUAL TABS */
-        .manual-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid #333; }
-        .m-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .m-tab.active { color: white; border-bottom: 2px solid var(--accent); }
+        /* DEBUG CONSOLE */
+        #debugLog { background: #000; border: 1px solid #333; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; height: 150px; overflow-y: scroll; white-space: pre-wrap; margin-top: 10px; }
 
         /* DASHBOARD */
         #dashScreen { display: none; height: 100%; grid-template-rows: 60px 1fr 120px; }
         #dashScreen.active { display: grid; }
-
-        .comms-bar { background: var(--panel); padding: 0 20px; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--border); position: relative; }
-        .coach-text { font-family: monospace; color: var(--accent); font-size: 14px; font-weight: bold; white-space: pre-wrap; }
-        
-        .main-deck { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .main-deck { display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .metric-huge { font-size: 14vh; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
         .metric-sub { font-size: 4vh; color: #888; font-weight: 700; margin-top: 10px; }
-
         .lower-deck { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-top: 1px solid var(--border); }
-        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); position: relative; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); }
         
         /* HR ZONES */
-        .hr-bar-container { width: 100%; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; overflow: hidden; display: flex; }
-        .hr-zone { height: 100%; opacity: 0.3; transition: opacity 0.2s; }
+        .hr-bar-container { width: 100%; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; display: flex; }
+        .hr-zone { height: 100%; opacity: 0.3; flex-grow: 1; margin: 0 1px; }
         .hr-zone.active { opacity: 1; box-shadow: 0 0 10px currentColor; }
-        .z1 { background: #666; width: 50%; } 
-        .z2 { background: #0088FF; width: 10%; } 
-        .z3 { background: #00FF00; width: 10%; } 
-        .z4 { background: #FFAA00; width: 10%; } 
-        .z5 { background: #FF0000; width: 20%; } 
+        .z1 { background: #666; } .z2 { background: #0088FF; } .z3 { background: #00FF00; } .z4 { background: #FFAA00; } .z5 { background: #FF0000; } 
 
-        /* HISTORY */
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; transition: background 0.2s; }
-        .history-item:hover { background: #1a1a1a; }
-        .h-date { font-size: 12px; color: #666; }
-        .h-desc { font-weight: bold; font-size: 14px; margin-top: 2px; }
-        .h-stat { font-family: monospace; color: var(--accent); font-size: 12px; }
-
-        /* BUILDER */
-        .seg-list { margin-top: 10px; }
-        .seg-item { background: #1a1a1a; padding: 8px; margin-bottom: 5px; border-left: 3px solid var(--accent); font-size: 12px; display: flex; justify-content: space-between; }
-        
-        @media (max-width: 380px) { .metric-huge { font-size: 10vh; } }
+        /* TABS */
+        .manual-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid #333; }
+        .m-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; }
+        .m-tab.active { color: white; border-bottom: 2px solid var(--accent); }
     </style>
 </head>
 <body>
@@ -105,22 +73,8 @@
     <div id="screenBuilder" class="screen active">
         <div class="scroll-area">
             
-            <div class="card" id="authCard" style="display:none; border-color:var(--warn);">
-                <div class="section-header" style="color:var(--warn);">⚠ NEURAL UPLINK REQUIRED</div>
-                <label style="font-size:10px; color:#666;">PASTE API KEY TO ACTIVATE AI</label>
-                <input type="password" id="homeApiKeyInput" placeholder="Paste Gemini Key here...">
-                <button class="btn btn-outline" onclick="saveHomeKey()">ACTIVATE SYSTEM</button>
-            </div>
-
             <div class="card">
-                <div class="section-header">NATURAL LANGUAGE MISSION BUILDER</div>
-                <label style="font-size:10px; color:#666;">TYPE OR SPEAK YOUR PLAN</label>
-                <textarea id="aiInput" rows="3" aria-label="Mission Input" placeholder="e.g. 4 x 6min. 2 mins 20sr, 2 mins 24sr, 2 mins 30sr..."></textarea>
-                <button class="btn btn-green" onclick="generateMission()" aria-label="Generate Mission">GENERATE MISSION</button>
-            </div>
-
-            <div class="card">
-                <div class="section-header">MANUAL SETUP</div>
+                <div class="section-header">MANUAL MISSION SETUP</div>
                 <div class="manual-tabs">
                     <button class="m-tab active" onclick="setManualMode('SINGLE')" id="tabSingle">SINGLE</button>
                     <button class="m-tab" onclick="setManualMode('INTERVAL')" id="tabInterval">INTERVALS</button>
@@ -140,7 +94,7 @@
                 </div>
 
                 <div style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-                    <label style="color:var(--accent); font-size:10px;">TARGETS (OPTIONAL)</label>
+                    <label style="color:var(--accent); font-size:10px;">TARGETS</label>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                         <div><label>PACE</label><input type="text" id="inpPace" value="1:54"></div>
                         <div><label>RATE</label><input type="number" id="inpRate" value="26"></div>
@@ -153,50 +107,87 @@
                 </div>
             </div>
 
-            <div id="missionPreview" class="card hidden">
-                <div class="section-header">AI MISSION PREVIEW</div>
-                <div id="missionDetails" style="font-size:12px; color:#ccc; margin-bottom:10px; white-space: pre-wrap;"></div>
-                <div class="seg-list" id="segmentList"></div>
+            <div class="card">
+                <div class="section-header">AI MISSION BUILDER</div>
+                <label style="font-size:10px; color:#666;">NATURAL LANGUAGE INPUT</label>
+                <textarea id="aiInput" rows="3" placeholder="e.g. 8 x 1min, 2min rest..."></textarea>
+                <button class="btn btn-outline" onclick="generateMission()">GENERATE WITH AI</button>
+            </div>
+
+            <div id="missionPreview" class="card" style="display:none;">
+                <div class="section-header">AI PREVIEW</div>
+                <div id="missionDetails" style="font-size:12px; color:#ccc; white-space: pre-wrap;"></div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
                     <button class="btn btn-outline" onclick="startMission(true)">SIMULATE AI</button>
                     <button class="btn btn-green" onclick="startMission(false)">START AI ROW</button>
                 </div>
             </div>
-            
+        </div>
+    </div>
+
+    <div id="screenSettings" class="screen">
+        <div class="screen-header">
+            <button class="header-btn" onclick="nav('screenBuilder')">DONE</button>
+            <div class="header-title">SETTINGS</div>
+            <div style="width:40px;"></div>
+        </div>
+        <div class="scroll-area">
             <div class="card">
-                <button class="btn btn-outline" style="font-size:10px;" onclick="nav('screenSettings')">SETTINGS / KEYS</button>
+                <div class="section-header">AI CONFIGURATION</div>
+                <label>API KEY</label>
+                <input type="password" id="apiKeyInput" placeholder="Paste Key...">
+                
+                <label style="margin-top:10px;">MODEL</label>
+                <select id="modelSelect">
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Standard)</option>
+                    <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
+                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Exp)</option>
+                </select>
+
+                <button class="btn btn-green" onclick="testConnection()">TEST CONNECTION</button>
+                
+                <label style="margin-top:15px; color:#666;">DEBUG LOG (SEND THIS IF FAILED)</label>
+                <div id="debugLog">Ready to test...</div>
             </div>
+
+            <div class="card">
+                <div class="section-header">HEART RATE ZONES</div>
+                <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
+                    <div><label>Z5</label><input type="number" id="hrZ5" value="180"></div>
+                    <div><label>Z1</label><input type="number" id="hrZ1" value="108"></div>
+                </div>
+                <div style="font-size:10px; color:#666;">(Adjust other zones in code for now)</div>
+            </div>
+            
+            <button class="btn btn-danger" onclick="localStorage.clear(); location.reload();">RESET ALL</button>
         </div>
     </div>
 
     <div id="dashScreen">
-        <div class="comms-bar">
+        <div class="comms-bar" style="border-bottom:1px solid #333; padding:10px 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:10px; color:#666;">ANALYST AI</span>
-                <span id="aiStatus" style="color:#333;">●</span>
+                <span style="font-size:10px; color:#666;">MISSION CONTROL</span>
+                <span id="phaseBadge" style="background:#222; padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold; color:#888;">IDLE</span>
             </div>
-            <div class="coach-text" id="coachMsg">READY.</div>
-            <div style="position:absolute; right:10px; top:10px; background:#222; padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold; color:#888;" id="phaseBadge">IDLE</div>
+            <div id="intervalInfo" style="font-size:14px; color:#fff; font-weight:bold;">--</div>
         </div>
 
         <div class="main-deck">
-            <div id="intervalInfo" style="font-size:14px; color:#666; margin-bottom:5px;">--</div>
             <div class="metric-huge" id="dispPace">0:00</div>
-            <div class="metric-sub">
-                <span id="dispWatts">0</span>W <span style="color:#444">|</span> <span id="dispDist">0</span>m
-            </div>
+            <div class="metric-sub"><span id="dispWatts">0</span>W <span style="color:#444">|</span> <span id="dispDist">0</span>m</div>
         </div>
 
         <div class="lower-deck">
             <div class="stat-box">
                 <div class="metric-sub" id="dispRate" style="color:white; margin:0;">--</div>
-                <div style="font-size:10px; color:#666;">RATE</div>
-                <div style="font-size:10px; color:var(--accent); margin-top:2px;">TGT: <span id="tgtRate">--</span></div>
+                <div style="font-size:10px; color:#666;">RATE (TGT: <span id="tgtRate" style="color:var(--accent)">--</span>)</div>
             </div>
-            <div class="stat-box" style="padding: 0 15px;">
+            <div class="stat-box">
                 <div class="metric-sub" id="dispHR" style="color:white; margin:0;">--</div>
                 <div style="font-size:10px; color:#666;">HEART RATE</div>
-                <div class="hr-bar-container" id="hrBar">
+                <div class="hr-bar-container">
                     <div class="hr-zone z1" id="z1"></div>
                     <div class="hr-zone z2" id="z2"></div>
                     <div class="hr-zone z3" id="z3"></div>
@@ -205,134 +196,60 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="screenHistory" class="screen">
-        <div class="screen-header">
-            <button class="header-btn cancel" onclick="nav('screenBuilder')">← BACK</button>
-            <div class="header-title">MISSION LOGS</div>
-            <div style="width:40px;"></div>
-        </div>
-        <div class="scroll-area" id="historyList"></div>
-        <div style="padding:15px; border-top:1px solid #333; background:var(--panel);">
-            <button class="btn btn-outline" onclick="exportHistory()">EXPORT ALL (CSV)</button>
-        </div>
-    </div>
-
-    <div id="screenSettings" class="screen">
-        <div class="screen-header">
-            <button class="header-btn cancel" onclick="cancelSettings()">CANCEL</button>
-            <div class="header-title">SETTINGS</div>
-            <button class="header-btn" style="width:40px;"></button>
-        </div>
-        <div class="scroll-area">
-            
-            <div class="card">
-                <div class="section-header">SYSTEM & API</div>
-                <label>API KEY</label>
-                <input type="password" id="apiKeyInput" placeholder="Paste Key...">
-                
-                <label style="margin-top:10px;">AI MODEL SELECTION</label>
-                <select id="modelSelect">
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Standard)</option>
-                    <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B (Fastest)</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Powerful)</option>
-                    <option value="gemini-1.0-pro">Gemini 1.0 Pro (Stable/Legacy)</option>
-                </select>
-                
-                <label style="margin-top:10px; color:#666;">CUSTOM MODEL ID (IF ABOVE FAIL)</label>
-                <input type="text" id="modelCustom" placeholder="e.g. gemini-2.0-flash-exp">
-                
-                <button class="btn btn-outline" onclick="testConnection()">TEST CONNECTION</button>
-            </div>
-
-            <div class="card">
-                <div class="section-header">HEART RATE ZONES (MAX BPM)</div>
-                <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
-                    <div style="display:flex; align-items:center; gap:10px;"><span style="color:#FF0000; font-weight:bold; width:30px;">Z5</span><input type="number" id="hrZ5" value="180"></div>
-                    <div style="display:flex; align-items:center; gap:10px;"><span style="color:#FFAA00; font-weight:bold; width:30px;">Z4</span><input type="number" id="hrZ4" value="162"></div>
-                    <div style="display:flex; align-items:center; gap:10px;"><span style="color:#00FF00; font-weight:bold; width:30px;">Z3</span><input type="number" id="hrZ3" value="144"></div>
-                    <div style="display:flex; align-items:center; gap:10px;"><span style="color:#0088FF; font-weight:bold; width:30px;">Z2</span><input type="number" id="hrZ2" value="125"></div>
-                    <div style="display:flex; align-items:center; gap:10px;"><span style="color:#666; font-weight:bold; width:30px;">Z1</span><input type="number" id="hrZ1" value="108"></div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="section-header">DATA</div>
-                <button class="btn btn-danger" onclick="clearData()">RESET ALL DATA</button>
-            </div>
-            
-            <button id="btnSave" class="btn btn-green" onclick="saveSettings()">SAVE PROFILE</button>
+        
+        <div style="background:#111; padding:10px; display:flex; justify-content:center;">
+            <button class="btn btn-outline" style="width:auto; padding:10px 30px;" onclick="location.reload()">STOP / SAVE</button>
         </div>
     </div>
 
     <div class="nav-bar">
         <button class="nav-btn active" onclick="nav('screenBuilder')" id="navBuild"><span class="nav-icon">⚡</span>BUILD</button>
         <button class="nav-btn" onclick="nav('dashScreen')" id="navDash"><span class="nav-icon">⏱</span>ROW</button>
-        <button class="nav-btn" onclick="nav('screenHistory')" id="navHist"><span class="nav-icon">☰</span>LOGS</button>
         <button class="nav-btn" onclick="nav('screenSettings')" id="navSet"><span class="nav-icon">⚙</span>SET</button>
     </div>
 
     <script>
-        // --- CONSTANTS ---
         const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
         const PM5_CHAR_32 = 'ce060032-43e5-11e4-916c-0800200c9a66'; 
-
-        // --- STATE ---
-        let PROFILE = { hrZones: { z1: 108, z2: 125, z3: 144, z4: 162, z5: 180 }, apiKey: "", model: "gemini-1.5-flash" };
-        let HISTORY = [];
-        let MISSION = { description: "", intervals: [], totalTime: 0 };
-        let STATE = { active: false, intervalIdx: 0, segmentIdx: 0, timeLeft: 0, elapsedInterval: 0, log: [], simLoop: null, lastAi: 0 };
+        
+        let MISSION = { description: "", intervals: [] };
+        let STATE = { active: false, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null };
         let MANUAL_MODE = 'SINGLE';
+        let HR_ZONES = { z1: 108, z2: 125, z3: 144, z4: 162, z5: 180 };
 
-        // --- INIT ---
         window.onload = () => {
-            loadData();
-            renderHistory();
-            checkAuth();
+            const key = localStorage.getItem('gemini_api_key');
+            if(key) document.getElementById('apiKeyInput').value = key;
+            const savedZones = localStorage.getItem('hr_zones');
+            if(savedZones) {
+                HR_ZONES = JSON.parse(savedZones);
+                document.getElementById('hrZ5').value = HR_ZONES.z5;
+                document.getElementById('hrZ1').value = HR_ZONES.z1;
+            }
         };
 
-        function checkAuth() {
-            const key = localStorage.getItem('gemini_api_key');
-            if(!key || key.length < 10) {
-                document.getElementById('authCard').style.display = 'block';
-            } else {
-                document.getElementById('authCard').style.display = 'none';
-            }
-        }
-
-        function saveHomeKey() {
-            const k = document.getElementById('homeApiKeyInput').value.trim();
-            if(k.length > 5) {
-                localStorage.setItem('gemini_api_key', k);
-                loadData();
-                checkAuth();
-                showToast("Key Saved. System Active.", 'success');
-            }
-        }
-
         // --- UTILS ---
-        function showToast(msg, type = 'success') {
+        function showToast(msg, type='success') {
             const t = document.getElementById('toast');
-            t.innerText = (type === 'success' ? '✔ ' : '⚠ ') + msg;
-            t.className = type === 'success' ? 'success active' : 'error active';
-            
-            // Auto hide based on type
-            const duration = type === 'error' ? 5000 : 3000;
-            setTimeout(() => { t.className = ''; }, duration);
+            t.innerText = (type==='success'?'✔ ':'⚠ ') + msg;
+            t.className = type + ' active';
+            setTimeout(()=>t.className='', 3000);
+        }
+        function nav(id) {
+            document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+            if(id==='screenBuilder') document.getElementById('navBuild').classList.add('active');
+            if(id==='dashScreen') document.getElementById('navDash').classList.add('active');
+            if(id==='screenSettings') document.getElementById('navSet').classList.add('active');
+        }
+        function logDebug(msg) {
+            const d = document.getElementById('debugLog');
+            d.innerText += "\n> " + msg;
+            d.scrollTop = d.scrollHeight;
         }
 
-        function nav(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            if(screenId === 'screenBuilder') document.getElementById('navBuild').classList.add('active');
-            if(screenId === 'dashScreen') document.getElementById('navDash').classList.add('active');
-            if(screenId === 'screenHistory') document.getElementById('navHist').classList.add('active');
-            if(screenId === 'screenSettings') document.getElementById('navSet').classList.add('active');
-        }
-
-        // --- MANUAL MODE TOGGLE ---
+        // --- MANUAL MODE ---
         function setManualMode(mode) {
             MANUAL_MODE = mode;
             document.getElementById('tabSingle').className = mode === 'SINGLE' ? 'm-tab active' : 'm-tab';
@@ -343,125 +260,90 @@
 
         function launchManual(isSim) {
             MISSION = { description: "Manual " + MANUAL_MODE, intervals: [] };
-            const tgtPace = document.getElementById('inpPace').value;
             const tgtRate = parseInt(document.getElementById('inpRate').value) || 20;
 
             if(MANUAL_MODE === 'SINGLE') {
                 const dist = parseInt(document.getElementById('inpDist').value);
-                MISSION.intervals.push({ 
-                    type: 'WORK', duration: 99999, dist: dist, 
-                    segments: [{ duration: 99999, rate: tgtRate }] 
-                });
+                MISSION.intervals.push({ type:'WORK', dist: dist, duration:99999, rate:tgtRate });
             } else {
                 const sets = parseInt(document.getElementById('inpSets').value);
                 const dist = parseInt(document.getElementById('inpIntDist').value);
                 const rest = parseInt(document.getElementById('inpRest').value);
                 for(let i=0; i<sets; i++) {
-                    MISSION.intervals.push({ type: 'WORK', duration: 9999, dist: dist, segments:[{duration:9999, rate:tgtRate}] });
-                    if(i < sets-1) MISSION.intervals.push({ type: 'REST', duration: rest });
+                    MISSION.intervals.push({ type:'WORK', dist: dist, duration:99999, rate:tgtRate });
+                    if(i < sets-1) MISSION.intervals.push({ type:'REST', duration:rest, rate:0 });
                 }
             }
             startMission(isSim);
         }
 
-        // --- AI GENERATOR ---
-        async function generateMission() {
-            const input = document.getElementById('aiInput').value;
-            const key = localStorage.getItem('gemini_api_key');
+        // --- AI ---
+        async function testConnection() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            if(!key) return showToast("API Key Missing", 'error');
+            localStorage.setItem('gemini_api_key', key);
             
-            if(!input || !key) {
-                document.getElementById('authCard').style.display = 'block';
-                return showToast("Key Invalid/Missing", 'error');
+            logDebug(`Testing ${model}...`);
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Hello" }] }] })
+                });
+                
+                const data = await r.json();
+                if(r.ok) {
+                    logDebug("SUCCESS: " + JSON.stringify(data));
+                    showToast("Connected!", 'success');
+                } else {
+                    logDebug("FAIL: " + JSON.stringify(data));
+                    showToast("Error. Check Log.", 'error');
+                }
+            } catch(e) {
+                logDebug("NET ERROR: " + e.message);
+                showToast("Network Error", 'error');
             }
-            
-            document.getElementById('missionDetails').innerText = "AI GENERATING...";
-            document.getElementById('missionPreview').classList.remove('hidden');
+        }
 
-            const PROMPT = `Parse rowing workout to JSON. Text: "${input}". 
-            Return JSON: { "description": "Summary", "intervals": [ { "type": "WORK", "duration": 0, "dist": 0, "segments": [ { "duration": 0, "rate": 0 } ] } ] }. 
-            Example: "4x1min, 1min rest" -> Work(60s), Rest(60s). If sub-segments (e.g. 30s 20spm, 30s 24spm), split WORK interval.`;
+        async function generateMission() {
+            const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
+            if(!key) { nav('screenSettings'); return showToast("Set API Key first", 'error'); }
+            
+            const input = document.getElementById('aiInput').value;
+            const model = document.getElementById('modelSelect').value;
+            
+            document.getElementById('missionPreview').style.display = 'block';
+            document.getElementById('missionDetails').innerText = "GENERATING...";
+
+            const PROMPT = `Parse workout: "${input}". JSON Format: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "rate": 0 }] }. If minutes use duration (sec), if meters use dist.`;
 
             try {
-                // Determine Model
-                let modelID = PROFILE.model || "gemini-1.5-flash";
-                if(document.getElementById('modelCustom') && document.getElementById('modelCustom').value.trim() !== "") {
-                    modelID = document.getElementById('modelCustom').value.trim();
-                }
-
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelID}:generateContent?key=${key}`;
-                
-                const r = await fetch(url, {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
                 });
-                
-                if(!r.ok) {
-                    const err = await r.json();
-                    throw new Error(err.error?.message || r.status);
-                }
-                
                 const d = await r.json();
-                const jsonText = d.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json/g,'').replace(/```/g,'');
-                MISSION = JSON.parse(jsonText);
+                if(!r.ok) throw new Error(d.error?.message || "API Error");
                 
-                renderMissionPreview();
-                showToast("Mission Generated", 'success');
+                const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
+                MISSION = JSON.parse(jsonText);
+                document.getElementById('missionDetails').innerText = JSON.stringify(MISSION, null, 2);
+                showToast("Generated!", 'success');
             } catch(e) {
-                console.error(e);
-                showToast(e.message, 'error');
-                document.getElementById('missionDetails').innerText = "Error: " + e.message;
+                document.getElementById('missionDetails').innerText = "ERROR: " + e.message;
             }
         }
 
-        function renderMissionPreview() {
-            document.getElementById('missionDetails').innerText = MISSION.description;
-            const list = document.getElementById('segmentList');
-            list.innerHTML = "";
-            MISSION.intervals.forEach((int, i) => {
-                let div = document.createElement('div');
-                div.className = 'seg-item';
-                div.style.borderLeftColor = int.type === 'WORK' ? 'var(--accent)' : 'var(--rest)';
-                div.innerHTML = `<span>${int.type} (${int.duration || int.dist + 'm'})</span> <span>${int.segments ? int.segments.length + ' Segments' : ''}</span>`;
-                list.appendChild(div);
-            });
-        }
-
-        async function testConnection() {
-            const key = document.getElementById('apiKeyInput').value;
-            let modelID = document.getElementById('modelSelect').value;
-            const custom = document.getElementById('modelCustom').value.trim();
-            if(custom) modelID = custom;
-
-            if(!key) return showToast("Enter API Key first", 'error');
-            
-            showToast("Testing connection...", 'success');
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelID}:generateContent?key=${key}`;
-                const r = await fetch(url, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Say OK" }] }] })
-                });
-                if(r.ok) showToast("Connection Successful!", 'success');
-                else {
-                    const d = await r.json();
-                    showToast("Error: " + (d.error?.message || r.status), 'error');
-                }
-            } catch(e) { showToast("Network Error", 'error'); }
-        }
-
-        // --- DASHBOARD CORE ---
+        // --- DASHBOARD ---
         function startMission(isSim) {
             nav('dashScreen');
-            STATE = { active: true, intervalIdx: 0, segmentIdx: 0, elapsedInterval: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null };
+            STATE = { active: true, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null };
             setupNextInterval();
 
             if(isSim) {
                 STATE.simLoop = setInterval(() => {
                     if(!STATE.active) return;
-                    let currentInt = MISSION.intervals[STATE.intervalIdx];
-                    let currentSeg = currentInt?.segments ? currentInt.segments[STATE.segmentIdx] : null;
-                    let tgtRate = currentSeg ? currentSeg.rate : 22;
-                    processTelemetry(2.5, tgtRate, 145, 200);
+                    processTelemetry(2.5, 24, 145, 200);
                 }, 500);
             } else {
                 connectBluetooth();
@@ -469,154 +351,56 @@
         }
 
         function setupNextInterval() {
-            if(STATE.intervalIdx >= MISSION.intervals.length) { endMission(); return; }
+            if(STATE.intervalIdx >= MISSION.intervals.length) {
+                STATE.active = false;
+                if(STATE.simLoop) clearInterval(STATE.simLoop);
+                alert("Workout Complete");
+                nav('screenBuilder');
+                return;
+            }
             const int = MISSION.intervals[STATE.intervalIdx];
-            
-            STATE.elapsedInterval = 0;
-            STATE.segmentIdx = 0;
-            STATE.timeLeft = int.duration || 99999; 
+            STATE.timeLeft = int.duration || 99999;
             STATE.distLeft = int.dist || 0;
             
-            const badge = document.getElementById('phaseBadge');
-            badge.innerText = int.type;
-            badge.style.backgroundColor = int.type === 'WORK' ? 'var(--accent)' : 'var(--rest)';
-            badge.style.color = int.type === 'WORK' ? 'black' : 'white';
+            document.getElementById('phaseBadge').innerText = int.type;
+            document.getElementById('phaseBadge').style.background = int.type==='WORK' ? '#00FF00' : '#0088FF';
+            document.getElementById('phaseBadge').style.color = int.type==='WORK' ? '#000' : '#fff';
             document.getElementById('intervalInfo').innerText = `${int.type} ${STATE.intervalIdx+1}/${MISSION.intervals.length}`;
+            document.getElementById('tgtRate').innerText = int.rate || "--";
         }
 
-        function processTelemetry(speedMS, rate, hr, watts) {
+        function processTelemetry(speed, rate, hr, watts) {
             if(!STATE.active) return;
-            const dt = 0.5;
-            STATE.elapsedInterval += dt;
-            STATE.timeLeft -= dt;
-            
-            if(speedMS > 0.1 && STATE.distLeft > 0) {
-                STATE.distLeft -= (speedMS * 0.5);
-                if(STATE.distLeft <= 0) { nextInterval(); return; }
-            } else if (STATE.timeLeft <= 0) {
-                nextInterval(); return;
-            }
-
             const int = MISSION.intervals[STATE.intervalIdx];
-            let currentSeg = null;
-            if(int.segments && int.segments.length > 0) {
-                let t = 0;
-                for(let i=0; i<int.segments.length; i++) {
-                    if(STATE.elapsedInterval >= t && STATE.elapsedInterval < t + int.segments[i].duration) {
-                        STATE.segmentIdx = i;
-                        currentSeg = int.segments[i];
-                        break;
-                    }
-                    t += int.segments[i].duration;
-                }
+            
+            // Updates
+            STATE.timeLeft -= 0.5;
+            if(speed > 0.1 && STATE.distLeft > 0) STATE.distLeft -= (speed * 0.5);
+            
+            // Finish Check
+            if( (int.dist > 0 && STATE.distLeft <= 0) || (int.duration < 99999 && STATE.timeLeft <= 0) ) {
+                STATE.intervalIdx++;
+                setupNextInterval();
+                return;
             }
 
             // UI
-            let paceSec = speedMS > 0.1 ? 500/speedMS : 0;
-            let m = Math.floor(paceSec / 60);
-            let s = Math.floor(paceSec % 60);
-            document.getElementById('dispPace').innerText = speedMS > 0.1 ? `${m}:${s.toString().padStart(2,'0')}` : "0:00";
+            let paceSec = speed > 0.1 ? 500/speed : 0;
+            let m = Math.floor(paceSec/60);
+            let s = Math.floor(paceSec%60);
+            document.getElementById('dispPace').innerText = speed > 0.1 ? `${m}:${s.toString().padStart(2,'0')}` : "0:00";
             document.getElementById('dispWatts').innerText = watts;
             document.getElementById('dispRate').innerText = rate;
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
-            document.getElementById('dispDist').innerText = Math.floor(STATE.distLeft);
-            document.getElementById('tgtRate').innerText = currentSeg ? currentSeg.rate : "--";
+            document.getElementById('dispDist').innerText = Math.floor(STATE.distLeft > 0 ? STATE.distLeft : 0);
 
-            updateHRBar(hr);
-            if(int.type === 'WORK') STATE.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate });
-        }
-
-        function nextInterval() {
-            STATE.intervalIdx++;
-            setupNextInterval();
-        }
-
-        function updateHRBar(hr) {
-            document.querySelectorAll('.hr-zone').forEach(z => z.classList.remove('active'));
-            if(hr > PROFILE.hrZones.z4) document.getElementById('z5').classList.add('active');
-            else if(hr > PROFILE.hrZones.z3) document.getElementById('z4').classList.add('active');
-            else if(hr > PROFILE.hrZones.z2) document.getElementById('z3').classList.add('active');
-            else if(hr > PROFILE.hrZones.z1) document.getElementById('z2').classList.add('active');
+            // HR Zones
+            document.querySelectorAll('.hr-zone').forEach(z=>z.classList.remove('active'));
+            if(hr > HR_ZONES.z4) document.getElementById('z5').classList.add('active');
+            else if(hr > HR_ZONES.z3) document.getElementById('z4').classList.add('active');
+            else if(hr > HR_ZONES.z2) document.getElementById('z3').classList.add('active');
+            else if(hr > HR_ZONES.z1) document.getElementById('z2').classList.add('active');
             else if(hr > 0) document.getElementById('z1').classList.add('active');
-        }
-
-        function endMission() {
-            STATE.active = false;
-            if(STATE.simLoop) clearInterval(STATE.simLoop);
-            showToast("Mission Complete", 'success');
-            
-            const session = { id: Date.now(), date: new Date().toISOString(), desc: MISSION.description, stats: { avgWatts: 0 } };
-            HISTORY.unshift(session);
-            localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
-            renderHistory();
-            setTimeout(() => nav('screenHistory'), 1000);
-        }
-
-        // --- PERSISTENCE ---
-        function loadData() {
-            const p = localStorage.getItem('analyst_profile');
-            if(p) PROFILE = JSON.parse(p);
-            
-            document.getElementById('hrZ5').value = PROFILE.hrZones.z5;
-            document.getElementById('hrZ4').value = PROFILE.hrZones.z4;
-            document.getElementById('hrZ3').value = PROFILE.hrZones.z3;
-            document.getElementById('hrZ2').value = PROFILE.hrZones.z2;
-            document.getElementById('hrZ1').value = PROFILE.hrZones.z1;
-            
-            if(PROFILE.model) document.getElementById('modelSelect').value = PROFILE.model;
-            
-            const key = localStorage.getItem('gemini_api_key');
-            if(key) document.getElementById('apiKeyInput').value = key;
-            
-            const h = localStorage.getItem('analyst_history');
-            if(h) HISTORY = JSON.parse(h);
-        }
-
-        function saveSettings() {
-            const z5 = parseInt(document.getElementById('hrZ5').value);
-            const z1 = parseInt(document.getElementById('hrZ1').value);
-            if(!z5 || !z1) return showToast("Missing fields", 'error');
-            
-            PROFILE.hrZones.z5 = z5;
-            PROFILE.hrZones.z4 = parseInt(document.getElementById('hrZ4').value);
-            PROFILE.hrZones.z3 = parseInt(document.getElementById('hrZ3').value);
-            PROFILE.hrZones.z2 = parseInt(document.getElementById('hrZ2').value);
-            PROFILE.hrZones.z1 = z1;
-            PROFILE.model = document.getElementById('modelSelect').value;
-            
-            const key = document.getElementById('apiKeyInput').value.trim();
-            if(key) {
-                localStorage.setItem('gemini_api_key', key);
-                document.getElementById('authCard').style.display = 'none';
-            }
-            
-            localStorage.setItem('analyst_profile', JSON.stringify(PROFILE));
-            showToast("Settings Saved");
-            setTimeout(() => nav('screenBuilder'), 500);
-        }
-
-        function cancelSettings() { loadData(); nav('screenBuilder'); }
-        function clearData() { if(confirm("Clear?")) { localStorage.clear(); location.reload(); } }
-
-        function renderHistory() {
-            const list = document.getElementById('historyList');
-            list.innerHTML = "";
-            HISTORY.forEach(h => {
-                let d = document.createElement('div');
-                d.className = 'history-item';
-                d.innerHTML = `<div><div class="h-date">${new Date(h.date).toLocaleDateString()}</div><div class="h-desc">${h.desc}</div></div>`;
-                list.appendChild(d);
-            });
-        }
-        
-        function exportHistory() {
-             let csv = "Log ID,Date,Description\n";
-             HISTORY.forEach(h => csv += `${h.id},${h.date},${h.desc}\n`);
-             const blob = new Blob([csv], { type: 'text/csv' });
-             const url = URL.createObjectURL(blob);
-             const a = document.createElement('a');
-             a.href = url; a.download = 'analyst_export.csv';
-             a.click();
         }
 
         async function connectBluetooth() {
@@ -628,11 +412,10 @@
                 await char.startNotifications();
                 char.addEventListener('characteristicvaluechanged', (e) => {
                     let d = e.target.value;
-                    if(d.byteLength < 13) return;
                     let speed = (d.getUint8(3) | (d.getUint8(4)<<8)) * 0.001;
                     processTelemetry(speed, d.getUint8(5), d.getUint8(6), (d.getUint8(11)|(d.getUint8(12)<<8)));
                 });
-            } catch(e) { showToast("BT Error: " + e.message, 'error'); }
+            } catch(e) { showToast("BT Error: "+e.message, 'error'); }
         }
     </script>
 </body>
