@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V5.0 (DIAGNOSTIC)</title>
+    <title>ANALYST V5.1 (AUTO-DISCOVERY)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); font-family: 'Roboto', -apple-system, sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
         /* TOAST */
-        #toast { position: fixed; top: -50px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 10px 20px; border-radius: 0 0 8px 8px; z-index: 1000; font-size: 12px; font-weight: bold; transition: top 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        #toast { position: fixed; top: -50px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 10px 20px; border-radius: 0 0 8px 8px; z-index: 2000; font-size: 12px; font-weight: bold; transition: top 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.5); white-space: nowrap; }
         #toast.active { top: 0; }
         #toast.success { border-color: var(--accent); color: var(--accent); }
         #toast.error { border-color: var(--danger); color: var(--danger); }
@@ -43,7 +43,7 @@
         input, textarea, select { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; width: 100%; font-family: inherit; margin-bottom: 10px; }
         
         /* DEBUG CONSOLE */
-        #debugLog { background: #000; border: 1px solid #333; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; height: 150px; overflow-y: scroll; white-space: pre-wrap; margin-top: 10px; }
+        #debugLog { background: #000; border: 1px solid #333; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; height: 100px; overflow-y: scroll; white-space: pre-wrap; margin-top: 10px; }
 
         /* DASHBOARD */
         #dashScreen { display: none; height: 100%; grid-template-rows: 60px 1fr 120px; }
@@ -54,13 +54,11 @@
         .lower-deck { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-top: 1px solid var(--border); }
         .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); }
         
-        /* HR ZONES */
         .hr-bar-container { width: 100%; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; display: flex; }
         .hr-zone { height: 100%; opacity: 0.3; flex-grow: 1; margin: 0 1px; }
         .hr-zone.active { opacity: 1; box-shadow: 0 0 10px currentColor; }
         .z1 { background: #666; } .z2 { background: #0088FF; } .z3 { background: #00FF00; } .z4 { background: #FFAA00; } .z5 { background: #FF0000; } 
 
-        /* TABS */
         .manual-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid #333; }
         .m-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; }
         .m-tab.active { color: white; border-bottom: 2px solid var(--accent); }
@@ -79,12 +77,9 @@
                     <button class="m-tab active" onclick="setManualMode('SINGLE')" id="tabSingle">SINGLE</button>
                     <button class="m-tab" onclick="setManualMode('INTERVAL')" id="tabInterval">INTERVALS</button>
                 </div>
-
                 <div id="inputsSingle">
-                    <label>DISTANCE (M)</label>
-                    <input type="number" id="inpDist" value="2000">
+                    <label>DISTANCE (M)</label><input type="number" id="inpDist" value="2000">
                 </div>
-
                 <div id="inputsInterval" style="display:none;">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                         <div><label>SETS</label><input type="number" id="inpSets" value="4"></div>
@@ -92,15 +87,12 @@
                     </div>
                     <label>REST (SEC)</label><input type="number" id="inpRest" value="60">
                 </div>
-
                 <div style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-                    <label style="color:var(--accent); font-size:10px;">TARGETS</label>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                         <div><label>PACE</label><input type="text" id="inpPace" value="1:54"></div>
                         <div><label>RATE</label><input type="number" id="inpRate" value="26"></div>
                     </div>
                 </div>
-
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
                     <button class="btn btn-outline" onclick="launchManual(true)">SIMULATE</button>
                     <button class="btn btn-green" onclick="launchManual(false)">START ROW</button>
@@ -133,23 +125,21 @@
         </div>
         <div class="scroll-area">
             <div class="card">
-                <div class="section-header">AI CONFIGURATION</div>
+                <div class="section-header">API & MODEL CONFIG</div>
                 <label>API KEY</label>
                 <input type="password" id="apiKeyInput" placeholder="Paste Key...">
                 
-                <label style="margin-top:10px;">MODEL</label>
+                <label style="margin-top:10px;">AVAILABLE MODELS</label>
                 <select id="modelSelect">
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Standard)</option>
-                    <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                    <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
-                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Exp)</option>
+                    <option value="" disabled selected>Click SCAN to find models</option>
                 </select>
 
-                <button class="btn btn-green" onclick="testConnection()">TEST CONNECTION</button>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                    <button class="btn btn-outline" onclick="scanModels()">SCAN FOR MODELS</button>
+                    <button class="btn btn-green" onclick="testConnection()">TEST</button>
+                </div>
                 
-                <label style="margin-top:15px; color:#666;">DEBUG LOG (SEND THIS IF FAILED)</label>
-                <div id="debugLog">Ready to test...</div>
+                <div id="debugLog">System Ready.</div>
             </div>
 
             <div class="card">
@@ -158,7 +148,6 @@
                     <div><label>Z5</label><input type="number" id="hrZ5" value="180"></div>
                     <div><label>Z1</label><input type="number" id="hrZ1" value="108"></div>
                 </div>
-                <div style="font-size:10px; color:#666;">(Adjust other zones in code for now)</div>
             </div>
             
             <button class="btn btn-danger" onclick="localStorage.clear(); location.reload();">RESET ALL</button>
@@ -220,12 +209,8 @@
         window.onload = () => {
             const key = localStorage.getItem('gemini_api_key');
             if(key) document.getElementById('apiKeyInput').value = key;
-            const savedZones = localStorage.getItem('hr_zones');
-            if(savedZones) {
-                HR_ZONES = JSON.parse(savedZones);
-                document.getElementById('hrZ5').value = HR_ZONES.z5;
-                document.getElementById('hrZ1').value = HR_ZONES.z1;
-            }
+            const model = localStorage.getItem('gemini_model');
+            if(model) addModelOption(model, true);
         };
 
         // --- UTILS ---
@@ -245,11 +230,111 @@
         }
         function logDebug(msg) {
             const d = document.getElementById('debugLog');
-            d.innerText += "\n> " + msg;
+            d.innerText += "\n" + msg;
             d.scrollTop = d.scrollHeight;
         }
 
-        // --- MANUAL MODE ---
+        // --- AI SCANNER ---
+        async function scanModels() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if(!key) return showToast("API Key Missing", 'error');
+            localStorage.setItem('gemini_api_key', key);
+            
+            logDebug("Scanning available models...");
+            
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                const data = await r.json();
+                
+                if(!r.ok) throw new Error(data.error?.message || "Scan Failed");
+                
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = ""; // Clear
+                
+                let found = 0;
+                data.models.forEach(m => {
+                    // Filter for models that support generateContent
+                    if(m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent")) {
+                        const name = m.name.replace("models/", "");
+                        addModelOption(name, found===0);
+                        found++;
+                    }
+                });
+                
+                logDebug(`Found ${found} usable models.`);
+                showToast(`Found ${found} models`, 'success');
+                
+            } catch(e) {
+                logDebug("SCAN ERROR: " + e.message);
+                showToast("Scan Failed. Check Log.", 'error');
+            }
+        }
+
+        function addModelOption(name, selectIt) {
+            const sel = document.getElementById('modelSelect');
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.innerText = name;
+            if(selectIt) {
+                opt.selected = true;
+                localStorage.setItem('gemini_model', name);
+            }
+            sel.appendChild(opt);
+        }
+
+        async function testConnection() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            
+            if(!model) return showToast("Scan Models first!", 'error');
+            
+            logDebug(`Testing ${model}...`);
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Say OK" }] }] })
+                });
+                const data = await r.json();
+                if(r.ok) {
+                    logDebug("SUCCESS: " + JSON.stringify(data));
+                    showToast("Connected!", 'success');
+                    localStorage.setItem('gemini_model', model);
+                } else {
+                    logDebug("FAIL: " + JSON.stringify(data));
+                    showToast("Model Failed", 'error');
+                }
+            } catch(e) { logDebug("NET ERROR: "+e.message); }
+        }
+
+        async function generateMission() {
+            const key = localStorage.getItem('gemini_api_key');
+            const model = localStorage.getItem('gemini_model');
+            const input = document.getElementById('aiInput').value;
+            
+            if(!key || !model || !input) return showToast("Setup required in Settings", 'error');
+            
+            document.getElementById('missionPreview').style.display = 'block';
+            document.getElementById('missionDetails').innerText = "GENERATING...";
+
+            const PROMPT = `Parse workout: "${input}". JSON Format: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "rate": 0 }] }. If minutes use duration (sec), if meters use dist.`;
+
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
+                });
+                const d = await r.json();
+                if(!r.ok) throw new Error(d.error?.message);
+                
+                const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
+                MISSION = JSON.parse(jsonText);
+                document.getElementById('missionDetails').innerText = JSON.stringify(MISSION, null, 2);
+            } catch(e) {
+                document.getElementById('missionDetails').innerText = "ERROR: " + e.message;
+            }
+        }
+
+        // --- DASHBOARD ---
         function setManualMode(mode) {
             MANUAL_MODE = mode;
             document.getElementById('tabSingle').className = mode === 'SINGLE' ? 'm-tab active' : 'm-tab';
@@ -277,64 +362,6 @@
             startMission(isSim);
         }
 
-        // --- AI ---
-        async function testConnection() {
-            const key = document.getElementById('apiKeyInput').value.trim();
-            const model = document.getElementById('modelSelect').value;
-            if(!key) return showToast("API Key Missing", 'error');
-            localStorage.setItem('gemini_api_key', key);
-            
-            logDebug(`Testing ${model}...`);
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Hello" }] }] })
-                });
-                
-                const data = await r.json();
-                if(r.ok) {
-                    logDebug("SUCCESS: " + JSON.stringify(data));
-                    showToast("Connected!", 'success');
-                } else {
-                    logDebug("FAIL: " + JSON.stringify(data));
-                    showToast("Error. Check Log.", 'error');
-                }
-            } catch(e) {
-                logDebug("NET ERROR: " + e.message);
-                showToast("Network Error", 'error');
-            }
-        }
-
-        async function generateMission() {
-            const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
-            if(!key) { nav('screenSettings'); return showToast("Set API Key first", 'error'); }
-            
-            const input = document.getElementById('aiInput').value;
-            const model = document.getElementById('modelSelect').value;
-            
-            document.getElementById('missionPreview').style.display = 'block';
-            document.getElementById('missionDetails').innerText = "GENERATING...";
-
-            const PROMPT = `Parse workout: "${input}". JSON Format: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "rate": 0 }] }. If minutes use duration (sec), if meters use dist.`;
-
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
-                });
-                const d = await r.json();
-                if(!r.ok) throw new Error(d.error?.message || "API Error");
-                
-                const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
-                MISSION = JSON.parse(jsonText);
-                document.getElementById('missionDetails').innerText = JSON.stringify(MISSION, null, 2);
-                showToast("Generated!", 'success');
-            } catch(e) {
-                document.getElementById('missionDetails').innerText = "ERROR: " + e.message;
-            }
-        }
-
-        // --- DASHBOARD ---
         function startMission(isSim) {
             nav('dashScreen');
             STATE = { active: true, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null };
@@ -373,18 +400,15 @@
             if(!STATE.active) return;
             const int = MISSION.intervals[STATE.intervalIdx];
             
-            // Updates
             STATE.timeLeft -= 0.5;
             if(speed > 0.1 && STATE.distLeft > 0) STATE.distLeft -= (speed * 0.5);
             
-            // Finish Check
             if( (int.dist > 0 && STATE.distLeft <= 0) || (int.duration < 99999 && STATE.timeLeft <= 0) ) {
                 STATE.intervalIdx++;
                 setupNextInterval();
                 return;
             }
 
-            // UI
             let paceSec = speed > 0.1 ? 500/speed : 0;
             let m = Math.floor(paceSec/60);
             let s = Math.floor(paceSec%60);
@@ -394,7 +418,6 @@
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
             document.getElementById('dispDist').innerText = Math.floor(STATE.distLeft > 0 ? STATE.distLeft : 0);
 
-            // HR Zones
             document.querySelectorAll('.hr-zone').forEach(z=>z.classList.remove('active'));
             if(hr > HR_ZONES.z4) document.getElementById('z5').classList.add('active');
             else if(hr > HR_ZONES.z3) document.getElementById('z4').classList.add('active');
