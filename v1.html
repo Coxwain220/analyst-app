@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V4.5 (MODEL SELECTOR)</title>
+    <title>ANALYST V4.6 (MODEL FORCE)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -11,11 +11,12 @@
 
         /* TOAST */
         #toast {
-            position: fixed; top: -50px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
             background: #222; color: #fff; border: 1px solid #444; border-top: none;
-            padding: 10px 20px; border-radius: 0 0 8px 8px; z-index: 1000;
-            font-size: 12px; font-weight: bold; transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; white-space: nowrap;
+            padding: 15px 25px; border-radius: 0 0 8px 8px; z-index: 2000;
+            font-size: 13px; font-weight: bold; transition: top 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 10px;
+            max-width: 90%; white-space: normal; text-align: center;
         }
         #toast.active { top: 0; }
         #toast.success { border-color: var(--accent); color: var(--accent); }
@@ -161,6 +162,10 @@
                     <button class="btn btn-green" onclick="startMission(false)">START AI ROW</button>
                 </div>
             </div>
+            
+            <div class="card">
+                <button class="btn btn-outline" style="font-size:10px;" onclick="nav('screenSettings')">SETTINGS / KEYS</button>
+            </div>
         </div>
     </div>
 
@@ -227,13 +232,16 @@
                 <label>API KEY</label>
                 <input type="password" id="apiKeyInput" placeholder="Paste Key...">
                 
-                <label style="margin-top:10px;">AI MODEL</label>
+                <label style="margin-top:10px;">AI MODEL SELECTION</label>
                 <select id="modelSelect">
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Default)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Standard)</option>
                     <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B (Fastest)</option>
-                    <option value="gemini-pro">Gemini Pro (Legacy - Try this if error)</option>
-                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Experimental)</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Powerful)</option>
+                    <option value="gemini-1.0-pro">Gemini 1.0 Pro (Stable/Legacy)</option>
                 </select>
+                
+                <label style="margin-top:10px; color:#666;">CUSTOM MODEL ID (IF ABOVE FAIL)</label>
+                <input type="text" id="modelCustom" placeholder="e.g. gemini-2.0-flash-exp">
                 
                 <button class="btn btn-outline" onclick="testConnection()">TEST CONNECTION</button>
             </div>
@@ -306,9 +314,12 @@
         // --- UTILS ---
         function showToast(msg, type = 'success') {
             const t = document.getElementById('toast');
-            t.innerHTML = (type === 'success' ? '✔ ' : '⚠ ') + msg;
+            t.innerText = (type === 'success' ? '✔ ' : '⚠ ') + msg;
             t.className = type === 'success' ? 'success active' : 'error active';
-            setTimeout(() => { t.className = ''; }, 3000);
+            
+            // Auto hide based on type
+            const duration = type === 'error' ? 5000 : 3000;
+            setTimeout(() => { t.className = ''; }, duration);
         }
 
         function nav(screenId) {
@@ -371,8 +382,13 @@
             Example: "4x1min, 1min rest" -> Work(60s), Rest(60s). If sub-segments (e.g. 30s 20spm, 30s 24spm), split WORK interval.`;
 
             try {
-                const model = PROFILE.model || "gemini-1.5-flash";
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                // Determine Model
+                let modelID = PROFILE.model || "gemini-1.5-flash";
+                if(document.getElementById('modelCustom') && document.getElementById('modelCustom').value.trim() !== "") {
+                    modelID = document.getElementById('modelCustom').value.trim();
+                }
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelID}:generateContent?key=${key}`;
                 
                 const r = await fetch(url, {
                     method: "POST", headers: {"Content-Type":"application/json"},
@@ -381,7 +397,6 @@
                 
                 if(!r.ok) {
                     const err = await r.json();
-                    if(r.status === 404) throw new Error("Model not found. Try changing Model in Settings.");
                     throw new Error(err.error?.message || r.status);
                 }
                 
@@ -413,12 +428,15 @@
 
         async function testConnection() {
             const key = document.getElementById('apiKeyInput').value;
-            const model = document.getElementById('modelSelect').value;
+            let modelID = document.getElementById('modelSelect').value;
+            const custom = document.getElementById('modelCustom').value.trim();
+            if(custom) modelID = custom;
+
             if(!key) return showToast("Enter API Key first", 'error');
             
-            showToast("Testing...", 'normal');
+            showToast("Testing connection...", 'success');
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelID}:generateContent?key=${key}`;
                 const r = await fetch(url, {
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Say OK" }] }] })
