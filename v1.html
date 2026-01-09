@@ -3,442 +3,524 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V3.3 (CONSULTANT)</title>
+    <title>ANALYST V4.0 (PLATFORM)</title>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --alert: #FF0000; --rest: #0088FF; --dim: #222; }
+        :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
+        * { box-sizing: border-box; }
         body { background: var(--bg); color: var(--text); font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
-        .hidden { display: none !important; }
-        .btn { padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; border: none; font-size:14px; flex: 1; }
-        .btn-green { background: var(--accent); color: black; }
-        .btn-warn { background: var(--warn); color: black; }
-        .btn-outline { background: transparent; border: 1px solid #444; color: #888; }
-        
-        /* TABS */
-        .tab-bar { display: flex; background: #111; border-bottom: 1px solid #333; }
-        .tab-btn { flex: 1; padding: 15px; color: #666; background: transparent; border: none; cursor: pointer; font-weight: bold; border-bottom: 2px solid transparent; }
-        .tab-btn.active { color: white; border-bottom-color: var(--accent); background: #1a1a1a; }
+        /* --- NAVIGATION --- */
+        .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 60px; }
+        .nav-btn { flex: 1; background: transparent; border: none; color: #666; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .nav-btn.active { color: var(--accent); background: #1a1a1a; }
+        .nav-icon { font-size: 18px; margin-bottom: 4px; }
 
-        /* SCREENS */
-        .screen { display: none; height: 100%; flex-direction: column; }
+        /* --- SCREENS --- */
+        .screen { display: none; flex-grow: 1; flex-direction: column; overflow: hidden; }
         .screen.active { display: flex; }
+        .scroll-area { flex-grow: 1; overflow-y: auto; padding: 20px; }
 
-        /* SETUP */
-        .config-area { flex-grow: 1; padding: 20px; overflow-y: auto; }
-        .section-title { color: var(--accent); font-size: 12px; letter-spacing: 1px; margin-bottom: 10px; margin-top: 20px; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .input-group { background: #111; padding: 10px; border-radius: 6px; border: 1px solid #333; }
-        .input-group label { display: block; color: #888; font-size: 10px; margin-bottom: 5px; text-transform: uppercase; }
-        .config-input { background: transparent; border: none; color: white; width: 100%; font-size: 20px; font-family: monospace; outline: none; }
-        textarea.config-input { font-size: 14px; font-family: sans-serif; resize: none; line-height: 1.4; }
-
-        /* BRIEFING SCREEN (NEW) */
-        #briefingContent { padding: 20px; font-family: monospace; font-size: 14px; line-height: 1.5; color: #ccc; white-space: pre-wrap; flex-grow: 1; overflow-y: auto; }
-        .risk-badge { font-size: 20px; font-weight: bold; padding: 10px; margin-bottom: 10px; text-align: center; border: 1px solid #333; }
+        /* --- UI ELEMENTS --- */
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
         
-        /* DASHBOARD */
-        #dashScreen { display: none; height: 100%; grid-template-rows: 15% 55% 20% 10%; }
+        .btn { width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 14px; margin-top: 5px; }
+        .btn-green { background: var(--accent); color: black; }
+        .btn-outline { background: transparent; border: 1px solid #555; color: #888; }
+        .btn-danger { background: #300; border: 1px solid #500; color: #f88; }
+
+        input, textarea, select { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; width: 100%; font-family: inherit; margin-bottom: 10px; }
+        textarea { resize: none; }
+
+        /* --- DASHBOARD --- */
+        #dashScreen { display: none; height: 100%; grid-template-rows: 60px 1fr 120px; }
         #dashScreen.active { display: grid; }
-        
-        .comms-bar { background: #111; border-bottom: 1px solid #333; padding: 0 20px; display: flex; flex-direction: column; justify-content: center; position: relative; }
-        .comms-text { font-size: 16px; color: var(--accent); font-family: monospace; font-weight: bold; line-height: 1.2; }
-        .phase-badge { position: absolute; right: 20px; top: 20px; font-size: 12px; padding: 4px 8px; background: #333; border-radius: 4px; color: #888; font-weight: bold; }
-        .phase-badge.work { background: var(--accent); color: #000; }
-        
-        .main-deck { display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
-        .primary-stat { font-size: 16vh; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
-        
-        .lower-deck { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #222; }
-        .stat-box { display: flex; flex-direction: column; justify-content: center; align-items: center; border-right: 1px solid #111; }
-        .stat-val { font-size: 6vh; font-weight: bold; }
-        .stat-lbl { font-size: 1.5vh; color: #666; }
 
-        /* UTILS */
-        .ai-thinking { color: var(--warn) !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .comms-bar { background: var(--panel); padding: 0 20px; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--border); position: relative; }
+        .coach-text { font-family: monospace; color: var(--accent); font-size: 14px; font-weight: bold; white-space: pre-wrap; }
         
-        #apiKeyInput { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 4px; box-sizing: border-box; }
+        .main-deck { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .metric-huge { font-size: 14vh; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
+        .metric-sub { font-size: 4vh; color: #888; font-weight: 700; margin-top: 10px; }
+
+        .lower-deck { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-top: 1px solid var(--border); }
+        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); position: relative; }
+        
+        /* --- HR ZONE BAR --- */
+        .hr-bar-container { width: 100%; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; overflow: hidden; display: flex; }
+        .hr-zone { height: 100%; opacity: 0.3; transition: opacity 0.2s; }
+        .hr-zone.active { opacity: 1; box-shadow: 0 0 10px currentColor; }
+        .z1 { background: #666; width: 50%; } /* Warmup */
+        .z2 { background: #0088FF; width: 10%; } /* Aerobic */
+        .z3 { background: #00FF00; width: 10%; } /* Tempo */
+        .z4 { background: #FFAA00; width: 10%; } /* Threshold */
+        .z5 { background: #FF0000; width: 20%; } /* Max */
+
+        /* --- HISTORY LIST --- */
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; }
+        .history-item:hover { background: #111; }
+        .h-date { font-size: 12px; color: #666; }
+        .h-desc { font-weight: bold; font-size: 14px; margin-top: 2px; }
+        .h-stat { font-family: monospace; color: var(--accent); font-size: 12px; }
+
+        /* --- SEGMENT BUILDER --- */
+        .seg-list { margin-top: 10px; }
+        .seg-item { background: #1a1a1a; padding: 8px; margin-bottom: 5px; border-left: 3px solid var(--accent); font-size: 12px; display: flex; justify-content: space-between; }
+
+        .ai-pulse { animation: pulse 1s infinite; color: var(--warn); }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-    <div id="setupScreen" class="screen active">
-        <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('SINGLE')">SINGLE</button>
-            <button class="tab-btn" onclick="switchTab('INTERVAL')">INTERVALS</button>
-        </div>
-
-        <div class="config-area">
-            <div style="margin-bottom: 20px;">
-                <label style="font-size:10px; color:#666; display:block; margin-bottom:5px;">NEURAL UPLINK (API KEY)</label>
-                <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key...">
+    <div id="screenBuilder" class="screen active">
+        <div class="scroll-area">
+            <div class="card">
+                <div class="section-header">NATURAL LANGUAGE MISSION BUILDER</div>
+                <label style="font-size:10px; color:#666;">TYPE OR SPEAK YOUR PLAN</label>
+                <textarea id="aiInput" rows="3" placeholder="e.g. 4 x 6min. 2 mins 20sr, 2 mins 24sr, 2 mins 30sr..."></textarea>
+                <button class="btn btn-green" onclick="generateMission()">GENERATE MISSION</button>
             </div>
 
-            <div id="cfgSingle" class="cfg-section">
-                <div class="section-title">PROPOSED WORKOUT</div>
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label>DISTANCE (M)</label>
-                        <input type="number" id="inpDist" class="config-input" value="2000">
-                    </div>
+            <div id="missionPreview" class="card hidden">
+                <div class="section-header">MISSION PARAMETERS</div>
+                <div id="missionDetails" style="font-size:12px; color:#ccc; margin-bottom:10px; white-space: pre-wrap;"></div>
+                <div class="seg-list" id="segmentList"></div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
+                    <button class="btn btn-outline" onclick="startMission(true)">SIMULATE</button>
+                    <button class="btn btn-green" onclick="startMission(false)">CONNECT PM5</button>
                 </div>
             </div>
 
-            <div id="cfgInterval" class="cfg-section hidden">
-                <div class="section-title">PROPOSED INTERVALS</div>
-                <div class="input-grid">
-                    <div class="input-group"><label>SETS</label><input type="number" id="inpSets" class="config-input" value="4"></div>
-                    <div class="input-group"><label>DIST (M)</label><input type="number" id="inpIntDist" class="config-input" value="500"></div>
-                    <div class="input-group"><label>REST (SEC)</label><input type="number" id="inpRest" class="config-input" value="60"></div>
-                </div>
-            </div>
-
-            <div class="section-title">TARGETS</div>
-            <div class="input-grid">
-                <div class="input-group"><label>PACE (/500)</label><input type="text" id="tgtPace" class="config-input" value="1:56"></div>
-                <div class="input-group"><label>RATE (S/M)</label><input type="number" id="tgtRate" class="config-input" value="26"></div>
-            </div>
-
-            <div class="section-title">MISSION BRIEF</div>
-            <div class="input-group" style="height: auto;">
-                <label>OPERATOR CONDITION / NOTES</label>
-                <textarea id="userNotes" class="config-input" rows="2" placeholder="e.g. Slept poorly, knee sore, ate pasta..."></textarea>
-            </div>
-        </div>
-
-        <div style="padding: 20px; background: #111; border-top: 1px solid #333;">
-            <button class="btn btn-green" style="width:100%" onclick="analyzeMission()">ANALYZE MISSION</button>
-        </div>
-    </div>
-
-    <div id="briefingScreen" class="screen">
-        <div style="padding:20px; border-bottom:1px solid #333; background:#111;">
-            <h2 style="margin:0; color:var(--accent); font-size:14px; letter-spacing:1px;">TACTICAL ASSESSMENT</h2>
-        </div>
-        
-        <div id="briefingContent">Analyzing Parameters...</div>
-
-        <div id="aiSuggestionData" style="display:none;"></div>
-
-        <div style="padding:20px; background:#111; border-top:1px solid #333; display:flex; gap:10px; flex-direction:column;">
-            <button id="btnApplyAI" class="btn btn-warn hidden" onclick="applyAiChanges()">APPLY AI PLAN</button>
-            <div style="display:flex; gap:10px;">
-                <button class="btn btn-outline" onclick="editMission()">EDIT</button>
-                <button class="btn btn-green" onclick="commitMission(false)">CONNECT PM5</button>
-                <button class="btn btn-sim" onclick="commitMission(true)">SIMULATE</button>
+            <div class="card">
+                <div class="section-header">MANUAL OVERRIDE</div>
+                <button class="btn btn-outline" style="font-size:12px;" onclick="nav('screenSettings')">EDIT HR ZONES</button>
             </div>
         </div>
     </div>
 
-    <div id="dashScreen" class="screen">
+    <div id="dashScreen">
         <div class="comms-bar">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:10px; color:#666;">ANALYST AI</span>
-                <span id="aiDot" style="color:#333;">●</span>
+                <span id="aiStatus" style="color:#333;">●</span>
             </div>
-            <div class="comms-text" id="coachMsg">SYSTEM ONLINE.</div>
-            <div class="phase-badge" id="phaseBadge">READY</div>
+            <div class="coach-text" id="coachMsg">READY.</div>
+            <div style="position:absolute; right:10px; top:10px; background:#222; padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold; color:#888;" id="phaseBadge">IDLE</div>
         </div>
 
         <div class="main-deck">
-            <div id="intervalCounter" style="font-size:2vh; color:#666; margin-bottom:5px;">SINGLE</div>
-            <div style="font-size:1.5vh; color:#444;">SPLIT / 500M</div>
-            <div class="primary-stat" id="dispPace">0:00</div>
-            <div class="sub-stat" style="margin-top: 15px;">
-                <span id="dispWatts">0</span> <span style="font-size:2vh; color:#666;">W</span>
-                <span style="margin-left:15px; font-size:4vh; color:#444;">|</span>
-                <span id="dispDist" style="margin-left:15px;">0</span> <span style="font-size:2vh; color:#666;">m</span>
+            <div id="intervalInfo" style="font-size:14px; color:#666; margin-bottom:5px;">--</div>
+            <div class="metric-huge" id="dispPace">0:00</div>
+            <div class="metric-sub">
+                <span id="dispWatts">0</span>W <span style="color:#444">|</span> <span id="dispDist">0</span>m
             </div>
         </div>
 
         <div class="lower-deck">
             <div class="stat-box">
-                <div class="stat-val" id="dispRate">--</div>
-                <div class="stat-lbl">RATE</div>
-                <div class="stat-target">TGT: <span id="lblTgtRate">--</span></div>
+                <div class="metric-sub" id="dispRate" style="color:white; margin:0;">--</div>
+                <div style="font-size:10px; color:#666;">RATE</div>
+                <div style="font-size:10px; color:var(--accent); margin-top:2px;">TGT: <span id="tgtRate">--</span></div>
             </div>
-            <div class="stat-box" style="border:none;">
-                <div class="stat-val" id="dispHR" style="color:white">--</div>
-                <div class="stat-lbl">HEART RATE</div>
+            <div class="stat-box" style="padding: 0 15px;">
+                <div class="metric-sub" id="dispHR" style="color:white; margin:0;">--</div>
+                <div style="font-size:10px; color:#666;">HEART RATE</div>
+                <div class="hr-bar-container" id="hrBar">
+                    <div class="hr-zone z1" id="z1"></div>
+                    <div class="hr-zone z2" id="z2"></div>
+                    <div class="hr-zone z3" id="z3"></div>
+                    <div class="hr-zone z4" id="z4"></div>
+                    <div class="hr-zone z5" id="z5"></div>
+                </div>
             </div>
-        </div>
-        
-         <div style="background:#111; display:flex; padding:0 20px; align-items:center; height:10%;">
-            <button class="btn" style="background:none; color:#666; font-size:10px;" onclick="location.reload()">ABORT</button>
-            <button class="btn" style="background:none; color:#accent; font-size:10px;" onclick="downloadLog()">SAVE LOG</button>
         </div>
     </div>
 
+    <div id="screenHistory" class="screen">
+        <div class="scroll-area" id="historyList">
+            </div>
+        <div style="padding:15px; border-top:1px solid #333; background:var(--panel);">
+            <button class="btn btn-outline" onclick="exportHistory()">EXPORT ALL (CSV)</button>
+        </div>
+    </div>
+
+    <div id="screenSettings" class="screen">
+        <div class="scroll-area">
+            <div class="card">
+                <div class="section-header">HEART RATE ZONES</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div><label>Z5 MAX</label><input type="number" id="hrZ5" value="180"></div>
+                    <div><label>Z4 MAX</label><input type="number" id="hrZ4" value="162"></div>
+                    <div><label>Z3 MAX</label><input type="number" id="hrZ3" value="144"></div>
+                    <div><label>Z2 MAX</label><input type="number" id="hrZ2" value="125"></div>
+                    <div><label>Z1 MAX</label><input type="number" id="hrZ1" value="108"></div>
+                </div>
+                <button class="btn btn-green" onclick="saveSettings()">SAVE PROFILE</button>
+            </div>
+            
+            <div class="card">
+                <div class="section-header">SYSTEM</div>
+                <label>API KEY</label>
+                <input type="password" id="apiKeyInput">
+                <button class="btn btn-danger" onclick="clearData()">RESET DATA</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <button class="nav-btn active" onclick="nav('screenBuilder')" id="navBuild">
+            <span class="nav-icon">⚡</span>BUILD
+        </button>
+        <button class="nav-btn" onclick="nav('dashScreen')" id="navDash">
+            <span class="nav-icon">⏱</span>ROW
+        </button>
+        <button class="nav-btn" onclick="nav('screenHistory')" id="navHist">
+            <span class="nav-icon">☰</span>LOGS
+        </button>
+        <button class="nav-btn" onclick="nav('screenSettings')" id="navSet">
+            <span class="nav-icon">⚙</span>SET
+        </button>
+    </div>
+
     <script>
+        // --- CONSTANTS ---
         const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
         const PM5_CHAR_32 = 'ce060032-43e5-11e4-916c-0800200c9a66'; 
         const MODEL = "gemini-2.5-flash";
 
-        let MISSION = { type: 'SINGLE', sets: 1, workDist: 2000, restSec: 0, targets: { paceSec: 0, rate: 0 }, context: "", apiKey: "" };
-        let STATE = { active: false, currentSet: 1, phase: 'IDLE', distRemaining: 0, restTimer: 0, log: [], lastAi: 0 };
-        let AI_SUGGESTION = null;
-
-        window.onload = () => {
-            if(localStorage.getItem("gemini_api_key")) 
-                document.getElementById("apiKeyInput").value = localStorage.getItem("gemini_api_key");
+        // --- DATA STORE ---
+        let PROFILE = {
+            hrZones: { z1: 108, z2: 125, z3: 144, z4: 162, z5: 180 },
+            apiKey: ""
+        };
+        let HISTORY = [];
+        
+        let MISSION = {
+            description: "",
+            intervals: [], // Array of { type:'WORK'|'REST', duration:sec, segments:[{duration, rate, pace}] }
+            totalTime: 0
         };
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.cfg-section').forEach(s => s.classList.add('hidden'));
-            if(tab === 'SINGLE') {
-                document.getElementById('cfgSingle').classList.remove('hidden');
-                event.target.classList.add('active');
-                MISSION.type = 'SINGLE';
-            } else if (tab === 'INTERVAL') {
-                document.getElementById('cfgInterval').classList.remove('hidden');
-                event.target.classList.add('active');
-                MISSION.type = 'INTERVAL';
-            }
+        let STATE = {
+            active: false,
+            intervalIdx: 0,
+            segmentIdx: 0,
+            timeLeft: 0,
+            elapsedInterval: 0,
+            log: [], // High res log
+            simLoop: null,
+            lastAi: 0
+        };
+
+        // --- INIT ---
+        window.onload = () => {
+            loadData();
+            renderHistory();
+        };
+
+        function nav(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if(screenId === 'screenBuilder') document.getElementById('navBuild').classList.add('active');
+            if(screenId === 'dashScreen') document.getElementById('navDash').classList.add('active');
+            if(screenId === 'screenHistory') document.getElementById('navHist').classList.add('active');
+            if(screenId === 'screenSettings') document.getElementById('navSet').classList.add('active');
         }
 
-        // --- STEP 1: ANALYZE ---
-        async function analyzeMission() {
-            MISSION.apiKey = document.getElementById("apiKeyInput").value.trim();
-            if(!MISSION.apiKey) { alert("API Key Required"); return; }
-            localStorage.setItem("gemini_api_key", MISSION.apiKey);
-
-            // Capture Inputs
-            let proposed = "";
-            if(MISSION.type === 'SINGLE') {
-                MISSION.workDist = document.getElementById('inpDist').value;
-                proposed = `Single Distance: ${MISSION.workDist}m`;
-            } else {
-                MISSION.sets = document.getElementById('inpSets').value;
-                MISSION.workDist = document.getElementById('inpIntDist').value;
-                MISSION.restSec = document.getElementById('inpRest').value;
-                proposed = `Intervals: ${MISSION.sets} x ${MISSION.workDist}m / ${MISSION.restSec}s rest`;
-            }
-            let pace = document.getElementById('tgtPace').value;
-            let rate = document.getElementById('tgtRate').value;
-            let notes = document.getElementById('userNotes').value;
-
-            // Show Briefing Screen
-            document.getElementById('setupScreen').classList.remove('active');
-            document.getElementById('briefingScreen').classList.add('active');
-            document.getElementById('briefingContent').innerHTML = "<span class='ai-thinking'>ESTABLISHING UPLINK... ANALYZING PARAMETERS...</span>";
-
-            // Prompt Gemini
-            const PROMPT = `
-            Act as an Elite Sports Physiologist.
-            User Proposal: ${proposed} @ Pace ${pace}, Rate ${rate}.
-            User Context/Notes: "${notes}".
-
-            Task: Evaluate risk and optimization.
+        function loadData() {
+            const p = localStorage.getItem('analyst_profile');
+            if(p) PROFILE = JSON.parse(p);
             
-            JSON RESPONSE FORMAT:
+            // Populate Settings inputs
+            document.getElementById('hrZ5').value = PROFILE.hrZones.z5;
+            document.getElementById('hrZ4').value = PROFILE.hrZones.z4;
+            document.getElementById('hrZ3').value = PROFILE.hrZones.z3;
+            document.getElementById('hrZ2').value = PROFILE.hrZones.z2;
+            document.getElementById('hrZ1').value = PROFILE.hrZones.z1;
+            if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
+
+            const h = localStorage.getItem('analyst_history');
+            if(h) HISTORY = JSON.parse(h);
+        }
+
+        function saveSettings() {
+            PROFILE.hrZones.z5 = parseInt(document.getElementById('hrZ5').value);
+            PROFILE.hrZones.z4 = parseInt(document.getElementById('hrZ4').value);
+            PROFILE.hrZones.z3 = parseInt(document.getElementById('hrZ3').value);
+            PROFILE.hrZones.z2 = parseInt(document.getElementById('hrZ2').value);
+            PROFILE.hrZones.z1 = parseInt(document.getElementById('hrZ1').value);
+            
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if(key) localStorage.setItem('gemini_api_key', key);
+            PROFILE.apiKey = key;
+
+            localStorage.setItem('analyst_profile', JSON.stringify(PROFILE));
+            alert("Settings Saved");
+        }
+
+        // --- AI MISSION GENERATOR ---
+        async function generateMission() {
+            const input = document.getElementById('aiInput').value;
+            const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
+            
+            if(!input || !key) return alert("Input and API Key required.");
+            
+            document.getElementById('missionDetails').innerText = "AI GENERATING TRAINING PLAN...";
+            document.getElementById('missionPreview').classList.remove('hidden');
+
+            const PROMPT = `
+            Parse this rowing workout text into a JSON structure.
+            Text: "${input}"
+            
+            Return JSON object:
             {
-                "risk_level": "LOW" or "HIGH",
-                "assessment": "Brief text explanation of why.",
-                "strategy": "Specific coaching focus for the row.",
-                "suggested_changes": {
-                    "distance": 0, (only if changing)
-                    "pace": "0:00", (only if changing)
-                    "rate": 0 (only if changing)
-                }
+                "description": "Short summary",
+                "intervals": [
+                    {
+                        "type": "WORK", (or REST)
+                        "duration": 0, (seconds)
+                        "dist": 0, (meters, 0 if time-based)
+                        "segments": [
+                            { "duration": 0, "rate": 0, "pace_desc": "..." } 
+                        ]
+                    }
+                ]
             }
-            Return ONLY JSON.
+            Example: "4x6min, 2min rest" -> 4 work intervals (360s), 3 rest intervals (120s) in between.
+            IMPORTANT: If the user specifies sub-segments (e.g. "2 mins 20sr, 2 mins 24sr"), break the WORK interval into segments.
             `;
 
             try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${MISSION.apiKey}`, {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
                 });
                 const d = await r.json();
-                const txt = d.candidates?.[0]?.content?.parts?.[0]?.text;
+                const jsonText = d.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json/g,'').replace(/```/g,'');
+                const plan = JSON.parse(jsonText);
                 
-                // Clean JSON
-                const jsonStr = txt.replace(/```json/g, '').replace(/```/g, '');
-                const analysis = JSON.parse(jsonStr);
-                
-                // Render Analysis
-                let html = "";
-                let color = analysis.risk_level === "HIGH" ? "#FF0000" : "#00FF00";
-                
-                html += `<div class="risk-badge" style="color:${color}; border-color:${color}">RISK: ${analysis.risk_level}</div>`;
-                html += `<strong>ASSESSMENT:</strong>\n${analysis.assessment}\n\n`;
-                html += `<strong>STRATEGY:</strong>\n${analysis.strategy}\n\n`;
-                
-                AI_SUGGESTION = analysis.suggested_changes;
-                
-                if(AI_SUGGESTION && (AI_SUGGESTION.distance || AI_SUGGESTION.pace || AI_SUGGESTION.rate)) {
-                    html += `<strong style="color:var(--warn)">PROPOSED MODIFICATIONS:</strong>\n`;
-                    if(AI_SUGGESTION.distance) html += `- Distance: ${AI_SUGGESTION.distance}m\n`;
-                    if(AI_SUGGESTION.pace) html += `- Pace: ${AI_SUGGESTION.pace}\n`;
-                    if(AI_SUGGESTION.rate) html += `- Rate: ${AI_SUGGESTION.rate}\n`;
-                    
-                    document.getElementById('btnApplyAI').classList.remove('hidden');
-                } else {
-                    document.getElementById('btnApplyAI').classList.add('hidden');
-                }
-
-                document.getElementById('briefingContent').innerHTML = html;
-                MISSION.context = analysis.strategy; // Save strategy for in-row coaching
+                MISSION = plan;
+                renderMissionPreview();
 
             } catch(e) {
-                document.getElementById('briefingContent').innerText = "ANALYSIS FAILED: " + e.message;
+                alert("AI Generation Failed: " + e.message);
             }
         }
 
-        // --- STEP 2: APPLY CHANGES ---
-        function applyAiChanges() {
-            if(!AI_SUGGESTION) return;
+        function renderMissionPreview() {
+            document.getElementById('missionDetails').innerText = MISSION.description;
+            const list = document.getElementById('segmentList');
+            list.innerHTML = "";
             
-            // Update Inputs (Behind the scenes)
-            if(AI_SUGGESTION.distance) {
-                if(MISSION.type === 'SINGLE') document.getElementById('inpDist').value = AI_SUGGESTION.distance;
-                else document.getElementById('inpIntDist').value = AI_SUGGESTION.distance;
-            }
-            if(AI_SUGGESTION.pace) document.getElementById('tgtPace').value = AI_SUGGESTION.pace;
-            if(AI_SUGGESTION.rate) document.getElementById('tgtRate').value = AI_SUGGESTION.rate;
-            
-            alert("Parameters Updated. Review in Edit mode or Connect to start.");
-            document.getElementById('btnApplyAI').classList.add('hidden');
+            MISSION.intervals.forEach((int, i) => {
+                let div = document.createElement('div');
+                div.className = 'seg-item';
+                div.style.borderLeftColor = int.type === 'WORK' ? 'var(--accent)' : 'var(--rest)';
+                div.innerHTML = `<span>${int.type} (${int.duration}s)</span> <span>${int.segments ? int.segments.length + ' Segments' : ''}</span>`;
+                list.appendChild(div);
+            });
         }
 
-        function editMission() {
-            document.getElementById('briefingScreen').classList.remove('active');
-            document.getElementById('setupScreen').classList.add('active');
-        }
+        // --- DASHBOARD ENGINE ---
+        function startMission(isSim) {
+            nav('dashScreen');
+            STATE = {
+                active: true,
+                intervalIdx: 0,
+                segmentIdx: 0,
+                timeLeft: MISSION.intervals[0].duration,
+                elapsedInterval: 0,
+                log: [],
+                lastAi: 0
+            };
+            
+            updateDashboardPhase();
 
-        // --- STEP 3: EXECUTE ---
-        async function commitMission(isSim) {
-            // Re-capture (in case edited)
-            if(MISSION.type === 'SINGLE') {
-                MISSION.sets = 1;
-                MISSION.workDist = parseInt(document.getElementById('inpDist').value);
+            if(isSim) {
+                STATE.simLoop = setInterval(() => {
+                    if(!STATE.active) return;
+                    // Sim data
+                    let currentInt = MISSION.intervals[STATE.intervalIdx];
+                    let currentSeg = currentInt.segments ? currentInt.segments[STATE.segmentIdx] : null;
+                    let tgtRate = currentSeg ? currentSeg.rate : 22;
+                    
+                    processTelemetry(2.5, tgtRate, 145, 200);
+                }, 500);
             } else {
-                MISSION.sets = parseInt(document.getElementById('inpSets').value);
-                MISSION.workDist = parseInt(document.getElementById('inpIntDist').value);
-                MISSION.restSec = parseInt(document.getElementById('inpRest').value);
-            }
-            let p = document.getElementById('tgtPace').value.split(':');
-            MISSION.targets.paceSec = (parseInt(p[0])*60) + parseInt(p[1]);
-            MISSION.targets.rate = parseInt(document.getElementById('tgtRate').value) || 0;
-
-            document.getElementById('briefingScreen').classList.remove('active');
-            document.getElementById('dashScreen').classList.add('active');
-            
-            document.getElementById('lblTgtRate').innerText = MISSION.targets.rate;
-
-            STATE.currentSet = 1;
-            STATE.distRemaining = MISSION.workDist;
-            STATE.active = true;
-            setPhase('WORK');
-
-            if(isSim) startSimulator();
-            else connectBluetooth();
-            
-            triggerAI("MISSION_START", "Strategy: " + MISSION.context);
-        }
-
-        // --- STANDARD DASHBOARD FUNCTIONS ---
-        function setPhase(p) {
-            STATE.phase = p;
-            const badge = document.getElementById('phaseBadge');
-            if(p === 'WORK') {
-                badge.innerText = `SET ${STATE.currentSet} / ${MISSION.sets}`;
-                badge.className = 'phase-badge work';
-                STATE.distRemaining = MISSION.workDist;
-            } else if (p === 'REST') {
-                badge.innerText = `REST (${MISSION.restSec}s)`;
-                badge.className = 'phase-badge rest';
-                STATE.restTimer = MISSION.restSec;
-                startRestTimer();
-            } else {
-                badge.innerText = "COMPLETE";
-                badge.className = 'phase-badge';
+                connectBluetooth();
             }
         }
 
-        function startRestTimer() {
-            let t = setInterval(() => {
-                if(STATE.phase !== 'REST') { clearInterval(t); return; }
-                STATE.restTimer--;
-                document.getElementById('phaseBadge').innerText = `REST (${STATE.restTimer}s)`;
-                if(STATE.restTimer <= 0) {
-                    clearInterval(t);
-                    STATE.currentSet++;
-                    if(STATE.currentSet > MISSION.sets) {
-                        setPhase('COMPLETE');
-                        triggerAI("MISSION_COMPLETE", "Done.");
-                    } else {
-                        setPhase('WORK');
-                        triggerAI("SET_START", `Set ${STATE.currentSet}`);
-                    }
-                }
-            }, 1000);
+        function updateDashboardPhase() {
+            if(STATE.intervalIdx >= MISSION.intervals.length) {
+                endMission();
+                return;
+            }
+            
+            const int = MISSION.intervals[STATE.intervalIdx];
+            document.getElementById('phaseBadge').innerText = int.type;
+            document.getElementById('phaseBadge').style.backgroundColor = int.type === 'WORK' ? 'var(--accent)' : 'var(--rest)';
+            document.getElementById('phaseBadge').style.color = int.type === 'WORK' ? 'black' : 'white';
+            
+            STATE.timeLeft = int.duration;
+            STATE.segmentIdx = 0;
+            STATE.elapsedInterval = 0;
+            
+            document.getElementById('intervalInfo').innerText = `${int.type} ${STATE.intervalIdx+1}/${MISSION.intervals.length}`;
         }
 
         function processTelemetry(speedMS, rate, hr, watts) {
-            if(!STATE.active || STATE.phase !== 'WORK') return;
+            if(!STATE.active) return;
+            
+            // Time Management
+            // Assuming 0.5s tick or using real time delta. For simplicity V4 uses 0.5s ticks
+            const dt = 0.5;
+            STATE.timeLeft -= dt;
+            STATE.elapsedInterval += dt;
+
+            // Segment Logic
+            const int = MISSION.intervals[STATE.intervalIdx];
+            let currentSeg = null;
+            
+            if(int.segments && int.segments.length > 0) {
+                // Find which segment we are in
+                let t = 0;
+                for(let s of int.segments) {
+                    if(STATE.elapsedInterval >= t && STATE.elapsedInterval < t + s.duration) {
+                        currentSeg = s;
+                        break;
+                    }
+                    t += s.duration;
+                }
+            }
+
+            // Next Interval Check
+            if(STATE.timeLeft <= 0) {
+                STATE.intervalIdx++;
+                updateDashboardPhase();
+                return;
+            }
+
+            // UI Update
             let paceSec = speedMS > 0.1 ? 500/speedMS : 0;
             let m = Math.floor(paceSec / 60);
             let s = Math.floor(paceSec % 60);
-            let paceStr = speedMS > 0.1 ? `${m}:${s.toString().padStart(2,'0')}` : "0:00";
-            if(speedMS > 0.1) {
-                STATE.distRemaining -= (speedMS * 0.5); 
-                if(STATE.distRemaining <= 0) {
-                    STATE.distRemaining = 0;
-                    if(MISSION.type === 'SINGLE') { setPhase('COMPLETE'); triggerAI("COMPLETE", "Done"); } 
-                    else { setPhase('REST'); }
-                }
-            }
-            document.getElementById('dispPace').innerText = paceStr;
+            document.getElementById('dispPace').innerText = speedMS > 0.1 ? `${m}:${s.toString().padStart(2,'0')}` : "0:00";
             document.getElementById('dispWatts').innerText = watts;
             document.getElementById('dispRate').innerText = rate;
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
-            document.getElementById('dispDist').innerText = Math.floor(STATE.distRemaining);
             
-            runWatchdog(paceSec, rate, hr);
-            if(Date.now() % 1000 < 500) STATE.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate, p:paceStr });
-        }
+            // Target Rate Display
+            document.getElementById('tgtRate').innerText = currentSeg ? currentSeg.rate : "--";
 
-        function runWatchdog(paceSec, rate, hr) {
-            if(Date.now() - STATE.lastAi < 20000) return;
-            let alerts = [];
-            if(MISSION.targets.paceSec > 0 && paceSec > 0) {
-                let diff = paceSec - MISSION.targets.paceSec;
-                if(diff > 3) alerts.push("Pace Slow");
-                else if(diff < -3) alerts.push("Too Fast");
-            }
-            if(alerts.length > 0) triggerAI("ANOMALY", alerts.join(","));
-        }
-
-        async function triggerAI(evt, details) {
-            STATE.lastAi = Date.now();
-            const box = document.getElementById('coachMsg');
-            const dot = document.getElementById('aiDot');
-            dot.style.color = "yellow";
+            // HR Zone Bar
+            updateHRBar(hr);
             
-            const PROMPT = `Coach Mode. Context: ${MISSION.context}. Event: ${evt}. Details: ${details}. Max 1 sentence guide.`;
-            
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${MISSION.apiKey}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
+            // Log
+            if(int.type === 'WORK') {
+                STATE.log.push({
+                    time: new Date().toISOString(),
+                    watts: watts,
+                    hr: hr,
+                    rate: rate,
+                    pace: document.getElementById('dispPace').innerText,
+                    dist: 0 // Calculate if needed
                 });
-                const d = await r.json();
-                box.innerText = (d.candidates?.[0]?.content?.parts?.[0]?.text || "ROGER").toUpperCase();
-                dot.style.color = "#00FF00";
-            } catch(e) { dot.style.color = "red"; }
+            }
         }
 
-        // SIM & BT
-        function startSimulator() {
-            let simPace = MISSION.targets.paceSec || 120;
-            STATE.simLoop = setInterval(() => {
-                if(STATE.phase !== 'WORK') return;
-                let speed = 500 / (simPace + (Math.random()-0.5)*2);
-                processTelemetry(speed, 26, 140, 200);
-            }, 500);
+        function updateHRBar(hr) {
+            document.querySelectorAll('.hr-zone').forEach(z => z.classList.remove('active'));
+            if(hr > PROFILE.hrZones.z4) document.getElementById('z5').classList.add('active');
+            else if(hr > PROFILE.hrZones.z3) document.getElementById('z4').classList.add('active');
+            else if(hr > PROFILE.hrZones.z2) document.getElementById('z3').classList.add('active');
+            else if(hr > PROFILE.hrZones.z1) document.getElementById('z2').classList.add('active');
+            else if(hr > 0) document.getElementById('z1').classList.add('active');
         }
+
+        function endMission() {
+            STATE.active = false;
+            if(STATE.simLoop) clearInterval(STATE.simLoop);
+            alert("Mission Complete. Saving Data.");
+            
+            // Save to History
+            const session = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                desc: MISSION.description || "Custom Workout",
+                stats: calculateStats(STATE.log),
+                raw: STATE.log
+            };
+            HISTORY.unshift(session);
+            localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
+            renderHistory();
+            nav('screenHistory');
+        }
+
+        function calculateStats(log) {
+            if(log.length === 0) return { avgWatts:0, dist:0 };
+            let sumWatts = 0;
+            log.forEach(l => sumWatts += l.watts);
+            return {
+                avgWatts: Math.round(sumWatts / log.length),
+                dist: log.length * (500 / (log[0].paceSec || 120)) // Approx
+            };
+        }
+
+        // --- HISTORY & EXPORT ---
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = "";
+            HISTORY.forEach(h => {
+                let div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div>
+                        <div class="h-date">${new Date(h.date).toLocaleDateString()} ${new Date(h.date).toLocaleTimeString()}</div>
+                        <div class="h-desc">${h.desc}</div>
+                    </div>
+                    <div class="h-stat">${h.stats.avgWatts}W</div>
+                `;
+                div.onclick = () => alert(JSON.stringify(h.stats, null, 2));
+                list.appendChild(div);
+            });
+        }
+
+        function exportHistory() {
+            // ErgData Header Format
+            let csv = "Log ID,Date,Description,Work Time (Formatted),Work Time (Seconds),Rest Time (Formatted),Rest Time (Seconds),Work Distance,Rest Distance,Stroke Rate/Cadence,Stroke Count,Pace,Avg Watts,Cal/Hour,Total Cal,Avg Heart Rate,Drag Factor,Age,Weight,Type,Ranked,Comments,Date Entered\n";
+            
+            HISTORY.forEach(h => {
+                // We flatten the log. For "All Data" export, usually ErgData exports summary rows.
+                // Here we will export SUMMARY rows for the history.
+                // If user wants row-by-row, we'd need a separate button.
+                
+                // Let's emulate the row-by-row for the LATEST session or just summary lines?
+                // The prompt asked for specific headers. Let's do Summary Lines for all history.
+                
+                csv += `${h.id},${h.date},${h.desc},00:00,0,00:00,0,0,0,0,0,0:00,${h.stats.avgWatts},0,0,0,0,0,0,RowErg,No,,${h.date}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'analyst_export.csv';
+            a.click();
+        }
+        
+        function clearData() {
+            if(confirm("Delete all history?")) {
+                localStorage.removeItem('analyst_history');
+                HISTORY = [];
+                renderHistory();
+            }
+        }
+
+        // --- BLUETOOTH ---
         async function connectBluetooth() {
             try {
                 const device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'PM5' }], optionalServices: [PM5_SERVICE] });
@@ -452,9 +534,9 @@
                     let speed = (d.getUint8(3) | (d.getUint8(4)<<8)) * 0.001;
                     processTelemetry(speed, d.getUint8(5), d.getUint8(6), (d.getUint8(11)|(d.getUint8(12)<<8)));
                 });
-            } catch(e) { alert(e.message); }
+            } catch(e) { alert("BT Error: " + e.message); }
         }
-        function downloadLog() { /* CSV Logic Same as V3.2 */ }
+
     </script>
 </body>
 </html>
