@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V5.5 (ROBUST AI)</title>
+    <title>ANALYST V5.6 (DYNAMIC BRAIN)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -24,11 +24,12 @@
         .header-title { flex-grow: 1; text-align: center; font-weight: bold; font-size: 14px; letter-spacing: 1px; color: #888; }
         .header-btn { background: transparent; border: none; color: var(--accent); font-weight: bold; font-size: 12px; cursor: pointer; padding: 10px; }
 
-        /* UI CARDS */
+        /* CARDS */
         .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
         
-        .btn { width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 14px; margin-top: 5px; }
+        .btn { width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 14px; margin-top: 5px; transition: filter 0.2s; }
+        .btn:active { transform: scale(0.98); }
         .btn-green { background: var(--accent); color: black; }
         .btn-outline { background: transparent; border: 1px solid #555; color: #888; }
         .btn-danger { background: #300; border: 1px solid #500; color: #f88; }
@@ -48,14 +49,13 @@
         .hr-zone.active { opacity: 1; box-shadow: 0 0 10px currentColor; }
         .z1 { background: #666; } .z2 { background: #0088FF; } .z3 { background: #00FF00; } .z4 { background: #FFAA00; } .z5 { background: #FF0000; } 
 
-        /* TABS */
+        /* MANUAL TABS */
         .manual-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid #333; }
         .m-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; }
         .m-tab.active { color: white; border-bottom: 2px solid var(--accent); }
 
         /* LOGS */
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; background: #151515; margin-bottom: 2px; }
-        .history-item:active { background: #222; }
         .h-date { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
         .h-desc { font-weight: bold; font-size: 13px; margin-top: 2px; color: #eee; }
         .h-stat { font-family: monospace; color: var(--accent); font-size: 14px; font-weight: bold; }
@@ -111,7 +111,7 @@
             <div class="card">
                 <div class="section-header">AI MISSION BUILDER</div>
                 <label style="font-size:10px; color:#666;">DESCRIBE WORKOUT</label>
-                <textarea id="aiInput" rows="3" placeholder="e.g. 8 x 1min row. 1:40 split. 1 min rest."></textarea>
+                <textarea id="aiInput" rows="3" placeholder="e.g. 4 x 500m. 2 min rest. aim for 1.45 per row"></textarea>
                 <button class="btn btn-blue" onclick="generateMission()">GENERATE PLAN</button>
             </div>
 
@@ -205,10 +205,21 @@
         <div class="screen-header"><div class="header-title">SETTINGS</div></div>
         <div class="scroll-area">
             <div class="card">
-                <div class="section-header">API & MODEL</div>
-                <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key...">
-                <button class="btn btn-green" onclick="saveSettings()">SAVE SETTINGS</button>
+                <div class="section-header">API & MODEL CONFIG</div>
+                <label>API KEY</label>
+                <input type="password" id="apiKeyInput" placeholder="Paste Key...">
+                
+                <label style="margin-top:10px;">AVAILABLE MODELS</label>
+                <select id="modelSelect">
+                    <option value="" disabled selected>Click SCAN to find models</option>
+                </select>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                    <button class="btn btn-outline" onclick="scanModels()">SCAN FOR MODELS</button>
+                    <button class="btn btn-green" onclick="testConnection()">TEST</button>
+                </div>
             </div>
+
             <div class="card">
                 <div class="section-header">HEART RATE ZONES (BPM)</div>
                 <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
@@ -219,7 +230,9 @@
                     <div><label>Z1 (Recovery)</label><input type="number" id="hrZ1" value="108"></div>
                 </div>
             </div>
-            <button class="btn btn-danger" onclick="clearData()">RESET DATA</button>
+            
+            <button class="btn btn-green" onclick="saveSettings()">SAVE SETTINGS</button>
+            <button class="btn btn-danger" style="margin-top:10px;" onclick="clearData()">RESET DATA</button>
         </div>
     </div>
 
@@ -237,13 +250,15 @@
         let MISSION = { description: "", intervals: [] };
         let STATE = { active: false, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: false };
         let HISTORY = [];
-        let PROFILE = { hrZones: { z1: 108, z2: 125, z3: 144, z4: 162, z5: 180 } };
+        let PROFILE = { hrZones: { z1: 108, z2: 125, z3: 144, z4: 162, z5: 180 }, model: "gemini-1.5-flash" };
 
         window.onload = () => {
             const key = localStorage.getItem('gemini_api_key');
             if(key) document.getElementById('apiKeyInput').value = key;
+            
             const h = localStorage.getItem('analyst_history');
             if(h) HISTORY = JSON.parse(h);
+            
             const p = localStorage.getItem('analyst_profile');
             if(p) {
                 PROFILE = JSON.parse(p);
@@ -252,32 +267,39 @@
                 document.getElementById('hrZ3').value = PROFILE.hrZones.z3;
                 document.getElementById('hrZ2').value = PROFILE.hrZones.z2;
                 document.getElementById('hrZ1').value = PROFILE.hrZones.z1;
+                // Add saved model to select if exists, else trigger add
+                if(PROFILE.model) addModelOption(PROFILE.model, true);
             }
             
-            // SEED DATA
             if(HISTORY.length === 0) {
                 HISTORY = [
-                    {id: 1, date: new Date().toISOString(), desc: "8 x 1min Power", stats: {avgWatts: 245, dist: 2200, time: 480, avgRate: 26, avgHR: 155}},
-                    {id: 2, date: new Date(Date.now()-86400000).toISOString(), desc: "5k Steady State", stats: {avgWatts: 180, dist: 5000, time: 1200, avgRate: 20, avgHR: 135}}
+                    {id: 1, date: new Date().toISOString(), desc: "Example Row", stats: {avgWatts: 200, dist: 2000, time: 480, avgRate: 24, avgHR: 140}}
                 ];
                 localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
             }
             renderHistory();
         };
 
+        // --- UTILS ---
+        function showToast(msg, type='success') {
+            const t = document.getElementById('toast');
+            t.innerText = (type==='success'?'✔ ':'⚠ ') + msg;
+            t.className = type + ' active';
+            setTimeout(()=>t.className='', 3000);
+        }
+
         function nav(id) {
             document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
             
-            // Highlight logic
             if(id==='screenBuilder') document.getElementById('navBuild').classList.add('active');
             else if(id==='dashScreen') document.getElementById('navDash').classList.add('active');
             else if(id==='screenHistory' || id==='screenLogDetail') document.getElementById('navHist').classList.add('active');
             else if(id==='screenSettings') document.getElementById('navSet').classList.add('active');
         }
 
-        // --- MANUAL & AI BUILDER ---
+        // --- MANUAL MODE ---
         function setManualMode(mode) {
             document.getElementById('inputsSingle').style.display = mode==='SINGLE'?'block':'none';
             document.getElementById('inputsInterval').style.display = mode==='INTERVAL'?'block':'none';
@@ -309,31 +331,84 @@
             startMission(false);
         }
 
+        // --- AI ---
+        async function scanModels() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if(!key) return showToast("API Key Missing", 'error');
+            localStorage.setItem('gemini_api_key', key);
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                const data = await r.json();
+                if(!r.ok) throw new Error(data.error?.message);
+                
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = "";
+                let found = 0;
+                data.models.forEach(m => {
+                    if(m.supportedGenerationMethods?.includes("generateContent")) {
+                        addModelOption(m.name.replace("models/", ""), found===0);
+                        found++;
+                    }
+                });
+                showToast(`Found ${found} models`, 'success');
+            } catch(e) { showToast("Scan Failed: "+e.message, 'error'); }
+        }
+
+        function addModelOption(name, selectIt) {
+            const sel = document.getElementById('modelSelect');
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.innerText = name;
+            if(selectIt) { 
+                opt.selected = true; 
+                PROFILE.model = name;
+            }
+            sel.appendChild(opt);
+        }
+
+        async function testConnection() {
+            const key = document.getElementById('apiKeyInput').value;
+            const model = document.getElementById('modelSelect').value;
+            if(!model) return showToast("Scan first", 'error');
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Hi" }] }] })
+                });
+                if(r.ok) showToast("Connected!", 'success');
+                else showToast("Failed", 'error');
+            } catch(e) { showToast("Network Error", 'error'); }
+        }
+
         async function generateMission() {
             const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
-            if(!key) { alert("Please set API Key in Settings"); return; }
+            if(!key) return showToast("Set API Key in Settings", 'error');
             
+            const model = PROFILE.model || "gemini-1.5-flash"; 
             const input = document.getElementById('aiInput').value;
             const btn = document.querySelector('#screenBuilder .btn-blue');
             btn.innerText = "THINKING...";
             
-            // IMPROVED PROMPT
+            // ROBUST PROMPT
             const PROMPT = `Parse workout: "${input}". 
             Return JSON: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. 
             RULES:
-            1. If input format is "1.45" or "1:45" refers to pace, convert to seconds (105). set in "pace_target".
-            2. If "watts" mentioned, set "watts".
-            3. If time based, duration in seconds.
-            4. If no specific target, leave as 0.
+            1. If input is "1.45" or "1:45" refers to pace/split, convert to seconds (105) -> pace_target.
+            2. If "watts", set "watts".
+            3. If time based (min), duration in seconds. If dist based (m), dist in meters.
+            4. If undefined, set 0.
             `;
 
             try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                const r = await fetch(url, {
                     method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
+                    body: JSON.stringify({ 
+                        contents: [{ role: "user", parts: [{ text: PROMPT }] }],
+                        safetySettings: [{ category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" }] // SAFETY OVERRIDE
+                    })
                 });
                 
-                // SAFETY: Check response before parsing
                 const d = await r.json();
                 if(!d.candidates || !d.candidates[0]) throw new Error("AI returned no results");
 
@@ -344,7 +419,6 @@
                 document.getElementById('aiDesc').value = MISSION.description;
                 document.getElementById('aiCount').innerText = MISSION.intervals.filter(i=>i.type==='WORK').length;
                 
-                // Extract targets from first work interval
                 const firstWork = MISSION.intervals.find(i=>i.type==='WORK');
                 if(firstWork) {
                     if(firstWork.pace_target > 0) {
@@ -356,30 +430,24 @@
                 }
 
                 document.getElementById('missionPreview').classList.remove('hidden');
-            } catch(e) { alert("AI Error: " + e.message); }
+            } catch(e) { showToast("AI Error: " + e.message, 'error'); }
             btn.innerText = "GENERATE PLAN";
         }
 
-        // Helper to extract JSON from markdown text
         function extractJSON(text) {
             const start = text.indexOf('{');
             const end = text.lastIndexOf('}');
-            if (start !== -1 && end !== -1) {
-                return text.substring(start, end + 1);
-            }
-            return text; // Fallback
+            return (start !== -1 && end !== -1) ? text.substring(start, end + 1) : text;
         }
 
         // --- DASHBOARD LOGIC ---
         function startMission(isSim) {
-            // Apply Manual Overrides from AI Preview
             if(!document.getElementById('missionPreview').classList.contains('hidden')) {
                 MISSION.description = document.getElementById('aiDesc').value;
                 const p = document.getElementById('aiPace').value.split(':');
                 const paceSec = p.length==2 ? (parseInt(p[0])*60 + parseInt(p[1])) : 0;
                 const rate = parseInt(document.getElementById('aiRate').value) || 0;
                 
-                // Apply to all WORK intervals
                 MISSION.intervals.forEach(i => {
                     if(i.type === 'WORK') {
                         if(paceSec > 0) i.pace_target = paceSec;
@@ -409,7 +477,6 @@
             document.getElementById('phaseBadge').style.color = int.type==='WORK'?'black':'white';
             document.getElementById('intervalInfo').innerText = `${int.type} ${STATE.intervalIdx+1}/${MISSION.intervals.length}`;
             
-            // Show targets
             document.getElementById('tgtRate').innerText = int.rate ? `(${int.rate})` : "";
             if(int.pace_target > 0) {
                 let m = Math.floor(int.pace_target/60);
@@ -425,7 +492,6 @@
         }
 
         function processTelemetry(speed, rate, hr, watts) {
-            // AUTO START
             if(watts > 0 && !STATE.active && document.getElementById('dashScreen').classList.contains('active') === false) {
                 launchJustRow(); return;
             }
@@ -441,7 +507,6 @@
                 return;
             }
 
-            // UI
             let paceSec = speed > 0.1 ? 500/speed : 0;
             let m = Math.floor(paceSec/60);
             let s = Math.floor(paceSec%60);
@@ -451,7 +516,6 @@
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
             document.getElementById('dispDist').innerText = Math.floor(STATE.distLeft > 0 ? STATE.distLeft : 0);
 
-            // HR Zones
             const z = PROFILE.hrZones;
             document.querySelectorAll('.hr-zone').forEach(el=>el.classList.remove('active'));
             if(hr > z.z4) document.getElementById('z5').classList.add('active');
@@ -468,7 +532,6 @@
             if(STATE.simLoop) clearInterval(STATE.simLoop);
             showToast("Mission Complete", 'success');
             
-            // Calc stats
             let sumW=0, sumR=0, sumHR=0, count=0;
             STATE.log.forEach(l => { sumW+=l.w; sumR+=l.r; sumHR+=l.h; count++; });
             
@@ -476,8 +539,8 @@
                 avgWatts: count ? Math.round(sumW/count) : 0,
                 avgRate: count ? Math.round(sumR/count) : 0,
                 avgHR: count ? Math.round(sumHR/count) : 0,
-                dist: 0, // In V5.4 we rely on PM5 dist, but for now 0
-                time: count * 0.5 // Approx duration
+                dist: 0, 
+                time: count * 0.5 
             };
 
             const session = { id: Date.now(), date: new Date().toISOString(), desc: MISSION.description || "Just Row", stats: stats, raw: STATE.log };
@@ -487,7 +550,6 @@
             nav('screenHistory');
         }
 
-        // --- HISTORY & SETTINGS ---
         function renderHistory() {
             const list = document.getElementById('historyList');
             list.innerHTML = "";
@@ -522,7 +584,6 @@
         }
 
         function exportHistory() {
-            // ErgData Header Format (Simplified for V5.4 but accurate columns)
             let csv = "Log ID,Date,Description,Work Time (Seconds),Work Distance,Stroke Rate/Cadence,Avg Watts,Avg Heart Rate,Drag Factor,Comments\n";
             HISTORY.forEach(h => {
                 csv += `${h.id},${h.date},"${h.desc}",${h.stats.time},${h.stats.dist},${h.stats.avgRate},${h.stats.avgWatts},${h.stats.avgHR},115,Analyst Export\n`;
@@ -545,6 +606,7 @@
                 z2: parseInt(document.getElementById('hrZ2').value),
                 z1: parseInt(document.getElementById('hrZ1').value)
             };
+            PROFILE.model = document.getElementById('modelSelect').value;
             localStorage.setItem('analyst_profile', JSON.stringify(PROFILE));
             showToast("Saved", 'success');
         }
@@ -566,7 +628,7 @@
                 STATE.connected = true;
                 document.getElementById('btConnectBtn').innerText = "CONNECTED";
                 document.getElementById('btConnectBtn').style.color = "#00FF00";
-            } catch(e) { alert("BT Error: " + e.message); }
+            } catch(e) { showToast("BT Error: " + e.message, 'error'); }
         }
     </script>
 </body>
