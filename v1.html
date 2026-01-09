@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V5.1 (AUTO-DISCOVERY)</title>
+    <title>ANALYST V5.2 (WATTS FIXED)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -52,7 +52,7 @@
         .metric-huge { font-size: 14vh; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
         .metric-sub { font-size: 4vh; color: #888; font-weight: 700; margin-top: 10px; }
         .lower-deck { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-top: 1px solid var(--border); }
-        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); }
+        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); position: relative; }
         
         .hr-bar-container { width: 100%; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; display: flex; }
         .hr-zone { height: 100%; opacity: 0.3; flex-grow: 1; margin: 0 1px; }
@@ -89,8 +89,8 @@
                 </div>
                 <div style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <div><label>PACE</label><input type="text" id="inpPace" value="1:54"></div>
-                        <div><label>RATE</label><input type="number" id="inpRate" value="26"></div>
+                        <div><label>TARGET WATTS</label><input type="number" id="inpWatts" value="200"></div>
+                        <div><label>TARGET RATE</label><input type="number" id="inpRate" value="26"></div>
                     </div>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
@@ -102,7 +102,7 @@
             <div class="card">
                 <div class="section-header">AI MISSION BUILDER</div>
                 <label style="font-size:10px; color:#666;">NATURAL LANGUAGE INPUT</label>
-                <textarea id="aiInput" rows="3" placeholder="e.g. 8 x 1min, 2min rest..."></textarea>
+                <textarea id="aiInput" rows="3" placeholder="e.g. 8 x 1min, 266 watts, 2min rest..."></textarea>
                 <button class="btn btn-outline" onclick="generateMission()">GENERATE WITH AI</button>
             </div>
 
@@ -128,29 +128,15 @@
                 <div class="section-header">API & MODEL CONFIG</div>
                 <label>API KEY</label>
                 <input type="password" id="apiKeyInput" placeholder="Paste Key...">
-                
                 <label style="margin-top:10px;">AVAILABLE MODELS</label>
-                <select id="modelSelect">
-                    <option value="" disabled selected>Click SCAN to find models</option>
-                </select>
-
+                <select id="modelSelect"><option value="" disabled selected>Click SCAN to find models</option></select>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                    <button class="btn btn-outline" onclick="scanModels()">SCAN FOR MODELS</button>
+                    <button class="btn btn-outline" onclick="scanModels()">SCAN</button>
                     <button class="btn btn-green" onclick="testConnection()">TEST</button>
                 </div>
-                
                 <div id="debugLog">System Ready.</div>
             </div>
-
-            <div class="card">
-                <div class="section-header">HEART RATE ZONES</div>
-                <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
-                    <div><label>Z5</label><input type="number" id="hrZ5" value="180"></div>
-                    <div><label>Z1</label><input type="number" id="hrZ1" value="108"></div>
-                </div>
-            </div>
-            
-            <button class="btn btn-danger" onclick="localStorage.clear(); location.reload();">RESET ALL</button>
+            <button class="btn btn-green" onclick="saveSettings()">SAVE PROFILE</button>
         </div>
     </div>
 
@@ -165,15 +151,19 @@
 
         <div class="main-deck">
             <div class="metric-huge" id="dispPace">0:00</div>
-            <div class="metric-sub"><span id="dispWatts">0</span>W <span style="color:#444">|</span> <span id="dispDist">0</span>m</div>
+            <div class="metric-sub">
+                <span id="dispWatts">0</span>W <span style="font-size:10px; color:var(--accent); display:none;" id="tgtWatts">TGT: --</span> 
+                <span style="color:#444">|</span> 
+                <span id="dispDist">0</span>m
+            </div>
         </div>
 
         <div class="lower-deck">
             <div class="stat-box">
                 <div class="metric-sub" id="dispRate" style="color:white; margin:0;">--</div>
-                <div style="font-size:10px; color:#666;">RATE (TGT: <span id="tgtRate" style="color:var(--accent)">--</span>)</div>
+                <div style="font-size:10px; color:#666;">RATE <span id="tgtRateContainer" style="display:none; color:var(--accent)">(TGT: <span id="tgtRate">--</span>)</span></div>
             </div>
-            <div class="stat-box">
+            <div class="stat-box" style="padding: 0 15px;">
                 <div class="metric-sub" id="dispHR" style="color:white; margin:0;">--</div>
                 <div style="font-size:10px; color:#666;">HEART RATE</div>
                 <div class="hr-bar-container">
@@ -234,89 +224,78 @@
             d.scrollTop = d.scrollHeight;
         }
 
-        // --- AI SCANNER ---
+        // --- SCANNER ---
         async function scanModels() {
             const key = document.getElementById('apiKeyInput').value.trim();
             if(!key) return showToast("API Key Missing", 'error');
             localStorage.setItem('gemini_api_key', key);
-            
-            logDebug("Scanning available models...");
-            
+            logDebug("Scanning...");
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
                 const data = await r.json();
-                
-                if(!r.ok) throw new Error(data.error?.message || "Scan Failed");
-                
+                if(!r.ok) throw new Error(data.error?.message);
                 const select = document.getElementById('modelSelect');
-                select.innerHTML = ""; // Clear
-                
+                select.innerHTML = "";
                 let found = 0;
                 data.models.forEach(m => {
-                    // Filter for models that support generateContent
-                    if(m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent")) {
-                        const name = m.name.replace("models/", "");
-                        addModelOption(name, found===0);
+                    if(m.supportedGenerationMethods?.includes("generateContent")) {
+                        addModelOption(m.name.replace("models/", ""), found===0);
                         found++;
                     }
                 });
-                
-                logDebug(`Found ${found} usable models.`);
                 showToast(`Found ${found} models`, 'success');
-                
-            } catch(e) {
-                logDebug("SCAN ERROR: " + e.message);
-                showToast("Scan Failed. Check Log.", 'error');
-            }
+            } catch(e) { logDebug("SCAN ERROR: " + e.message); }
         }
-
         function addModelOption(name, selectIt) {
             const sel = document.getElementById('modelSelect');
             const opt = document.createElement('option');
             opt.value = name;
             opt.innerText = name;
-            if(selectIt) {
-                opt.selected = true;
-                localStorage.setItem('gemini_model', name);
-            }
+            if(selectIt) { opt.selected = true; localStorage.setItem('gemini_model', name); }
             sel.appendChild(opt);
         }
-
         async function testConnection() {
-            const key = document.getElementById('apiKeyInput').value.trim();
+            const key = document.getElementById('apiKeyInput').value;
             const model = document.getElementById('modelSelect').value;
-            
-            if(!model) return showToast("Scan Models first!", 'error');
-            
-            logDebug(`Testing ${model}...`);
+            if(!model) return showToast("Scan first", 'error');
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Say OK" }] }] })
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Hi" }] }] })
                 });
-                const data = await r.json();
-                if(r.ok) {
-                    logDebug("SUCCESS: " + JSON.stringify(data));
-                    showToast("Connected!", 'success');
-                    localStorage.setItem('gemini_model', model);
-                } else {
-                    logDebug("FAIL: " + JSON.stringify(data));
-                    showToast("Model Failed", 'error');
-                }
+                if(r.ok) showToast("Connected!", 'success');
+                else logDebug("FAIL: " + (await r.text()));
             } catch(e) { logDebug("NET ERROR: "+e.message); }
         }
 
+        // --- AI GENERATOR (FIXED PROMPT) ---
         async function generateMission() {
             const key = localStorage.getItem('gemini_api_key');
             const model = localStorage.getItem('gemini_model');
             const input = document.getElementById('aiInput').value;
             
-            if(!key || !model || !input) return showToast("Setup required in Settings", 'error');
+            if(!key || !model || !input) return showToast("Setup required", 'error');
             
             document.getElementById('missionPreview').style.display = 'block';
             document.getElementById('missionDetails').innerText = "GENERATING...";
 
-            const PROMPT = `Parse workout: "${input}". JSON Format: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "rate": 0 }] }. If minutes use duration (sec), if meters use dist.`;
+            // UPDATED PROMPT TO HANDLE WATTS vs RATE
+            const PROMPT = `Parse workout: "${input}". 
+            Return JSON: { 
+                "description": "txt", 
+                "intervals": [{ 
+                    "type": "WORK"|"REST", 
+                    "dist": 0, 
+                    "duration": 0, 
+                    "watts": 0, 
+                    "rate": 0 
+                }] 
+            }. 
+            RULES:
+            1. If input says "watts" or "power", put value in 'watts'.
+            2. If input says "rate", "spm", "s/m", put value in 'rate'.
+            3. If time based, duration in seconds.
+            `;
 
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
@@ -334,7 +313,7 @@
             }
         }
 
-        // --- DASHBOARD ---
+        // --- MANUAL ---
         function setManualMode(mode) {
             MANUAL_MODE = mode;
             document.getElementById('tabSingle').className = mode === 'SINGLE' ? 'm-tab active' : 'm-tab';
@@ -345,23 +324,25 @@
 
         function launchManual(isSim) {
             MISSION = { description: "Manual " + MANUAL_MODE, intervals: [] };
-            const tgtRate = parseInt(document.getElementById('inpRate').value) || 20;
+            const tgtWatts = parseInt(document.getElementById('inpWatts').value) || 0;
+            const tgtRate = parseInt(document.getElementById('inpRate').value) || 0;
 
             if(MANUAL_MODE === 'SINGLE') {
                 const dist = parseInt(document.getElementById('inpDist').value);
-                MISSION.intervals.push({ type:'WORK', dist: dist, duration:99999, rate:tgtRate });
+                MISSION.intervals.push({ type:'WORK', dist: dist, duration:99999, watts:tgtWatts, rate:tgtRate });
             } else {
                 const sets = parseInt(document.getElementById('inpSets').value);
                 const dist = parseInt(document.getElementById('inpIntDist').value);
                 const rest = parseInt(document.getElementById('inpRest').value);
                 for(let i=0; i<sets; i++) {
-                    MISSION.intervals.push({ type:'WORK', dist: dist, duration:99999, rate:tgtRate });
-                    if(i < sets-1) MISSION.intervals.push({ type:'REST', duration:rest, rate:0 });
+                    MISSION.intervals.push({ type:'WORK', dist: dist, duration:99999, watts:tgtWatts, rate:tgtRate });
+                    if(i < sets-1) MISSION.intervals.push({ type:'REST', duration:rest });
                 }
             }
             startMission(isSim);
         }
 
+        // --- DASHBOARD ---
         function startMission(isSim) {
             nav('dashScreen');
             STATE = { active: true, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null };
@@ -370,7 +351,14 @@
             if(isSim) {
                 STATE.simLoop = setInterval(() => {
                     if(!STATE.active) return;
-                    processTelemetry(2.5, 24, 145, 200);
+                    let int = MISSION.intervals[STATE.intervalIdx];
+                    // Simulate based on target
+                    let simWatts = int.watts > 0 ? int.watts : 200;
+                    let simRate = int.rate > 0 ? int.rate : 24;
+                    // Add noise
+                    simWatts += (Math.random()-0.5)*10;
+                    
+                    processTelemetry(2.5, Math.floor(simRate), 145, Math.floor(simWatts));
                 }, 500);
             } else {
                 connectBluetooth();
@@ -393,7 +381,21 @@
             document.getElementById('phaseBadge').style.background = int.type==='WORK' ? '#00FF00' : '#0088FF';
             document.getElementById('phaseBadge').style.color = int.type==='WORK' ? '#000' : '#fff';
             document.getElementById('intervalInfo').innerText = `${int.type} ${STATE.intervalIdx+1}/${MISSION.intervals.length}`;
-            document.getElementById('tgtRate').innerText = int.rate || "--";
+            
+            // Set Targets Display
+            if(int.watts > 0) {
+                document.getElementById('tgtWatts').innerText = `TGT: ${int.watts}`;
+                document.getElementById('tgtWatts').style.display = 'inline';
+            } else {
+                document.getElementById('tgtWatts').style.display = 'none';
+            }
+
+            if(int.rate > 0) {
+                document.getElementById('tgtRate').innerText = int.rate;
+                document.getElementById('tgtRateContainer').style.display = 'inline';
+            } else {
+                document.getElementById('tgtRateContainer').style.display = 'none';
+            }
         }
 
         function processTelemetry(speed, rate, hr, watts) {
@@ -418,12 +420,20 @@
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
             document.getElementById('dispDist').innerText = Math.floor(STATE.distLeft > 0 ? STATE.distLeft : 0);
 
+            // HR Zones
             document.querySelectorAll('.hr-zone').forEach(z=>z.classList.remove('active'));
             if(hr > HR_ZONES.z4) document.getElementById('z5').classList.add('active');
             else if(hr > HR_ZONES.z3) document.getElementById('z4').classList.add('active');
             else if(hr > HR_ZONES.z2) document.getElementById('z3').classList.add('active');
             else if(hr > HR_ZONES.z1) document.getElementById('z2').classList.add('active');
             else if(hr > 0) document.getElementById('z1').classList.add('active');
+        }
+
+        function saveSettings() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if(key) localStorage.setItem('gemini_api_key', key);
+            showToast("Settings Saved");
+            setTimeout(() => nav('screenBuilder'), 500);
         }
 
         async function connectBluetooth() {
