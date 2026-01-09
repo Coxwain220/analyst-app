@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V5.7 (HOTFIX)</title>
+    <title>ANALYST V6.0 (UNIFIED)</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); font-family: 'Roboto', -apple-system, sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
         /* TOAST */
-        #toast { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 12px 24px; border-radius: 0 0 8px 8px; z-index: 2000; font-size: 13px; font-weight: bold; transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); box-shadow: 0 5px 20px rgba(0,0,0,0.5); white-space: nowrap; }
+        #toast { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 12px 24px; border-radius: 0 0 8px 8px; z-index: 2000; font-size: 13px; font-weight: bold; transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); white-space: nowrap; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         #toast.active { top: 0; }
         #toast.success { border-color: var(--accent); color: var(--accent); }
         #toast.error { border-color: var(--danger); color: var(--danger); }
@@ -18,26 +18,43 @@
         /* SCREENS */
         .screen { display: none; flex-grow: 1; flex-direction: column; overflow: hidden; height: 100%; }
         .screen.active { display: flex; }
-        .scroll-area { flex-grow: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; -webkit-overflow-scrolling: touch; }
+        .scroll-area { flex-grow: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
         
         .screen-header { display: flex; align-items: center; padding: 15px; background: var(--panel); border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .header-title { flex-grow: 1; text-align: center; font-weight: bold; font-size: 14px; letter-spacing: 1px; color: #888; }
         .header-btn { background: transparent; border: none; color: var(--accent); font-weight: bold; font-size: 12px; cursor: pointer; padding: 10px; }
 
-        /* CARDS */
+        /* CARDS & INPUTS */
         .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
         
-        /* BUTTONS */
         .btn { width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 14px; margin-top: 5px; transition: opacity 0.2s; }
         .btn:active { opacity: 0.7; }
         .btn-green { background: var(--accent); color: black; }
         .btn-outline { background: transparent; border: 1px solid #555; color: #888; }
         .btn-danger { background: #300; border: 1px solid #500; color: #f88; }
-        .btn-blue { background: var(--rest); color: white; }
-
-        input, textarea, select { background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 4px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; }
         
+        input, textarea, select { background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 4px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; }
+
+        /* MISSION BUILDER LIST */
+        #builderList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .step-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 12px; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; transition: background 0.2s; }
+        .step-card:hover { background: #222; }
+        .step-icon { font-size: 18px; font-weight: bold; text-align: center; }
+        .step-details { display: flex; flex-direction: column; }
+        .step-main { font-weight: bold; font-size: 14px; color: #fff; }
+        .step-sub { font-size: 11px; color: #888; margin-top: 2px; }
+        .step-del { color: #666; font-size: 18px; cursor: pointer; padding: 5px; }
+        .step-del:hover { color: var(--danger); }
+        
+        .type-work { color: var(--accent); }
+        .type-rest { color: var(--rest); }
+
+        /* EDIT MODAL */
+        #editModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        #editModal.active { display: flex; }
+        .modal-content { background: #111; padding: 20px; border-radius: 8px; border: 1px solid #333; width: 90%; max-width: 400px; }
+
         /* DASHBOARD */
         .main-deck { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0; }
         .metric-huge { font-size: 14vh; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
@@ -45,22 +62,10 @@
         .lower-deck { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-top: 1px solid var(--border); }
         .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); padding: 15px; }
         
-        /* HR BAR */
         .hr-bar-container { width: 100%; height: 8px; background: #222; margin-top: 8px; border-radius: 4px; display: flex; overflow: hidden; }
         .hr-zone { height: 100%; opacity: 0.2; flex-grow: 1; margin: 0 1px; transition: opacity 0.3s; }
         .hr-zone.active { opacity: 1; box-shadow: 0 0 8px currentColor; }
         .z1 { background: #666; } .z2 { background: #0088FF; } .z3 { background: #00FF00; } .z4 { background: #FFAA00; } .z5 { background: #FF0000; } 
-
-        /* TABS */
-        .manual-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid #333; }
-        .m-tab { flex: 1; background: transparent; border: none; color: #666; padding: 12px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .m-tab.active { color: white; border-bottom: 2px solid var(--accent); }
-
-        /* LOGS */
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; background: #151515; margin-bottom: 1px; }
-        .h-date { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        .h-desc { font-weight: bold; font-size: 13px; margin-top: 4px; color: #eee; }
-        .h-stat { font-family: monospace; color: var(--accent); font-size: 14px; font-weight: bold; }
 
         /* NAV BAR */
         .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; flex-shrink: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
@@ -68,16 +73,7 @@
         .nav-btn.active { color: var(--accent); background: #1a1a1a; }
         .nav-icon { font-size: 20px; margin-bottom: 4px; }
 
-        /* MEDIA QUERIES */
-        @media (max-width: 600px) {
-            .metric-huge { font-size: 18vw; }
-            .metric-sub { font-size: 5vh; }
-            .btn { font-size: 13px; padding: 12px; }
-        }
-        
-        /* LOG DETAIL TABLE */
-        .detail-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .detail-table td { padding: 10px; border-bottom: 1px solid #333; color: #ccc; font-size: 14px; }
+        @media (max-width: 600px) { .metric-huge { font-size: 18vw; } .metric-sub { font-size: 5vh; } }
     </style>
 </head>
 <body>
@@ -86,64 +82,61 @@
 
     <div id="screenBuilder" class="screen active">
         <div class="screen-header">
-            <div class="header-title">MISSION CONTROL</div>
+            <div class="header-title">MISSION BUILDER</div>
             <button class="header-btn" onclick="connectBluetooth()" id="btConnectBtn">CONNECT PM5</button>
         </div>
         <div class="scroll-area">
             
             <div class="card">
-                <div class="section-header">QUICK START</div>
-                <button class="btn btn-green" onclick="launchJustRow()">JUST ROW (OPEN)</button>
+                <div class="section-header">AI ASSISTANT</div>
+                <textarea id="aiInput" rows="2" placeholder="e.g. 4x500m @ 1:45, 2min rest..."></textarea>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-outline" style="flex:1" onclick="generateMission()">GENERATE PLAN</button>
+                    <button class="btn btn-green" style="flex:1" onclick="launchJustRow()">JUST ROW</button>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="section-header">MANUAL BUILDER</div>
-                <div class="manual-tabs">
-                    <button class="m-tab active" onclick="setManualMode('SINGLE')" id="tabSingle">SINGLE</button>
-                    <button class="m-tab" onclick="setManualMode('INTERVAL')" id="tabInterval">INTERVALS</button>
+            <div class="section-header" style="margin: 0 5px 10px 5px;">MISSION TIMELINE</div>
+            <div id="builderList">
+                <div style="text-align:center; padding:30px; color:#444; border:1px dashed #333; border-radius:6px;">
+                    Empty Plan. Use AI or Add Step.
                 </div>
-                
-                <div id="inputsSingle">
-                    <label>DISTANCE (M)</label><input type="number" id="inpDist" value="2000">
-                </div>
-                
-                <div id="inputsInterval" style="display:none;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <div><label>SETS</label><input type="number" id="inpSets" value="4"></div>
-                        <div><label>DIST (M)</label><input type="number" id="inpIntDist" value="500"></div>
-                    </div>
-                    <label>REST (SEC)</label><input type="number" id="inpRest" value="60">
-                </div>
-                
-                <button class="btn btn-outline" onclick="launchManual()">INITIALIZE MISSION</button>
             </div>
 
-            <div class="card">
-                <div class="section-header">AI MISSION BUILDER</div>
-                <label style="font-size:10px; color:#666;">DESCRIBE WORKOUT</label>
-                <textarea id="aiInput" rows="3" placeholder="e.g. 4 x 500m. 2 min rest. aim for 1.45 per row"></textarea>
-                <button class="btn btn-blue" onclick="generateMission()">GENERATE PLAN</button>
-            </div>
+            <button class="btn btn-outline" onclick="addManualStep()">+ ADD STEP</button>
+            <div style="height:20px;"></div>
+            <button class="btn btn-green" onclick="startMission(false)">START MISSION</button>
+            <button class="btn btn-outline" style="margin-top:10px;" onclick="startMission(true)">SIMULATE</button>
+        </div>
+    </div>
 
-            <div id="missionPreview" class="card hidden">
-                <div class="section-header">TACTICAL BOARD (EDITABLE)</div>
-                
-                <label>DESCRIPTION</label>
-                <input type="text" id="aiDesc" value="">
-                
+    <div id="editModal">
+        <div class="modal-content">
+            <div class="section-header">EDIT STEP</div>
+            
+            <label>TYPE</label>
+            <select id="editType">
+                <option value="WORK">WORK (Row)</option>
+                <option value="REST">REST (Stop)</option>
+            </select>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div><label>DIST (m)</label><input type="number" id="editDist" placeholder="0"></div>
+                <div><label>TIME (sec)</label><input type="number" id="editTime" placeholder="0"></div>
+            </div>
+            
+            <div style="border-top:1px solid #333; margin:10px 0; padding-top:10px;">
+                <label style="color:var(--accent);">TARGETS (OPTIONAL)</label>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div><label>TARGET PACE</label><input type="text" id="aiPace" placeholder="1:50"></div>
-                    <div><label>TARGET RATE</label><input type="number" id="aiRate" placeholder="26"></div>
+                    <div><label>PACE (/500)</label><input type="text" id="editPace" placeholder="1:50"></div>
+                    <div><label>RATE (s/m)</label><input type="number" id="editRate" placeholder="26"></div>
+                    <div><label>WATTS</label><input type="number" id="editWatts" placeholder="200"></div>
                 </div>
-                
-                <div style="margin-top:10px; font-size:12px; color:#888;">
-                    INTERVALS: <span id="aiCount" style="color:white; font-weight:bold;">0</span>
-                </div>
+            </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
-                    <button class="btn btn-outline" onclick="startMission(true)">SIMULATE</button>
-                    <button class="btn btn-green" onclick="startMission(false)">CONFIRM & ROW</button>
-                </div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-outline" onclick="closeEditModal()">CANCEL</button>
+                <button class="btn btn-green" onclick="saveEditStep()">SAVE STEP</button>
             </div>
         </div>
     </div>
@@ -197,52 +190,29 @@
         <div class="scroll-area" id="historyList"></div>
     </div>
 
-    <div id="screenLogDetail" class="screen" style="background:#000; z-index:200;">
-        <div class="screen-header">
-            <button class="header-btn" onclick="nav('screenHistory')">← BACK</button>
-            <div class="header-title">ANALYSIS</div>
-            <div style="width:40px;"></div>
-        </div>
-        <div class="scroll-area">
-            <div class="card">
-                <div class="section-header">SESSION SUMMARY</div>
-                <div id="logDetailContent"></div>
-            </div>
-        </div>
-    </div>
-
     <div id="screenSettings" class="screen">
         <div class="screen-header"><div class="header-title">SETTINGS</div></div>
         <div class="scroll-area">
             <div class="card">
-                <div class="section-header">API & MODEL CONFIG</div>
-                <label>API KEY</label>
-                <input type="password" id="apiKeyInput" placeholder="Paste Key...">
-                
-                <label style="margin-top:10px;">AVAILABLE MODELS</label>
-                <select id="modelSelect">
-                    <option value="" disabled selected>Click SCAN to find models</option>
+                <div class="section-header">API & MODEL</div>
+                <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key...">
+                <select id="modelSelect" style="margin-top:10px;">
+                    <option value="" disabled>Click SCAN below</option>
                 </select>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                    <button class="btn btn-outline" onclick="scanModels()">SCAN</button>
-                    <button class="btn btn-green" onclick="testConnection()">TEST</button>
-                </div>
+                <button class="btn btn-outline" onclick="scanModels()">SCAN MODELS</button>
+                <button class="btn btn-green" onclick="saveSettings()">SAVE</button>
             </div>
-
             <div class="card">
-                <div class="section-header">HEART RATE ZONES (BPM)</div>
-                <div class="input-grid">
-                    <div><label>Z5 (Max)</label><input type="number" id="hrZ5" value="180"></div>
-                    <div><label>Z4 (Threshold)</label><input type="number" id="hrZ4" value="162"></div>
-                    <div><label>Z3 (Aerobic)</label><input type="number" id="hrZ3" value="144"></div>
-                    <div><label>Z2 (Endurance)</label><input type="number" id="hrZ2" value="125"></div>
-                    <div><label>Z1 (Recovery)</label><input type="number" id="hrZ1" value="108"></div>
+                <div class="section-header">HEART RATE ZONES</div>
+                <div class="input-grid" style="display:grid; grid-template-columns:1fr; gap:5px;">
+                    <label>Z5 <input type="number" id="hrZ5"></label>
+                    <label>Z4 <input type="number" id="hrZ4"></label>
+                    <label>Z3 <input type="number" id="hrZ3"></label>
+                    <label>Z2 <input type="number" id="hrZ2"></label>
+                    <label>Z1 <input type="number" id="hrZ1"></label>
                 </div>
             </div>
-            
-            <button class="btn btn-green" onclick="saveSettings()">SAVE SETTINGS</button>
-            <button class="btn btn-danger" style="margin-top:10px;" onclick="clearData()">RESET DATA</button>
+            <button class="btn btn-danger" onclick="clearData()">RESET DATA</button>
         </div>
     </div>
 
@@ -254,6 +224,7 @@
     </div>
 
     <script>
+        // --- CONSTANTS ---
         const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
         const PM5_CHAR_32 = 'ce060032-43e5-11e4-916c-0800200c9a66'; 
         
@@ -261,28 +232,12 @@
         let STATE = { active: false, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: false };
         let HISTORY = [];
         let PROFILE = { hrZones: { z1: 108, z2: 125, z3: 144, z4: 162, z5: 180 }, model: "gemini-1.5-flash" };
+        let EDIT_INDEX = -1;
 
         window.onload = () => {
-            const key = localStorage.getItem('gemini_api_key');
-            if(key) document.getElementById('apiKeyInput').value = key;
-            const h = localStorage.getItem('analyst_history');
-            if(h) HISTORY = JSON.parse(h);
-            const p = localStorage.getItem('analyst_profile');
-            if(p) {
-                PROFILE = JSON.parse(p);
-                document.getElementById('hrZ5').value = PROFILE.hrZones.z5;
-                document.getElementById('hrZ4').value = PROFILE.hrZones.z4;
-                document.getElementById('hrZ3').value = PROFILE.hrZones.z3;
-                document.getElementById('hrZ2').value = PROFILE.hrZones.z2;
-                document.getElementById('hrZ1').value = PROFILE.hrZones.z1;
-                if(PROFILE.model) addModelOption(PROFILE.model, true);
-            }
-            
-            if(HISTORY.length === 0) {
-                HISTORY = [{id: 1, date: new Date().toISOString(), desc: "Example Row", stats: {avgWatts: 200, dist: 2000, time: 480, avgRate: 24, avgHR: 140}}];
-                localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
-            }
+            loadData();
             renderHistory();
+            renderBuilderList(); // Render empty state
         };
 
         // --- CORE UTILS ---
@@ -292,97 +247,132 @@
             t.className = type + ' active';
             setTimeout(()=>t.className='', 3000);
         }
-
         function nav(id) {
             document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-            
             if(id==='screenBuilder') document.getElementById('navBuild').classList.add('active');
             else if(id==='dashScreen') document.getElementById('navDash').classList.add('active');
-            else if(id==='screenHistory' || id==='screenLogDetail') document.getElementById('navHist').classList.add('active');
+            else if(id==='screenHistory') document.getElementById('navHist').classList.add('active');
             else if(id==='screenSettings') document.getElementById('navSet').classList.add('active');
         }
 
-        // --- MANUAL & AI BUILDER ---
-        function setManualMode(mode) {
-            document.getElementById('inputsSingle').style.display = mode==='SINGLE'?'block':'none';
-            document.getElementById('inputsInterval').style.display = mode==='INTERVAL'?'block':'none';
-            document.getElementById('tabSingle').className = mode==='SINGLE'?'m-tab active':'m-tab';
-            document.getElementById('tabInterval').className = mode==='INTERVAL'?'m-tab active':'m-tab';
-        }
-
-        function launchJustRow() {
-            MISSION = { description: "Just Row", intervals: [{ type:'WORK', duration:999999, dist:0 }] };
-            startMission(false);
-        }
-
-        function launchManual() {
-            MISSION = { description: "Manual", intervals: [] };
-            const type = document.getElementById('tabSingle').className.includes('active') ? 'SINGLE' : 'INTERVAL';
+        // --- BUILDER LOGIC ---
+        function renderBuilderList() {
+            const list = document.getElementById('builderList');
+            list.innerHTML = "";
             
-            if(type === 'SINGLE') {
-                const dist = parseInt(document.getElementById('inpDist').value);
-                MISSION.intervals.push({ type:'WORK', dist:dist, duration:99999 });
-            } else {
-                const sets = parseInt(document.getElementById('inpSets').value);
-                const dist = parseInt(document.getElementById('inpIntDist').value);
-                const rest = parseInt(document.getElementById('inpRest').value);
-                for(let i=0; i<sets; i++) {
-                    MISSION.intervals.push({ type:'WORK', dist:dist, duration:99999 });
-                    if(i<sets-1) MISSION.intervals.push({ type:'REST', duration:rest });
-                }
+            if(MISSION.intervals.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding:30px; color:#444; border:1px dashed #333; border-radius:6px;">Empty Plan. Use AI or Add Step.</div>`;
+                return;
             }
-            startMission(false);
+
+            MISSION.intervals.forEach((step, idx) => {
+                let div = document.createElement('div');
+                div.className = 'step-card';
+                
+                let icon = step.type === 'WORK' ? '⚡' : '💤';
+                let typeClass = step.type === 'WORK' ? 'type-work' : 'type-rest';
+                let mainText = step.dist > 0 ? `${step.dist}m` : `${formatTime(step.duration)}`;
+                let subText = [];
+                if(step.pace_target > 0) subText.push(`@ ${formatTime(step.pace_target)}`);
+                if(step.watts > 0) subText.push(`@ ${step.watts}W`);
+                if(step.rate > 0) subText.push(`@ ${step.rate}s/m`);
+                if(subText.length === 0) subText.push("No targets");
+
+                div.innerHTML = `
+                    <div class="step-icon ${typeClass}">${icon}</div>
+                    <div class="step-details" onclick="editStep(${idx})">
+                        <div class="step-main">${step.type} ${mainText}</div>
+                        <div class="step-sub">${subText.join(' ')}</div>
+                    </div>
+                    <div class="step-del" onclick="deleteStep(${idx})">×</div>
+                `;
+                list.appendChild(div);
+            });
         }
 
-        // --- AI LOGIC (FIXED: Uses Dynamic Model) ---
+        function addManualStep() {
+            // Default step
+            MISSION.intervals.push({ type: 'WORK', dist: 500, duration: 0, pace_target: 0, rate: 0, watts: 0 });
+            renderBuilderList();
+            editStep(MISSION.intervals.length - 1); // Auto open edit
+        }
+
+        function deleteStep(idx) {
+            MISSION.intervals.splice(idx, 1);
+            renderBuilderList();
+        }
+
+        function editStep(idx) {
+            EDIT_INDEX = idx;
+            const step = MISSION.intervals[idx];
+            document.getElementById('editType').value = step.type;
+            document.getElementById('editDist').value = step.dist || "";
+            document.getElementById('editTime').value = step.duration || "";
+            document.getElementById('editPace').value = step.pace_target ? formatTime(step.pace_target) : "";
+            document.getElementById('editRate').value = step.rate || "";
+            document.getElementById('editWatts').value = step.watts || "";
+            
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+
+        function saveEditStep() {
+            const step = MISSION.intervals[EDIT_INDEX];
+            step.type = document.getElementById('editType').value;
+            step.dist = parseInt(document.getElementById('editDist').value) || 0;
+            step.duration = parseInt(document.getElementById('editTime').value) || 0;
+            step.rate = parseInt(document.getElementById('editRate').value) || 0;
+            step.watts = parseInt(document.getElementById('editWatts').value) || 0;
+            
+            const paceStr = document.getElementById('editPace').value;
+            if(paceStr.includes(':')) {
+                const p = paceStr.split(':');
+                step.pace_target = parseInt(p[0])*60 + parseInt(p[1]);
+            } else {
+                step.pace_target = 0;
+            }
+
+            // Cleanup: ensure mutually exclusive dist/time if desired, or keep as is
+            if(step.dist > 0) step.duration = 0; // Prioritize dist for display logic
+
+            closeEditModal();
+            renderBuilderList();
+        }
+
+        // --- AI ---
         async function generateMission() {
             const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
-            if(!key) return showToast("API Key Required", 'error');
-            
+            const model = PROFILE.model || "gemini-1.5-flash";
             const input = document.getElementById('aiInput').value;
-            const btn = document.querySelector('#screenBuilder .btn-blue');
-            btn.innerText = "THINKING...";
             
-            // DYNAMIC MODEL SELECTION
-            const model = PROFILE.model || "gemini-1.5-flash"; 
+            if(!key || !input) return showToast("API Key & Input Required", 'error');
+            
+            const btn = document.querySelector('#screenBuilder .btn-blue');
+            const originalText = btn.innerText;
+            btn.innerText = "THINKING...";
 
-            const PROMPT = `Parse workout: "${input}". 
-            Return JSON: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. 
-            RULES: 1. "1:45" split = 105s pace_target. 2. "watts" = watts. 3. time=seconds, dist=meters.
-            `;
+            const PROMPT = `Parse: "${input}". Return JSON: { "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. RULES: 1. "1:45" pace = 105s pace_target. 2. Time in seconds.`;
 
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
                 });
-                
                 const d = await r.json();
-                if(!r.ok) throw new Error(d.error?.message || "Model Error");
-                if(!d.candidates) throw new Error("No AI candidates returned");
-
-                const jsonText = extractJSON(d.candidates[0].content.parts[0].text);
-                MISSION = JSON.parse(jsonText);
+                if(!d.candidates) throw new Error("No AI result");
                 
-                // Populate Editor
-                document.getElementById('aiDesc').value = MISSION.description;
-                document.getElementById('aiCount').innerText = MISSION.intervals.filter(i=>i.type==='WORK').length;
+                const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
+                const result = JSON.parse(extractJSON(jsonText));
                 
-                const firstWork = MISSION.intervals.find(i=>i.type==='WORK');
-                if(firstWork) {
-                    if(firstWork.pace_target > 0) {
-                        let m = Math.floor(firstWork.pace_target/60);
-                        let s = firstWork.pace_target%60;
-                        document.getElementById('aiPace').value = `${m}:${s.toString().padStart(2,'0')}`;
-                    }
-                    if(firstWork.rate > 0) document.getElementById('aiRate').value = firstWork.rate;
-                }
+                MISSION.intervals = result.intervals;
+                renderBuilderList();
+                showToast("Mission Generated", 'success');
 
-                document.getElementById('missionPreview').classList.remove('hidden');
             } catch(e) { showToast("AI Error: " + e.message, 'error'); }
-            btn.innerText = "GENERATE PLAN";
+            btn.innerText = originalText;
         }
 
         function extractJSON(text) {
@@ -391,91 +381,18 @@
             return (start !== -1 && end !== -1) ? text.substring(start, end + 1) : text;
         }
 
-        // --- SETTINGS: MODEL SCANNER ---
-        async function scanModels() {
-            const key = document.getElementById('apiKeyInput').value.trim();
-            if(!key) return showToast("API Key Missing", 'error');
-            localStorage.setItem('gemini_api_key', key);
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-                const data = await r.json();
-                if(!r.ok) throw new Error(data.error?.message);
-                
-                const select = document.getElementById('modelSelect');
-                select.innerHTML = "";
-                let found = 0;
-                data.models.forEach(m => {
-                    if(m.supportedGenerationMethods?.includes("generateContent")) {
-                        const name = m.name.replace("models/", "");
-                        addModelOption(name, found===0);
-                        found++;
-                    }
-                });
-                showToast(`Found ${found} models`, 'success');
-            } catch(e) { showToast("Scan Failed: "+e.message, 'error'); }
+        // --- ROWING ENGINE ---
+        function launchJustRow() {
+            MISSION.intervals = [{ type:'WORK', duration:999999, dist:0 }];
+            startMission(false);
         }
 
-        function addModelOption(name, selectIt) {
-            const sel = document.getElementById('modelSelect');
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.innerText = name;
-            if(selectIt) { 
-                opt.selected = true; 
-                PROFILE.model = name;
-            }
-            sel.appendChild(opt);
-        }
-
-        async function testConnection() {
-            const key = document.getElementById('apiKeyInput').value;
-            const model = document.getElementById('modelSelect').value;
-            if(!model) return showToast("Scan first", 'error');
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Hi" }] }] })
-                });
-                if(r.ok) showToast("Connected!", 'success');
-                else showToast("Failed", 'error');
-            } catch(e) { showToast("Network Error", 'error'); }
-        }
-
-        function saveSettings() {
-            const key = document.getElementById('apiKeyInput').value.trim();
-            if(key) localStorage.setItem('gemini_api_key', key);
-            
-            PROFILE.hrZones = {
-                z5: parseInt(document.getElementById('hrZ5').value),
-                z4: parseInt(document.getElementById('hrZ4').value),
-                z3: parseInt(document.getElementById('hrZ3').value),
-                z2: parseInt(document.getElementById('hrZ2').value),
-                z1: parseInt(document.getElementById('hrZ1').value)
-            };
-            PROFILE.model = document.getElementById('modelSelect').value;
-            localStorage.setItem('analyst_profile', JSON.stringify(PROFILE));
-            showToast("Saved", 'success');
-        }
-
-        // --- DASHBOARD & LOGS ---
         function startMission(isSim) {
-            if(!document.getElementById('missionPreview').classList.contains('hidden')) {
-                MISSION.description = document.getElementById('aiDesc').value;
-                const p = document.getElementById('aiPace').value.split(':');
-                const paceSec = p.length==2 ? (parseInt(p[0])*60 + parseInt(p[1])) : 0;
-                const rate = parseInt(document.getElementById('aiRate').value) || 0;
-                
-                MISSION.intervals.forEach(i => {
-                    if(i.type === 'WORK') {
-                        if(paceSec > 0) i.pace_target = paceSec;
-                        if(rate > 0) i.rate = rate;
-                    }
-                });
-            }
-
+            if(MISSION.intervals.length === 0) return showToast("Mission Empty", 'error');
             nav('dashScreen');
             STATE = { active: true, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: STATE.connected };
             setupNextInterval();
+            
             if(isSim) {
                 STATE.simLoop = setInterval(() => processTelemetry(2.5, 26, 150, 220), 500);
             } else if (!STATE.connected) {
@@ -486,20 +403,24 @@
         function setupNextInterval() {
             if(STATE.intervalIdx >= MISSION.intervals.length) { endMission(); return; }
             const int = MISSION.intervals[STATE.intervalIdx];
-            STATE.timeLeft = int.duration || 99999;
-            STATE.distLeft = int.dist || 0;
             
-            document.getElementById('phaseBadge').innerText = int.type;
-            document.getElementById('phaseBadge').style.background = int.type==='WORK'?'#00FF00':'#0088FF';
-            document.getElementById('phaseBadge').style.color = int.type==='WORK'?'black':'white';
+            // Set limits
+            STATE.timeLeft = int.duration > 0 ? int.duration : 99999;
+            STATE.distLeft = int.dist > 0 ? int.dist : 0;
+            
+            // UI
+            const badge = document.getElementById('phaseBadge');
+            badge.innerText = int.type;
+            badge.style.background = int.type==='WORK'?'var(--accent)':'var(--rest)';
+            badge.style.color = int.type==='WORK'?'black':'white';
+            
             document.getElementById('intervalInfo').innerText = `${int.type} ${STATE.intervalIdx+1}/${MISSION.intervals.length}`;
             
+            // Targets
             document.getElementById('tgtRate').innerText = int.rate ? `(${int.rate})` : "";
             const tgtW = document.getElementById('tgtWatts');
             if(int.pace_target > 0) {
-                let m = Math.floor(int.pace_target/60);
-                let s = int.pace_target%60;
-                tgtW.innerText = `TGT: ${m}:${s.toString().padStart(2,'0')}`;
+                tgtW.innerText = `TGT: ${formatTime(int.pace_target)}`;
                 tgtW.style.display = "inline";
             } else if (int.watts > 0) {
                 tgtW.innerText = `TGT: ${int.watts}W`;
@@ -510,30 +431,30 @@
         }
 
         function processTelemetry(speed, rate, hr, watts) {
-            if(watts > 0 && !STATE.active && document.getElementById('dashScreen').classList.contains('active') === false) {
-                launchJustRow(); return;
-            }
             if(!STATE.active) return;
-
             const int = MISSION.intervals[STATE.intervalIdx];
+            
             STATE.timeLeft -= 0.5;
             if(speed > 0.1 && STATE.distLeft > 0) STATE.distLeft -= (speed * 0.5);
 
-            if( (int.dist > 0 && STATE.distLeft <= 0) || (int.duration < 99999 && STATE.timeLeft <= 0) ) {
+            // Finish Condition
+            if( (int.dist > 0 && STATE.distLeft <= 0) || (int.duration > 0 && int.duration < 99999 && STATE.timeLeft <= 0) ) {
                 STATE.intervalIdx++;
                 setupNextInterval();
                 return;
             }
 
+            // Updates
             let paceSec = speed > 0.1 ? 500/speed : 0;
-            let m = Math.floor(paceSec/60);
-            let s = Math.floor(paceSec%60);
-            document.getElementById('dispPace').innerText = speed>0.1 ? `${m}:${s.toString().padStart(2,'0')}` : "0:00";
+            document.getElementById('dispPace').innerText = formatTime(paceSec);
             document.getElementById('dispWatts').innerText = watts;
             document.getElementById('dispRate').innerText = rate;
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
+            
+            // Dist Display: Show countdown if target exists, else count up (not implemented fully here, showing target decr)
             document.getElementById('dispDist').innerText = Math.floor(STATE.distLeft > 0 ? STATE.distLeft : 0);
 
+            // HR Bar
             const z = PROFILE.hrZones;
             document.querySelectorAll('.hr-zone').forEach(el=>el.classList.remove('active'));
             if(hr > z.z4) document.getElementById('z5').classList.add('active');
@@ -557,15 +478,76 @@
                 avgWatts: count ? Math.round(sumW/count) : 0,
                 avgRate: count ? Math.round(sumR/count) : 0,
                 avgHR: count ? Math.round(sumHR/count) : 0,
-                dist: 0, 
-                time: count * 0.5 
+                time: count * 0.5
             };
 
-            const session = { id: Date.now(), date: new Date().toISOString(), desc: MISSION.description || "Just Row", stats: stats, raw: STATE.log };
+            const session = { id: Date.now(), date: new Date().toISOString(), desc: MISSION.description || "Custom Session", stats: stats };
             HISTORY.unshift(session);
             localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
             renderHistory();
             nav('screenHistory');
+        }
+
+        // --- HELPERS ---
+        function formatTime(sec) {
+            let m = Math.floor(sec/60);
+            let s = Math.floor(sec%60);
+            return `${m}:${s.toString().padStart(2,'0')}`;
+        }
+
+        function loadData() {
+            const h = localStorage.getItem('analyst_history');
+            if(h) HISTORY = JSON.parse(h);
+            const p = localStorage.getItem('analyst_profile');
+            if(p) {
+                PROFILE = JSON.parse(p);
+                document.getElementById('hrZ5').value = PROFILE.hrZones.z5;
+                document.getElementById('hrZ4').value = PROFILE.hrZones.z4;
+                document.getElementById('hrZ3').value = PROFILE.hrZones.z3;
+                document.getElementById('hrZ2').value = PROFILE.hrZones.z2;
+                document.getElementById('hrZ1').value = PROFILE.hrZones.z1;
+                if(PROFILE.model) addModelOption(PROFILE.model, true);
+            }
+            if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
+        }
+
+        function saveSettings() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if(key) localStorage.setItem('gemini_api_key', key);
+            PROFILE.hrZones = {
+                z5: parseInt(document.getElementById('hrZ5').value),
+                z4: parseInt(document.getElementById('hrZ4').value),
+                z3: parseInt(document.getElementById('hrZ3').value),
+                z2: parseInt(document.getElementById('hrZ2').value),
+                z1: parseInt(document.getElementById('hrZ1').value)
+            };
+            PROFILE.model = document.getElementById('modelSelect').value;
+            localStorage.setItem('analyst_profile', JSON.stringify(PROFILE));
+            showToast("Saved", 'success');
+        }
+
+        function scanModels() {
+            const key = document.getElementById('apiKeyInput').value;
+            if(!key) return showToast("API Key Missing", 'error');
+            fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`)
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('modelSelect').innerHTML = "";
+                    let c = 0;
+                    d.models.forEach(m => {
+                        if(m.supportedGenerationMethods?.includes("generateContent")) {
+                            addModelOption(m.name.replace("models/", ""), c===0); c++;
+                        }
+                    });
+                    showToast(`Found ${c} Models`);
+                })
+                .catch(e => showToast(e.message, 'error'));
+        }
+
+        function addModelOption(name, sel) {
+            const opt = document.createElement('option');
+            opt.value = name; opt.innerText = name; if(sel) opt.selected=true;
+            document.getElementById('modelSelect').appendChild(opt);
         }
 
         function renderHistory() {
@@ -575,39 +557,11 @@
                 let d = document.createElement('div');
                 d.className = 'history-item';
                 d.innerHTML = `<div><div class="h-date">${new Date(h.date).toLocaleDateString()}</div><div class="h-desc">${h.desc}</div></div><div class="h-stat">${h.stats.avgWatts}W</div>`;
-                d.onclick = () => openLogDetail(h);
                 list.appendChild(d);
             });
         }
 
-        function openLogDetail(h) {
-            let html = `
-                <table class="detail-table">
-                    <tr><td>DATE</td><td>${new Date(h.date).toLocaleString()}</td></tr>
-                    <tr><td>WORKOUT</td><td>${h.desc}</td></tr>
-                    <tr><td>AVG WATTS</td><td>${h.stats.avgWatts} W</td></tr>
-                    <tr><td>AVG RATE</td><td>${h.stats.avgRate} s/m</td></tr>
-                    <tr><td>AVG HR</td><td>${h.stats.avgHR} bpm</td></tr>
-                    <tr><td>DURATION</td><td>${Math.floor(h.stats.time/60)}m ${Math.floor(h.stats.time%60)}s</td></tr>
-                </table>
-            `;
-            document.getElementById('logDetailContent').innerHTML = html;
-            nav('screenLogDetail');
-        }
-
-        function exportHistory() {
-            let csv = "Log ID,Date,Description,Work Time (Seconds),Work Distance,Stroke Rate/Cadence,Avg Watts,Avg Heart Rate,Drag Factor,Comments\n";
-            HISTORY.forEach(h => {
-                csv += `${h.id},${h.date},"${h.desc}",${h.stats.time},${h.stats.dist},${h.stats.avgRate},${h.stats.avgWatts},${h.stats.avgHR},115,Analyst Export\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'analyst_export.csv';
-            a.click();
-        }
-
-        function clearData() { if(confirm("Clear All?")) { localStorage.clear(); location.reload(); } }
+        function clearData() { if(confirm("Reset All?")) { localStorage.clear(); location.reload(); } }
 
         async function connectBluetooth() {
             try {
@@ -622,9 +576,9 @@
                     processTelemetry(speed, d.getUint8(5), d.getUint8(6), (d.getUint8(11)|(d.getUint8(12)<<8)));
                 });
                 STATE.connected = true;
-                document.getElementById('btConnectBtn').innerText = "CONNECTED";
+                document.getElementById('btConnectBtn').innerText = "LINKED";
                 document.getElementById('btConnectBtn').style.color = "#00FF00";
-            } catch(e) { alert("BT Error: " + e.message); }
+            } catch(e) { showToast("BT Error", 'error'); }
         }
     </script>
 </body>
