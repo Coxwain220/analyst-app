@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V6.2 (ROBUST)</title>
+    <title>ANALYST V7.0 (STRATEGIST)</title>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #00FF00; --warn: #FFAA00; --danger: #FF0000; --rest: #0088FF; --panel: #111; --border: #333; }
+        :root { --bg: #050505; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #111; --border: #222; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); font-family: 'Roboto', -apple-system, sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
         /* TOAST */
-        #toast { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 12px 24px; border-radius: 0 0 8px 8px; z-index: 2000; font-size: 13px; font-weight: bold; transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); white-space: nowrap; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-        #toast.active { top: 0; }
+        #toast { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 12px 24px; border-radius: 30px; z-index: 2000; font-size: 13px; font-weight: bold; transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); box-shadow: 0 10px 30px rgba(0,0,0,0.5); display:flex; align-items:center; gap:10px; }
+        #toast.active { top: 20px; }
         #toast.success { border-color: var(--accent); color: var(--accent); }
         #toast.error { border-color: var(--danger); color: var(--danger); }
 
@@ -19,63 +19,59 @@
         .screen { display: none; flex-grow: 1; flex-direction: column; overflow: hidden; height: 100%; }
         .screen.active { display: flex; }
         .scroll-area { flex-grow: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
-        .screen-header { display: flex; align-items: center; padding: 15px; background: var(--panel); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .header-title { flex-grow: 1; text-align: center; font-weight: bold; font-size: 14px; letter-spacing: 1px; color: #888; }
+        .screen-header { display: flex; align-items: center; padding: 15px 20px; background: var(--panel); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .header-title { flex-grow: 1; text-align: center; font-weight: 700; font-size: 14px; letter-spacing: 1px; color: #888; text-transform: uppercase; }
         .header-btn { background: transparent; border: none; color: var(--accent); font-weight: bold; font-size: 12px; cursor: pointer; padding: 10px; }
 
-        /* CARDS & INPUTS */
-        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        /* CARDS */
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; font-weight: 700; display:flex; justify-content:space-between; }
         
-        .btn { width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 14px; margin-top: 5px; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.7; }
-        .btn-green { background: var(--accent); color: black; }
-        .btn-outline { background: transparent; border: 1px solid #555; color: #888; }
-        .btn-danger { background: #300; border: 1px solid #500; color: #f88; }
+        /* INPUTS & BUTTONS */
+        .btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 13px; margin-top: 8px; transition: transform 0.1s, filter 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:active { transform: scale(0.98); }
+        .btn-green { background: var(--accent); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid #444; color: #888; }
+        .btn-outline:hover { border-color: #666; color: #fff; background: #1a1a1a; }
+        .btn-danger { background: rgba(255,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
         .btn-blue { background: var(--rest); color: white; }
-        
-        input, textarea, select { background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 4px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; }
 
-        /* MISSION BUILDER LIST */
+        input, textarea, select { background: #080808; border: 1px solid #333; color: white; padding: 12px; border-radius: 6px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; transition: border 0.2s; }
+        input:focus, textarea:focus { border-color: var(--accent); }
+
+        /* BUILDER TIMELINE */
         #builderList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .step-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 12px; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; transition: background 0.2s; }
-        .step-card:hover { background: #222; }
-        .step-icon { font-size: 18px; font-weight: bold; text-align: center; }
-        .step-details { display: flex; flex-direction: column; }
+        .step-card { background: #151515; border: 1px solid #333; border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; }
+        .step-icon { font-size: 18px; text-align: center; }
         .step-main { font-weight: bold; font-size: 14px; color: #fff; }
         .step-sub { font-size: 11px; color: #888; margin-top: 2px; }
-        .step-del { color: #666; font-size: 18px; cursor: pointer; padding: 5px; }
-        .step-del:hover { color: var(--danger); }
-        
         .type-work { color: var(--accent); }
         .type-rest { color: var(--rest); }
 
-        /* EDIT MODAL */
-        #editModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; }
-        #editModal.active { display: flex; }
-        .modal-content { background: #111; padding: 20px; border-radius: 8px; border: 1px solid #333; width: 90%; max-width: 400px; }
+        /* STRATEGY ROOM (NEW) */
+        .strategy-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .stat-badge { background: #222; padding: 10px; border-radius: 6px; border: 1px solid #333; text-align: center; }
+        .stat-val { font-size: 18px; font-weight: bold; color: #fff; }
+        .stat-lbl { font-size: 10px; color: #666; margin-top: 2px; }
+        .chat-box { background: #080808; border: 1px solid #333; border-radius: 8px; height: 150px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.4; color: #ccc; margin-bottom: 10px; white-space: pre-wrap; }
+        .chat-input-area { display: flex; gap: 10px; }
 
         /* DASHBOARD */
-        .main-deck { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0; }
-        .metric-huge { font-size: 14vh; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
-        .metric-sub { font-size: 4vh; color: #888; font-weight: 700; margin-top: 10px; }
+        .main-deck { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 0; }
+        .metric-huge { font-size: 14vh; font-weight: 900; line-height: 0.9; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
+        .metric-sub { font-size: 4vh; color: #888; font-weight: 700; margin-top: 10px; font-variant-numeric: tabular-nums; }
         .lower-deck { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-top: 1px solid var(--border); }
-        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); padding: 15px; }
-        
-        .hr-bar-container { width: 100%; height: 8px; background: #222; margin-top: 8px; border-radius: 4px; display: flex; overflow: hidden; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); padding: 20px; }
+        .hr-bar-container { width: 100%; height: 6px; background: #222; margin-top: 8px; border-radius: 3px; display: flex; overflow: hidden; }
         .hr-zone { height: 100%; opacity: 0.2; flex-grow: 1; margin: 0 1px; transition: opacity 0.3s; }
-        .hr-zone.active { opacity: 1; box-shadow: 0 0 8px currentColor; }
+        .hr-zone.active { opacity: 1; box-shadow: 0 0 10px currentColor; }
         .z1 { background: #666; } .z2 { background: #0088FF; } .z3 { background: #00FF00; } .z4 { background: #FFAA00; } .z5 { background: #FF0000; } 
 
-        /* TABS */
-        .manual-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid #333; }
-        .m-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; }
-        .m-tab.active { color: white; border-bottom: 2px solid var(--accent); }
-
         /* LOGS */
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; background: #151515; margin-bottom: 2px; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; background: #151515; margin-bottom: 1px; transition: background 0.2s; }
+        .history-item:hover { background: #222; }
         .h-date { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        .h-desc { font-weight: bold; font-size: 13px; margin-top: 2px; color: #eee; }
+        .h-desc { font-weight: bold; font-size: 14px; margin-top: 4px; color: #eee; }
         .h-stat { font-family: monospace; color: var(--accent); font-size: 14px; font-weight: bold; }
 
         /* NAV BAR */
@@ -93,70 +89,59 @@
 
     <div id="screenBuilder" class="screen active">
         <div class="screen-header">
-            <div class="header-title">MISSION BUILDER</div>
+            <div class="header-title">MISSION CONTROL</div>
             <button class="header-btn" onclick="connectBluetooth()" id="btConnectBtn">CONNECT PM5</button>
         </div>
         <div class="scroll-area">
-            
             <div class="card">
-                <div class="section-header">AI ASSISTANT</div>
-                <textarea id="aiInput" rows="2" placeholder="e.g. 4 x 500m. 2 min rest. aim for 1.45 per row"></textarea>
+                <div class="section-header">AI COMMANDER</div>
+                <textarea id="aiInput" rows="2" placeholder="e.g. 3 x 2000m, 4min rest"></textarea>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-blue" id="btnGen" style="flex:1" onclick="generateMission()">GENERATE PLAN</button>
-                    <button class="btn btn-green" style="flex:1" onclick="launchJustRow()">JUST ROW</button>
+                    <button class="btn btn-blue" id="btnGen" style="flex:2" onclick="generateMission()">GENERATE PLAN</button>
+                    <button class="btn btn-green" style="flex:1" onclick="launchJustRow()">ROW NOW</button>
                 </div>
             </div>
 
-            <div class="section-header" style="margin: 0 5px 10px 5px;">TIMELINE</div>
+            <div class="section-header" style="margin: 0 5px 10px 5px;">MISSION PLAN</div>
             <div id="builderList"></div>
-
             <button class="btn btn-outline" onclick="addManualStep()">+ ADD STEP</button>
-            <div style="height:20px;"></div>
-            <button class="btn btn-green" onclick="startMission(false)">START MISSION</button>
-            <button class="btn btn-outline" style="margin-top:10px;" onclick="startMission(true)">SIMULATE</button>
-            
-            <div class="card" style="margin-top:20px;">
-                <div class="section-header">MANUAL TEMPLATES</div>
-                <div class="manual-tabs">
-                    <button class="m-tab active" onclick="setManualMode('SINGLE')" id="tabSingle">SINGLE</button>
-                    <button class="m-tab" onclick="setManualMode('INTERVAL')" id="tabInterval">INTERVALS</button>
-                </div>
-                <div id="inputsSingle">
-                    <label>DISTANCE (M)</label><input type="number" id="inpDist" value="2000">
-                </div>
-                <div id="inputsInterval" style="display:none;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <div><label>SETS</label><input type="number" id="inpSets" value="4"></div>
-                        <div><label>DIST (M)</label><input type="number" id="inpIntDist" value="500"></div>
-                    </div>
-                    <label>REST (SEC)</label><input type="number" id="inpRest" value="60">
-                </div>
-                <button class="btn btn-outline" onclick="launchManual()">INITIALIZE TEMPLATE</button>
-            </div>
+
+            <div style="height:30px;"></div>
+            <button class="btn btn-green" onclick="goToStrategy()">ANALYZE & STRATEGIZE →</button>
         </div>
     </div>
 
-    <div id="editModal">
-        <div class="modal-content">
-            <div class="section-header">EDIT STEP</div>
-            <label>TYPE</label>
-            <select id="editType"><option value="WORK">WORK</option><option value="REST">REST</option></select>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <div><label>DIST (m)</label><input type="number" id="editDist" placeholder="0"></div>
-                <div><label>TIME (sec)</label><input type="number" id="editTime" placeholder="0"></div>
-            </div>
-            <div style="border-top:1px solid #333; margin:10px 0; padding-top:10px;">
-                <label style="color:var(--accent);">TARGETS</label>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div><label>PACE (/500)</label><input type="text" id="editPace" placeholder="1:50"></div>
-                    <div><label>RATE (s/m)</label><input type="number" id="editRate" placeholder="26"></div>
-                    <div><label>WATTS</label><input type="number" id="editWatts" placeholder="200"></div>
+    <div id="screenStrategy" class="screen">
+        <div class="screen-header">
+            <button class="header-btn" onclick="nav('screenBuilder')">← EDIT</button>
+            <div class="header-title">STRATEGY ROOM</div>
+            <div style="width:40px;"></div>
+        </div>
+        <div class="scroll-area">
+            <div class="card">
+                <div class="section-header">MISSION BRIEF</div>
+                <div id="stratSummary" style="font-size:16px; font-weight:bold; color:white; margin-bottom:10px;"></div>
+                <div class="strategy-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="stat-badge"><div class="stat-val" id="stratEstTime">--</div><div class="stat-lbl">EST TIME</div></div>
+                    <div class="stat-badge"><div class="stat-val" id="stratEstDist">--</div><div class="stat-lbl">EST DIST</div></div>
                 </div>
             </div>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button class="btn btn-outline" onclick="closeEditModal()">CANCEL</button>
-                <button class="btn btn-green" onclick="saveEditStep()">SAVE</button>
+
+            <div class="card" id="historyMatchCard">
+                <div class="section-header">HISTORICAL CONTEXT</div>
+                <div id="historyMatchContent" style="font-size:13px; color:#ccc; line-height:1.5;">Searching memory...</div>
             </div>
+
+            <div class="card">
+                <div class="section-header">ANALYST ADVICE</div>
+                <div class="chat-box" id="coachChat">Waiting for mission data...</div>
+                <div class="chat-input-area">
+                    <input type="text" id="coachInput" placeholder="Ask for strategy...">
+                    <button class="btn btn-outline" style="width:auto; margin:0;" onclick="askCoach()">ASK</button>
+                </div>
+            </div>
+
+            <button class="btn btn-green" onclick="startMission(false)">ACCEPT PLAN & ROW</button>
         </div>
     </div>
 
@@ -203,7 +188,7 @@
 
     <div id="screenHistory" class="screen">
         <div class="screen-header">
-            <div class="header-title">TRAINING LOGS</div>
+            <div class="header-title">MISSION LOGS</div>
             <button class="header-btn" onclick="exportHistory()">EXPORT CSV</button>
         </div>
         <div class="scroll-area" id="historyList"></div>
@@ -213,23 +198,23 @@
         <div class="screen-header"><div class="header-title">SETTINGS</div></div>
         <div class="scroll-area">
             <div class="card">
-                <div class="section-header">API & MODEL</div>
+                <div class="section-header">SYSTEM</div>
                 <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key...">
-                <select id="modelSelect" style="margin-top:10px;"><option value="" disabled>Click SCAN below</option></select>
+                <select id="modelSelect" style="margin-top:10px;"><option value="" disabled>Scan to load models</option></select>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
                     <button class="btn btn-outline" onclick="scanModels()">SCAN</button>
-                    <button class="btn btn-green" onclick="testConnection()">TEST</button>
+                    <button class="btn btn-green" onclick="saveSettings()">SAVE</button>
                 </div>
             </div>
+            
             <div class="card">
-                <div class="section-header">HEART RATE ZONES</div>
-                <div style="display:grid; grid-template-columns:1fr; gap:5px;">
-                    <label>Z5 <input type="number" id="hrZ5"></label>
-                    <label>Z1 <input type="number" id="hrZ1"></label>
-                </div>
+                <div class="section-header">MEMORY BANK</div>
+                <label style="font-size:10px; color:#666;">UPLOAD CSV TO UPDATE MEMORY</label>
+                <input type="file" id="csvInput" accept=".csv" style="margin-top:5px;">
+                <button class="btn btn-outline" onclick="processCSV()">IMPORT HISTORY</button>
             </div>
-            <button class="btn btn-green" onclick="saveSettings()">SAVE</button>
-            <button class="btn btn-danger" style="margin-top:10px;" onclick="clearData()">RESET DATA</button>
+
+            <button class="btn btn-danger" onclick="clearData()">FACTORY RESET</button>
         </div>
     </div>
 
@@ -248,25 +233,27 @@
         let STATE = { active: false, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: false };
         let HISTORY = [];
         let PROFILE = { hrZones: { z1: 108, z5: 180 }, model: "gemini-1.5-flash" };
-        let EDIT_INDEX = -1;
+
+        // PRE-LOADED HISTORY (Your Data)
+        const SEED_DATA = [
+            {id: 110986164, date: "2026-01-10T09:47:00", desc: "3 x 2000m / 4:00r", stats: {avgWatts: 228, dist: 6000, avgRate: 27, avgHR: 174, pace: "1:55.3"}},
+            {id: 110898284, date: "2026-01-08T21:25:00", desc: "8 x 1:00 / 1:00r (Power)", stats: {avgWatts: 227, dist: 2077, avgRate: 21, avgHR: 152, pace: "1:55.5"}},
+            {id: 110897422, date: "2026-01-05T18:46:00", desc: "4 x 1500m / 4:00r", stats: {avgWatts: 233, dist: 6000, avgRate: 27, avgHR: 176, pace: "1:54.4"}},
+            {id: 106289732, date: "2025-12-08T18:10:00", desc: "2000m Test", stats: {avgWatts: 256, dist: 2000, avgRate: 27, avgHR: 0, pace: "1:51.0"}}
+        ];
 
         window.onload = () => {
             loadData();
+            // Load seed data if empty
             if(HISTORY.length === 0) {
-                HISTORY = [{id: 1, date: new Date().toISOString(), desc: "Example Row", stats: {avgWatts: 200, dist: 2000, time: 480, avgRate: 24, avgHR: 140}}];
+                HISTORY = SEED_DATA;
                 localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
             }
             renderHistory();
-            renderBuilderList(); 
+            renderBuilderList();
         };
 
-        // --- CORE UTILS ---
-        function showToast(msg, type='success') {
-            const t = document.getElementById('toast');
-            t.innerText = (type==='success'?'✔ ':'⚠ ') + msg;
-            t.className = type + ' active';
-            setTimeout(()=>t.className='', 3000);
-        }
+        // --- NAVIGATION ---
         function nav(id) {
             document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -276,147 +263,153 @@
             else if(id==='screenHistory') document.getElementById('navHist').classList.add('active');
             else if(id==='screenSettings') document.getElementById('navSet').classList.add('active');
         }
-        function formatTime(sec) {
-            if(sec >= 99999) return "OPEN";
-            let m = Math.floor(sec/60);
-            let s = Math.floor(sec%60);
-            return `${m}:${s.toString().padStart(2,'0')}`;
+
+        // --- STRATEGY ROOM ---
+        function goToStrategy() {
+            if(MISSION.intervals.length === 0) return showToast("Build a mission first", 'error');
+            
+            nav('screenStrategy');
+            
+            // 1. Populate Summary
+            const workInts = MISSION.intervals.filter(i=>i.type==='WORK');
+            const totalWorkTime = workInts.reduce((a,b) => a + (b.duration||0), 0);
+            const totalWorkDist = workInts.reduce((a,b) => a + (b.dist||0), 0);
+            
+            let summary = MISSION.description;
+            if(!summary) {
+                if(totalWorkDist > 0) summary = `${workInts.length} Intervals (${totalWorkDist}m Total)`;
+                else summary = `${workInts.length} Intervals (${Math.floor(totalWorkTime/60)} min Total)`;
+            }
+            document.getElementById('stratSummary').innerText = summary;
+            document.getElementById('stratEstDist').innerText = totalWorkDist > 0 ? totalWorkDist + "m" : "N/A";
+            document.getElementById('stratEstTime').innerText = totalWorkTime > 0 ? Math.floor(totalWorkTime/60) + "m" : "N/A";
+
+            // 2. Find Match in History
+            findSimilarSession();
+
+            // 3. Auto-Ask Coach
+            askCoach(true);
+        }
+
+        function findSimilarSession() {
+            // Simple logic: look for similar distance or matching string in description
+            const currentDesc = MISSION.description.toLowerCase();
+            let match = null;
+            
+            // Try to find matching description keywords
+            match = HISTORY.find(h => currentDesc.includes("2000") && h.desc.includes("2000"));
+            if(!match) match = HISTORY.find(h => currentDesc.includes("500") && h.desc.includes("500"));
+            
+            const div = document.getElementById('historyMatchContent');
+            if(match) {
+                div.innerHTML = `
+                    <div style="color:var(--accent); font-weight:bold;">MATCH FOUND: ${new Date(match.date).toLocaleDateString()}</div>
+                    <div>${match.desc}</div>
+                    <div style="margin-top:5px; font-family:monospace;">
+                        Avg Pace: ${match.stats.pace || "N/A"} <br>
+                        Avg Watts: ${match.stats.avgWatts}W <br>
+                        Avg Rate: ${match.stats.avgRate} s/m
+                    </div>
+                `;
+            } else {
+                div.innerHTML = "No direct match found in memory. Analyzing general capacity...";
+            }
+        }
+
+        async function askCoach(isAuto = false) {
+            const key = localStorage.getItem('gemini_api_key');
+            if(!key) { document.getElementById('coachChat').innerText = "Please set API Key in Settings."; return; }
+            
+            const chat = document.getElementById('coachChat');
+            const userQ = isAuto ? "Analyze this workout based on my history." : document.getElementById('coachInput').value;
+            
+            if(!isAuto) chat.innerText += `\n\nYOU: ${userQ}`;
+            chat.innerText += `\n\nANALYST: Thinking...`;
+            chat.scrollTop = chat.scrollHeight;
+
+            // Context Construction
+            const historyContext = HISTORY.slice(0, 5).map(h => `${h.date.split('T')[0]}: ${h.desc} (Avg ${h.stats.avgWatts}W)`).join('\n');
+            const workoutContext = JSON.stringify(MISSION.intervals);
+            
+            const PROMPT = `
+            Act as an elite rowing coach. 
+            User Workout: ${MISSION.description || "Custom Interval"}.
+            Structure: ${workoutContext}.
+            User History (Last 5):
+            ${historyContext}
+            
+            User Question: ${userQ}
+            
+            Provide a concise, strategic answer. Suggest a specific split/pace target based on history.
+            `;
+
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${PROFILE.model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
+                });
+                const d = await r.json();
+                const reply = d.candidates[0].content.parts[0].text;
+                
+                chat.innerText = chat.innerText.replace("Thinking...", "");
+                chat.innerText += reply;
+                chat.scrollTop = chat.scrollHeight;
+            } catch(e) {
+                chat.innerText += "\n[Connection Error]";
+            }
         }
 
         // --- BUILDER ---
+        async function generateMission() {
+            const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
+            if(!key) return showToast("API Key Required", 'error');
+            const input = document.getElementById('aiInput').value;
+            const btn = document.getElementById('btnGen');
+            btn.innerText = "THINKING...";
+            
+            const PROMPT = `Parse workout: "${input}". Return JSON: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. RULES: 1. "1:45" pace = 105s pace_target. 2. Time in seconds.`;
+
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${PROFILE.model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
+                });
+                const d = await r.json();
+                const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
+                const result = JSON.parse(jsonText.substring(jsonText.indexOf('{'), jsonText.lastIndexOf('}')+1));
+                MISSION.intervals = result.intervals;
+                MISSION.description = result.description;
+                renderBuilderList();
+                showToast("Plan Generated", 'success');
+            } catch(e) { showToast("AI Error: " + e.message, 'error'); }
+            btn.innerText = "GENERATE PLAN";
+        }
+
         function renderBuilderList() {
             const list = document.getElementById('builderList');
             list.innerHTML = "";
-            if(MISSION.intervals.length === 0) {
-                list.innerHTML = `<div style="text-align:center; padding:20px; color:#444; border:1px dashed #333; border-radius:6px; font-size:12px;">Plan Empty. Use AI or Add Step.</div>`;
-                return;
-            }
             MISSION.intervals.forEach((step, idx) => {
                 let div = document.createElement('div');
                 div.className = 'step-card';
-                let icon = step.type === 'WORK' ? '⚡' : '💤';
                 let typeClass = step.type === 'WORK' ? 'type-work' : 'type-rest';
                 let mainText = step.dist > 0 ? `${step.dist}m` : formatTime(step.duration);
-                let subText = [];
-                if(step.pace_target > 0) subText.push(`@ ${formatTime(step.pace_target)}`);
-                if(step.watts > 0) subText.push(`@ ${step.watts}W`);
-                if(step.rate > 0) subText.push(`@ ${step.rate}s/m`);
-                if(subText.length === 0) subText.push(step.type);
-
-                div.innerHTML = `
-                    <div class="step-icon ${typeClass}">${icon}</div>
-                    <div class="step-details" onclick="editStep(${idx})">
-                        <div class="step-main">${step.type} ${mainText}</div>
-                        <div class="step-sub">${subText.join(' ')}</div>
-                    </div>
-                    <div class="step-del" onclick="deleteStep(${idx})">×</div>
-                `;
+                let sub = [];
+                if(step.pace_target) sub.push(`@ ${formatTime(step.pace_target)}`);
+                if(step.watts) sub.push(`@ ${step.watts}W`);
+                div.innerHTML = `<div class="step-icon ${typeClass}">${step.type==='WORK'?'⚡':'💤'}</div><div class="step-details"><div class="step-main">${step.type} ${mainText}</div><div class="step-sub">${sub.join(' ')}</div></div><div class="step-del" onclick="MISSION.intervals.splice(${idx},1);renderBuilderList()">×</div>`;
                 list.appendChild(div);
             });
         }
 
-        function addManualStep() {
-            MISSION.intervals.push({ type: 'WORK', dist: 500, duration: 0, pace_target: 0, rate: 0, watts: 0 });
-            renderBuilderList();
-            editStep(MISSION.intervals.length - 1);
-        }
-        function deleteStep(idx) { MISSION.intervals.splice(idx, 1); renderBuilderList(); }
-        function editStep(idx) {
-            EDIT_INDEX = idx;
-            const step = MISSION.intervals[idx];
-            document.getElementById('editType').value = step.type;
-            document.getElementById('editDist').value = step.dist || "";
-            document.getElementById('editTime').value = step.duration || "";
-            document.getElementById('editPace').value = step.pace_target ? formatTime(step.pace_target) : "";
-            document.getElementById('editRate').value = step.rate || "";
-            document.getElementById('editWatts').value = step.watts || "";
-            document.getElementById('editModal').classList.add('active');
-        }
-        function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
-        function saveEditStep() {
-            const step = MISSION.intervals[EDIT_INDEX];
-            step.type = document.getElementById('editType').value;
-            step.dist = parseInt(document.getElementById('editDist').value) || 0;
-            step.duration = parseInt(document.getElementById('editTime').value) || 0;
-            step.rate = parseInt(document.getElementById('editRate').value) || 0;
-            step.watts = parseInt(document.getElementById('editWatts').value) || 0;
-            const paceStr = document.getElementById('editPace').value;
-            if(paceStr.includes(':')) {
-                const p = paceStr.split(':');
-                step.pace_target = parseInt(p[0])*60 + parseInt(p[1]);
-            } else step.pace_target = 0;
-            if(step.dist > 0) step.duration = 0;
-            closeEditModal();
-            renderBuilderList();
-        }
-
-        // --- AI ---
-        async function generateMission() {
-            const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
-            const model = PROFILE.model || "gemini-1.5-flash";
-            const input = document.getElementById('aiInput').value;
-            const btn = document.getElementById('btnGen');
-            
-            if(!key || !input) return showToast("API Key & Input Required", 'error');
-            
-            btn.innerText = "THINKING...";
-            
-            const PROMPT = `Parse workout: "${input}". Return JSON: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. RULES: "1.45" or "1:45" pace = 105s pace_target. Time in seconds.`;
-
-            try {
-                // Timeout logic
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s Timeout
-
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                
-                const d = await r.json();
-                if(!d.candidates) throw new Error("No AI response");
-                const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
-                const result = JSON.parse(jsonText.substring(jsonText.indexOf('{'), jsonText.lastIndexOf('}')+1));
-                
-                MISSION.intervals = result.intervals;
-                renderBuilderList();
-                showToast("Plan Generated", 'success');
-            } catch(e) { 
-                if(e.name === 'AbortError') showToast("Timeout: Network too slow", 'error');
-                else showToast("AI Error: " + e.message, 'error'); 
-            }
-            btn.innerText = "GENERATE PLAN";
-        }
-
         // --- DASHBOARD ---
-        function launchJustRow() { MISSION.intervals = [{ type:'WORK', duration:999999, dist:0 }]; startMission(false); }
-        function launchManual() {
-            MISSION.intervals = []; // Reset first
-            const type = document.getElementById('tabSingle').className.includes('active') ? 'SINGLE' : 'INTERVAL';
-            if(type === 'SINGLE') {
-                const dist = parseInt(document.getElementById('inpDist').value);
-                MISSION.intervals.push({ type:'WORK', dist:dist, duration:99999 });
-            } else {
-                const sets = parseInt(document.getElementById('inpSets').value);
-                const dist = parseInt(document.getElementById('inpIntDist').value);
-                const rest = parseInt(document.getElementById('inpRest').value);
-                for(let i=0; i<sets; i++) {
-                    MISSION.intervals.push({ type:'WORK', dist:dist, duration:99999 });
-                    if(i<sets-1) MISSION.intervals.push({ type:'REST', duration:rest });
-                }
-            }
-            renderBuilderList();
-            showToast("Template Loaded", 'success');
-        }
         function startMission(isSim) {
-            if(MISSION.intervals.length === 0) return showToast("Plan Empty", 'error');
             nav('dashScreen');
             STATE = { active: true, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: STATE.connected };
             setupNextInterval();
             if(isSim) STATE.simLoop = setInterval(() => processTelemetry(2.5, 26, 150, 220), 500);
             else if(!STATE.connected) connectBluetooth();
         }
+
         function setupNextInterval() {
             if(STATE.intervalIdx >= MISSION.intervals.length) { endMission(); return; }
             const int = MISSION.intervals[STATE.intervalIdx];
@@ -424,16 +417,16 @@
             STATE.distLeft = int.dist > 0 ? int.dist : 0;
             document.getElementById('phaseBadge').innerText = int.type;
             document.getElementById('phaseBadge').style.background = int.type==='WORK'?'var(--accent)':'var(--rest)';
-            document.getElementById('phaseBadge').style.color = int.type==='WORK'?'black':'white';
             document.getElementById('intervalInfo').innerText = `${int.type} ${STATE.intervalIdx+1}/${MISSION.intervals.length}`;
-            document.getElementById('tgtRate').innerText = int.rate ? `(${int.rate})` : "";
+            
             const tgtW = document.getElementById('tgtWatts');
-            if(int.pace_target > 0) { tgtW.innerText = `TGT: ${formatTime(int.pace_target)}`; tgtW.style.display = "inline"; }
-            else if(int.watts > 0) { tgtW.innerText = `TGT: ${int.watts}W`; tgtW.style.display = "inline"; }
-            else tgtW.style.display = "none";
+            if(int.pace_target > 0) { tgtW.innerText = `TGT: ${formatTime(int.pace_target)}`; tgtW.style.display="inline"; }
+            else if(int.watts > 0) { tgtW.innerText = `TGT: ${int.watts}W`; tgtW.style.display="inline"; }
+            else tgtW.style.display="none";
         }
+
         function processTelemetry(speed, rate, hr, watts) {
-            if(watts > 0 && !STATE.active && document.getElementById('dashScreen').classList.contains('active') === false) { launchJustRow(); return; }
+            if(watts > 0 && !STATE.active && !document.getElementById('dashScreen').classList.contains('active')) { launchJustRow(); return; }
             if(!STATE.active) return;
             const int = MISSION.intervals[STATE.intervalIdx];
             STATE.timeLeft -= 0.5;
@@ -447,35 +440,40 @@
             document.getElementById('dispRate').innerText = rate;
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
             document.getElementById('dispDist').innerText = Math.floor(STATE.distLeft > 0 ? STATE.distLeft : 0);
+            
+            const z = PROFILE.hrZones;
+            document.querySelectorAll('.hr-zone').forEach(el=>el.classList.remove('active'));
+            if(hr > z.z4) document.getElementById('z5').classList.add('active');
+            else if(hr > z.z3) document.getElementById('z4').classList.add('active');
+            else if(hr > z.z2) document.getElementById('z3').classList.add('active');
+            else if(hr > z.z1) document.getElementById('z2').classList.add('active');
+            else if(hr > 0) document.getElementById('z1').classList.add('active');
+
             if(int.type === 'WORK') STATE.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate, p:paceSec });
         }
+
         function endMission() {
-            STATE.active = false; if(STATE.simLoop) clearInterval(STATE.simLoop); showToast("Finished");
+            STATE.active = false; if(STATE.simLoop) clearInterval(STATE.simLoop); showToast("Mission Complete", 'success');
             let sumW=0, count=0; STATE.log.forEach(l=>{sumW+=l.w; count++;});
-            const session = { id: Date.now(), date: new Date().toISOString(), desc: MISSION.description || "Row", stats: { avgWatts: count?Math.round(sumW/count):0, dist: 0, time: count*0.5, avgRate: 0, avgHR: 0 } };
+            const session = { id: Date.now(), date: new Date().toISOString(), desc: MISSION.description || "Row", stats: { avgWatts: count?Math.round(sumW/count):0, dist: 0, time: count*0.5, avgRate: 0, avgHR: 0, pace: "2:00" } };
             HISTORY.unshift(session); localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
             renderHistory(); nav('screenHistory');
         }
 
-        // --- SETTINGS & HELPERS ---
-        function setManualMode(mode) {
-            document.getElementById('inputsSingle').style.display = mode==='SINGLE'?'block':'none';
-            document.getElementById('inputsInterval').style.display = mode==='INTERVAL'?'block':'none';
-            document.getElementById('tabSingle').className = mode==='SINGLE'?'m-tab active':'m-tab';
-            document.getElementById('tabInterval').className = mode==='INTERVAL'?'m-tab active':'m-tab';
+        // --- UTILS ---
+        function formatTime(sec) {
+            if(sec >= 99999) return "OPEN";
+            let m = Math.floor(sec/60); let s = Math.floor(sec%60);
+            return `${m}:${s.toString().padStart(2,'0')}`;
         }
-        function loadData() {
+        function addManualStep() { MISSION.intervals.push({ type: 'WORK', dist: 500, duration: 0 }); renderBuilderList(); }
+        function launchJustRow() { MISSION.intervals = [{ type:'WORK', duration:999999, dist:0 }]; startMission(false); }
+        function showToast(msg, type='success') { const t = document.getElementById('toast'); t.innerText = (type==='success'?'✔ ':'⚠ ') + msg; t.className = type + ' active'; setTimeout(()=>t.className='', 3000); }
+        function saveSettings() { const key = document.getElementById('apiKeyInput').value; if(key) localStorage.setItem('gemini_api_key', key); PROFILE.model = document.getElementById('modelSelect').value; localStorage.setItem('analyst_profile', JSON.stringify(PROFILE)); showToast("Saved"); }
+        function loadData() { 
             const h = localStorage.getItem('analyst_history'); if(h) HISTORY = JSON.parse(h);
-            const p = localStorage.getItem('analyst_profile');
-            if(p) { PROFILE = JSON.parse(p); document.getElementById('hrZ5').value = PROFILE.hrZones.z5; document.getElementById('hrZ1').value = PROFILE.hrZones.z1; if(PROFILE.model) addModelOption(PROFILE.model, true); }
-            if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
-        }
-        function saveSettings() {
-            const key = document.getElementById('apiKeyInput').value.trim();
-            if(key) localStorage.setItem('gemini_api_key', key);
-            PROFILE.hrZones = { z5: document.getElementById('hrZ5').value, z1: document.getElementById('hrZ1').value }; // Simplified
-            PROFILE.model = document.getElementById('modelSelect').value;
-            localStorage.setItem('analyst_profile', JSON.stringify(PROFILE)); showToast("Saved");
+            const k = localStorage.getItem('gemini_api_key'); if(k) document.getElementById('apiKeyInput').value = k;
+            if(PROFILE.model) addModelOption(PROFILE.model, true);
         }
         function renderHistory() {
             const list = document.getElementById('historyList'); list.innerHTML = "";
@@ -486,26 +484,24 @@
             });
         }
         function exportHistory() {
-            let csv = "Log ID,Date,Description,Work Time (Seconds),Work Distance,Stroke Rate/Cadence,Avg Watts,Avg Heart Rate,Drag Factor,Comments\n";
-            HISTORY.forEach(h => { csv += `${h.id},${h.date},"${h.desc}",${h.stats.time},${h.stats.dist},${h.stats.avgRate},${h.stats.avgWatts},${h.stats.avgHR},115,Export\n`; });
+            let csv = "Log ID,Date,Description,Avg Watts\n";
+            HISTORY.forEach(h => { csv += `${h.id},${h.date},"${h.desc}",${h.stats.avgWatts}\n`; });
             const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = 'analyst_export.csv'; a.click();
         }
+        function clearData() { if(confirm("Reset?")) { localStorage.clear(); location.reload(); } }
         async function scanModels() {
-            const key = document.getElementById('apiKeyInput').value;
-            if(!key) return showToast("No Key", 'error');
+            const key = document.getElementById('apiKeyInput').value; if(!key) return showToast("No Key", 'error');
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
                 const data = await r.json();
-                const sel = document.getElementById('modelSelect'); sel.innerHTML = "";
+                document.getElementById('modelSelect').innerHTML = "";
                 data.models.forEach(m => { if(m.supportedGenerationMethods?.includes("generateContent")) addModelOption(m.name.replace("models/", ""), false); });
                 showToast("Models Found");
-            } catch(e) { showToast("Scan Error", 'error'); }
+            } catch(e) { showToast("Error", 'error'); }
         }
         function addModelOption(name, s) { const o = document.createElement('option'); o.value=name; o.innerText=name; if(s) o.selected=true; document.getElementById('modelSelect').appendChild(o); }
-        async function testConnection() { showToast("Testing..."); setTimeout(()=>showToast("Connected"), 500); } // Mock for speed
-        function clearData() { if(confirm("Reset?")) { localStorage.clear(); location.reload(); } }
-        async function connectBluetooth() { try { const d = await navigator.bluetooth.requestDevice({filters:[{namePrefix:'PM5'}],optionalServices:[PM5_SERVICE]}); STATE.connected=true; document.getElementById('btConnectBtn').innerText="LINKED"; document.getElementById('btConnectBtn').style.color="#00FF00"; } catch(e){showToast("BT Error",'error');} }
+        async function connectBluetooth() { try { await navigator.bluetooth.requestDevice({filters:[{namePrefix:'PM5'}],optionalServices:[PM5_SERVICE]}); STATE.connected=true; document.getElementById('btConnectBtn').innerText="LINKED"; document.getElementById('btConnectBtn').style.color="#00FF00"; } catch(e){showToast("BT Error",'error');} }
     </script>
 </body>
 </html>
