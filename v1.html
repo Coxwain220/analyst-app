@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V7.0 (STRATEGIST)</title>
+    <title>ANALYST V7.1 (REFINED)</title>
     <style>
         :root { --bg: #050505; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #111; --border: #222; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -48,7 +48,7 @@
         .type-work { color: var(--accent); }
         .type-rest { color: var(--rest); }
 
-        /* STRATEGY ROOM (NEW) */
+        /* STRATEGY ROOM */
         .strategy-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         .stat-badge { background: #222; padding: 10px; border-radius: 6px; border: 1px solid #333; text-align: center; }
         .stat-val { font-size: 18px; font-weight: bold; color: #fff; }
@@ -85,35 +85,35 @@
 </head>
 <body>
 
-    <div id="toast"><span>Notification</span></div>
+    <div id="toast" role="alert" aria-live="assertive"><span>Notification</span></div>
 
-    <div id="screenBuilder" class="screen active">
+    <div id="screenBuilder" class="screen active" role="main" aria-label="Mission Builder">
         <div class="screen-header">
             <div class="header-title">MISSION CONTROL</div>
-            <button class="header-btn" onclick="connectBluetooth()" id="btConnectBtn">CONNECT PM5</button>
+            <button class="header-btn" onclick="connectBluetooth()" id="btConnectBtn" aria-label="Connect Bluetooth">CONNECT PM5</button>
         </div>
         <div class="scroll-area">
             <div class="card">
                 <div class="section-header">AI COMMANDER</div>
-                <textarea id="aiInput" rows="2" placeholder="e.g. 3 x 2000m, 4min rest"></textarea>
+                <textarea id="aiInput" rows="2" placeholder="e.g. 3 x 2000m, 4min rest" aria-label="Workout Description"></textarea>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-blue" id="btnGen" style="flex:2" onclick="generateMission()">GENERATE PLAN</button>
-                    <button class="btn btn-green" style="flex:1" onclick="launchJustRow()">ROW NOW</button>
+                    <button class="btn btn-blue" id="btnGen" style="flex:2" onclick="generateMission()" aria-label="Generate Plan">GENERATE PLAN</button>
+                    <button class="btn btn-green" style="flex:1" onclick="launchJustRow()" aria-label="Start Just Row">ROW NOW</button>
                 </div>
             </div>
 
             <div class="section-header" style="margin: 0 5px 10px 5px;">MISSION PLAN</div>
-            <div id="builderList"></div>
-            <button class="btn btn-outline" onclick="addManualStep()">+ ADD STEP</button>
+            <div id="builderList" aria-live="polite"></div>
+            <button class="btn btn-outline" onclick="addManualStep()" aria-label="Add Manual Step">+ ADD STEP</button>
 
             <div style="height:30px;"></div>
-            <button class="btn btn-green" onclick="goToStrategy()">ANALYZE & STRATEGIZE →</button>
+            <button class="btn btn-green" onclick="goToStrategy()" aria-label="Go to Strategy Room">ANALYZE & STRATEGIZE →</button>
         </div>
     </div>
 
-    <div id="screenStrategy" class="screen">
+    <div id="screenStrategy" class="screen" aria-label="Strategy Room">
         <div class="screen-header">
-            <button class="header-btn" onclick="nav('screenBuilder')">← EDIT</button>
+            <button class="header-btn" onclick="nav('screenBuilder')" aria-label="Back to Builder">← EDIT</button>
             <div class="header-title">STRATEGY ROOM</div>
             <div style="width:40px;"></div>
         </div>
@@ -134,18 +134,18 @@
 
             <div class="card">
                 <div class="section-header">ANALYST ADVICE</div>
-                <div class="chat-box" id="coachChat">Waiting for mission data...</div>
+                <div class="chat-box" id="coachChat" aria-live="polite">Waiting for mission data...</div>
                 <div class="chat-input-area">
-                    <input type="text" id="coachInput" placeholder="Ask for strategy...">
-                    <button class="btn btn-outline" style="width:auto; margin:0;" onclick="askCoach()">ASK</button>
+                    <input type="text" id="coachInput" placeholder="Ask for strategy..." aria-label="Ask Coach">
+                    <button class="btn btn-outline" style="width:auto; margin:0;" onclick="askCoach()" aria-label="Send Question">ASK</button>
                 </div>
             </div>
 
-            <button class="btn btn-green" onclick="startMission(false)">ACCEPT PLAN & ROW</button>
+            <button class="btn btn-green" onclick="startMission(false)" aria-label="Start Rowing">ACCEPT PLAN & ROW</button>
         </div>
     </div>
 
-    <div id="dashScreen" class="screen">
+    <div id="dashScreen" class="screen" aria-label="Dashboard">
         <div class="comms-bar" style="border-bottom:1px solid #333; padding:10px 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:10px; color:#666;">LIVE TELEMETRY</span>
@@ -182,57 +182,61 @@
         </div>
         
         <div style="background:#111; padding:10px; display:flex; justify-content:center; align-items:center;">
-            <button class="btn btn-outline" style="width:auto; padding:10px 30px;" onclick="endMission()">FINISH & SAVE</button>
+            <button class="btn btn-outline" style="width:auto; padding:10px 30px;" onclick="endMission()" aria-label="End Session">FINISH & SAVE</button>
         </div>
     </div>
 
-    <div id="screenHistory" class="screen">
+    <div id="screenHistory" class="screen" aria-label="History Log">
         <div class="screen-header">
             <div class="header-title">MISSION LOGS</div>
-            <button class="header-btn" onclick="exportHistory()">EXPORT CSV</button>
+            <button class="header-btn" onclick="exportHistory()" aria-label="Export CSV">EXPORT CSV</button>
         </div>
         <div class="scroll-area" id="historyList"></div>
     </div>
 
-    <div id="screenSettings" class="screen">
+    <div id="screenSettings" class="screen" aria-label="Settings">
         <div class="screen-header"><div class="header-title">SETTINGS</div></div>
         <div class="scroll-area">
             <div class="card">
                 <div class="section-header">SYSTEM</div>
-                <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key...">
-                <select id="modelSelect" style="margin-top:10px;"><option value="" disabled>Scan to load models</option></select>
+                <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key..." aria-label="API Key">
+                <select id="modelSelect" style="margin-top:10px;" aria-label="AI Model"><option value="" disabled>Scan to load models</option></select>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
-                    <button class="btn btn-outline" onclick="scanModels()">SCAN</button>
-                    <button class="btn btn-green" onclick="saveSettings()">SAVE</button>
+                    <button class="btn btn-outline" onclick="scanModels()" aria-label="Scan Models">SCAN</button>
+                    <button class="btn btn-green" onclick="saveSettings()" aria-label="Save Settings">SAVE</button>
                 </div>
             </div>
             
             <div class="card">
                 <div class="section-header">MEMORY BANK</div>
                 <label style="font-size:10px; color:#666;">UPLOAD CSV TO UPDATE MEMORY</label>
-                <input type="file" id="csvInput" accept=".csv" style="margin-top:5px;">
-                <button class="btn btn-outline" onclick="processCSV()">IMPORT HISTORY</button>
+                <input type="file" id="csvInput" accept=".csv" style="margin-top:5px;" aria-label="Upload CSV">
+                <button class="btn btn-outline" onclick="processCSV()" aria-label="Import History">IMPORT HISTORY</button>
             </div>
 
-            <button class="btn btn-danger" onclick="clearData()">FACTORY RESET</button>
+            <button class="btn btn-danger" onclick="clearData()" aria-label="Factory Reset">FACTORY RESET</button>
         </div>
     </div>
 
     <div class="nav-bar">
-        <button class="nav-btn active" onclick="nav('screenBuilder')" id="navBuild"><span class="nav-icon">⚡</span>BUILD</button>
-        <button class="nav-btn" onclick="nav('dashScreen')" id="navDash"><span class="nav-icon">⏱</span>ROW</button>
-        <button class="nav-btn" onclick="nav('screenHistory')" id="navHist"><span class="nav-icon">☰</span>LOGS</button>
-        <button class="nav-btn" onclick="nav('screenSettings')" id="navSet"><span class="nav-icon">⚙</span>SET</button>
+        <button class="nav-btn active" onclick="nav('screenBuilder')" id="navBuild" aria-label="Build Tab"><span class="nav-icon">⚡</span>BUILD</button>
+        <button class="nav-btn" onclick="nav('dashScreen')" id="navDash" aria-label="Row Tab"><span class="nav-icon">⏱</span>ROW</button>
+        <button class="nav-btn" onclick="nav('screenHistory')" id="navHist" aria-label="Logs Tab"><span class="nav-icon">☰</span>LOGS</button>
+        <button class="nav-btn" onclick="nav('screenSettings')" id="navSet" aria-label="Settings Tab"><span class="nav-icon">⚙</span>SET</button>
     </div>
 
     <script>
+        // --- CONSTANTS ---
         const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
         const PM5_CHAR_32 = 'ce060032-43e5-11e4-916c-0800200c9a66'; 
         
-        let MISSION = { description: "", intervals: [] };
-        let STATE = { active: false, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: false };
-        let HISTORY = [];
-        let PROFILE = { hrZones: { z1: 108, z5: 180 }, model: "gemini-1.5-flash" };
+        // --- STATE MANAGEMENT ---
+        const App = {
+            mission: { description: "", intervals: [] },
+            state: { active: false, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: false },
+            history: [],
+            profile: { hrZones: { z1: 108, z5: 180 }, model: "gemini-1.5-flash" }
+        };
 
         // PRE-LOADED HISTORY (Your Data)
         const SEED_DATA = [
@@ -244,10 +248,10 @@
 
         window.onload = () => {
             loadData();
-            // Load seed data if empty
-            if(HISTORY.length === 0) {
-                HISTORY = SEED_DATA;
-                localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
+            // Seed check
+            if(App.history.length === 0) {
+                App.history = SEED_DATA;
+                localStorage.setItem('analyst_history', JSON.stringify(App.history));
             }
             renderHistory();
             renderBuilderList();
@@ -258,6 +262,7 @@
             document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+            
             if(id==='screenBuilder') document.getElementById('navBuild').classList.add('active');
             else if(id==='dashScreen') document.getElementById('navDash').classList.add('active');
             else if(id==='screenHistory') document.getElementById('navHist').classList.add('active');
@@ -266,16 +271,16 @@
 
         // --- STRATEGY ROOM ---
         function goToStrategy() {
-            if(MISSION.intervals.length === 0) return showToast("Build a mission first", 'error');
+            if(App.mission.intervals.length === 0) return showToast("Build a mission first", 'error');
             
             nav('screenStrategy');
             
             // 1. Populate Summary
-            const workInts = MISSION.intervals.filter(i=>i.type==='WORK');
+            const workInts = App.mission.intervals.filter(i=>i.type==='WORK');
             const totalWorkTime = workInts.reduce((a,b) => a + (b.duration||0), 0);
             const totalWorkDist = workInts.reduce((a,b) => a + (b.dist||0), 0);
             
-            let summary = MISSION.description;
+            let summary = App.mission.description;
             if(!summary) {
                 if(totalWorkDist > 0) summary = `${workInts.length} Intervals (${totalWorkDist}m Total)`;
                 else summary = `${workInts.length} Intervals (${Math.floor(totalWorkTime/60)} min Total)`;
@@ -284,21 +289,14 @@
             document.getElementById('stratEstDist').innerText = totalWorkDist > 0 ? totalWorkDist + "m" : "N/A";
             document.getElementById('stratEstTime').innerText = totalWorkTime > 0 ? Math.floor(totalWorkTime/60) + "m" : "N/A";
 
-            // 2. Find Match in History
             findSimilarSession();
-
-            // 3. Auto-Ask Coach
             askCoach(true);
         }
 
         function findSimilarSession() {
-            // Simple logic: look for similar distance or matching string in description
-            const currentDesc = MISSION.description.toLowerCase();
-            let match = null;
-            
-            // Try to find matching description keywords
-            match = HISTORY.find(h => currentDesc.includes("2000") && h.desc.includes("2000"));
-            if(!match) match = HISTORY.find(h => currentDesc.includes("500") && h.desc.includes("500"));
+            const currentDesc = (App.mission.description || "").toLowerCase();
+            let match = App.history.find(h => currentDesc.includes("2000") && h.desc.includes("2000"));
+            if(!match) match = App.history.find(h => currentDesc.includes("500") && h.desc.includes("500"));
             
             const div = document.getElementById('historyMatchContent');
             if(match) {
@@ -324,38 +322,37 @@
             const userQ = isAuto ? "Analyze this workout based on my history." : document.getElementById('coachInput').value;
             
             if(!isAuto) chat.innerText += `\n\nYOU: ${userQ}`;
-            chat.innerText += `\n\nANALYST: Thinking...`;
+            if(isAuto) chat.innerText = `ANALYST: Analyzing Mission Parameters...`;
+            else chat.innerText += `\n\nANALYST: Thinking...`;
+            
             chat.scrollTop = chat.scrollHeight;
 
-            // Context Construction
-            const historyContext = HISTORY.slice(0, 5).map(h => `${h.date.split('T')[0]}: ${h.desc} (Avg ${h.stats.avgWatts}W)`).join('\n');
-            const workoutContext = JSON.stringify(MISSION.intervals);
+            const historyContext = App.history.slice(0, 5).map(h => `${h.date.split('T')[0]}: ${h.desc} (Avg ${h.stats.avgWatts}W)`).join('\n');
+            const workoutContext = JSON.stringify(App.mission.intervals);
             
             const PROMPT = `
             Act as an elite rowing coach. 
-            User Workout: ${MISSION.description || "Custom Interval"}.
+            User Workout: ${App.mission.description || "Custom Interval"}.
             Structure: ${workoutContext}.
             User History (Last 5):
             ${historyContext}
-            
             User Question: ${userQ}
-            
-            Provide a concise, strategic answer. Suggest a specific split/pace target based on history.
+            Provide a concise, strategic answer.
             `;
 
             try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${PROFILE.model}:generateContent?key=${key}`, {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
                 });
                 const d = await r.json();
                 const reply = d.candidates[0].content.parts[0].text;
                 
-                chat.innerText = chat.innerText.replace("Thinking...", "");
-                chat.innerText += reply;
+                chat.innerText = chat.innerText.replace("Thinking...", "").replace("Analyzing Mission Parameters...", "");
+                chat.innerText += isAuto ? reply : "\n" + reply;
                 chat.scrollTop = chat.scrollHeight;
             } catch(e) {
-                chat.innerText += "\n[Connection Error]";
+                chat.innerText += `\n[Error: ${e.message}]`;
             }
         }
 
@@ -370,15 +367,15 @@
             const PROMPT = `Parse workout: "${input}". Return JSON: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. RULES: 1. "1:45" pace = 105s pace_target. 2. Time in seconds.`;
 
             try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${PROFILE.model}:generateContent?key=${key}`, {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
                 });
                 const d = await r.json();
                 const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
                 const result = JSON.parse(jsonText.substring(jsonText.indexOf('{'), jsonText.lastIndexOf('}')+1));
-                MISSION.intervals = result.intervals;
-                MISSION.description = result.description;
+                App.mission.intervals = result.intervals;
+                App.mission.description = result.description;
                 renderBuilderList();
                 showToast("Plan Generated", 'success');
             } catch(e) { showToast("AI Error: " + e.message, 'error'); }
@@ -387,8 +384,11 @@
 
         function renderBuilderList() {
             const list = document.getElementById('builderList');
+            // Use Fragment for performance
+            const fragment = document.createDocumentFragment();
             list.innerHTML = "";
-            MISSION.intervals.forEach((step, idx) => {
+            
+            App.mission.intervals.forEach((step, idx) => {
                 let div = document.createElement('div');
                 div.className = 'step-card';
                 let typeClass = step.type === 'WORK' ? 'type-work' : 'type-rest';
@@ -396,28 +396,34 @@
                 let sub = [];
                 if(step.pace_target) sub.push(`@ ${formatTime(step.pace_target)}`);
                 if(step.watts) sub.push(`@ ${step.watts}W`);
-                div.innerHTML = `<div class="step-icon ${typeClass}">${step.type==='WORK'?'⚡':'💤'}</div><div class="step-details"><div class="step-main">${step.type} ${mainText}</div><div class="step-sub">${sub.join(' ')}</div></div><div class="step-del" onclick="MISSION.intervals.splice(${idx},1);renderBuilderList()">×</div>`;
-                list.appendChild(div);
+                
+                div.innerHTML = `<div class="step-icon ${typeClass}">${step.type==='WORK'?'⚡':'💤'}</div><div class="step-details"><div class="step-main">${step.type} ${mainText}</div><div class="step-sub">${sub.join(' ')}</div></div><div class="step-del" onclick="deleteStep(${idx})">×</div>`;
+                fragment.appendChild(div);
             });
+            list.appendChild(fragment);
         }
+
+        function deleteStep(idx) { App.mission.intervals.splice(idx, 1); renderBuilderList(); }
+        function addManualStep() { App.mission.intervals.push({ type: 'WORK', dist: 500, duration: 0 }); renderBuilderList(); }
 
         // --- DASHBOARD ---
         function startMission(isSim) {
             nav('dashScreen');
-            STATE = { active: true, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: STATE.connected };
+            App.state = { active: true, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: App.state.connected };
             setupNextInterval();
-            if(isSim) STATE.simLoop = setInterval(() => processTelemetry(2.5, 26, 150, 220), 500);
-            else if(!STATE.connected) connectBluetooth();
+            if(isSim) App.state.simLoop = setInterval(() => processTelemetry(2.5, 26, 150, 220), 500);
+            else if(!App.state.connected) connectBluetooth();
         }
 
         function setupNextInterval() {
-            if(STATE.intervalIdx >= MISSION.intervals.length) { endMission(); return; }
-            const int = MISSION.intervals[STATE.intervalIdx];
-            STATE.timeLeft = int.duration > 0 ? int.duration : 99999;
-            STATE.distLeft = int.dist > 0 ? int.dist : 0;
+            if(App.state.intervalIdx >= App.mission.intervals.length) { endMission(); return; }
+            const int = App.mission.intervals[App.state.intervalIdx];
+            App.state.timeLeft = int.duration > 0 ? int.duration : 99999;
+            App.state.distLeft = int.dist > 0 ? int.dist : 0;
+            
             document.getElementById('phaseBadge').innerText = int.type;
             document.getElementById('phaseBadge').style.background = int.type==='WORK'?'var(--accent)':'var(--rest)';
-            document.getElementById('intervalInfo').innerText = `${int.type} ${STATE.intervalIdx+1}/${MISSION.intervals.length}`;
+            document.getElementById('intervalInfo').innerText = `${int.type} ${App.state.intervalIdx+1}/${App.mission.intervals.length}`;
             
             const tgtW = document.getElementById('tgtWatts');
             if(int.pace_target > 0) { tgtW.innerText = `TGT: ${formatTime(int.pace_target)}`; tgtW.style.display="inline"; }
@@ -426,37 +432,41 @@
         }
 
         function processTelemetry(speed, rate, hr, watts) {
-            if(watts > 0 && !STATE.active && !document.getElementById('dashScreen').classList.contains('active')) { launchJustRow(); return; }
-            if(!STATE.active) return;
-            const int = MISSION.intervals[STATE.intervalIdx];
-            STATE.timeLeft -= 0.5;
-            if(speed > 0.1 && STATE.distLeft > 0) STATE.distLeft -= (speed * 0.5);
-            if((int.dist > 0 && STATE.distLeft <= 0) || (int.duration > 0 && int.duration < 99999 && STATE.timeLeft <= 0)) {
-                STATE.intervalIdx++; setupNextInterval(); return;
+            if(watts > 0 && !App.state.active && !document.getElementById('dashScreen').classList.contains('active')) { launchJustRow(); return; }
+            if(!App.state.active) return;
+            const int = App.mission.intervals[App.state.intervalIdx];
+            App.state.timeLeft -= 0.5;
+            if(speed > 0.1 && App.state.distLeft > 0) App.state.distLeft -= (speed * 0.5);
+            
+            if((int.dist > 0 && App.state.distLeft <= 0) || (int.duration > 0 && int.duration < 99999 && App.state.timeLeft <= 0)) {
+                App.state.intervalIdx++; setupNextInterval(); return;
             }
+            
             let paceSec = speed > 0.1 ? 500/speed : 0;
             document.getElementById('dispPace').innerText = formatTime(paceSec);
             document.getElementById('dispWatts').innerText = watts;
             document.getElementById('dispRate').innerText = rate;
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
-            document.getElementById('dispDist').innerText = Math.floor(STATE.distLeft > 0 ? STATE.distLeft : 0);
+            document.getElementById('dispDist').innerText = Math.floor(App.state.distLeft > 0 ? App.state.distLeft : 0);
             
-            const z = PROFILE.hrZones;
-            document.querySelectorAll('.hr-zone').forEach(el=>el.classList.remove('active'));
-            if(hr > z.z4) document.getElementById('z5').classList.add('active');
-            else if(hr > z.z3) document.getElementById('z4').classList.add('active');
-            else if(hr > z.z2) document.getElementById('z3').classList.add('active');
-            else if(hr > z.z1) document.getElementById('z2').classList.add('active');
-            else if(hr > 0) document.getElementById('z1').classList.add('active');
+            updateHRZones(hr);
 
-            if(int.type === 'WORK') STATE.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate, p:paceSec });
+            if(int.type === 'WORK') App.state.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate, p:paceSec });
+        }
+
+        function updateHRZones(hr) {
+            const z = App.profile.hrZones;
+            const zones = [z.z1, z.z2, z.z3, z.z4, z.z5];
+            document.querySelectorAll('.hr-zone').forEach((el, idx) => {
+                el.classList.toggle('active', hr >= zones[idx]);
+            });
         }
 
         function endMission() {
-            STATE.active = false; if(STATE.simLoop) clearInterval(STATE.simLoop); showToast("Mission Complete", 'success');
-            let sumW=0, count=0; STATE.log.forEach(l=>{sumW+=l.w; count++;});
-            const session = { id: Date.now(), date: new Date().toISOString(), desc: MISSION.description || "Row", stats: { avgWatts: count?Math.round(sumW/count):0, dist: 0, time: count*0.5, avgRate: 0, avgHR: 0, pace: "2:00" } };
-            HISTORY.unshift(session); localStorage.setItem('analyst_history', JSON.stringify(HISTORY));
+            App.state.active = false; if(App.state.simLoop) clearInterval(App.state.simLoop); showToast("Mission Complete", 'success');
+            let sumW=0, count=0; App.state.log.forEach(l=>{sumW+=l.w; count++;});
+            const session = { id: Date.now(), date: new Date().toISOString(), desc: App.mission.description || "Row", stats: { avgWatts: count?Math.round(sumW/count):0, dist: 0, time: count*0.5, avgRate: 0, avgHR: 0, pace: "2:00" } };
+            App.history.unshift(session); localStorage.setItem('analyst_history', JSON.stringify(App.history));
             renderHistory(); nav('screenHistory');
         }
 
@@ -466,26 +476,35 @@
             let m = Math.floor(sec/60); let s = Math.floor(sec%60);
             return `${m}:${s.toString().padStart(2,'0')}`;
         }
-        function addManualStep() { MISSION.intervals.push({ type: 'WORK', dist: 500, duration: 0 }); renderBuilderList(); }
-        function launchJustRow() { MISSION.intervals = [{ type:'WORK', duration:999999, dist:0 }]; startMission(false); }
+        function launchJustRow() { App.mission.intervals = [{ type:'WORK', duration:999999, dist:0 }]; startMission(false); }
         function showToast(msg, type='success') { const t = document.getElementById('toast'); t.innerText = (type==='success'?'✔ ':'⚠ ') + msg; t.className = type + ' active'; setTimeout(()=>t.className='', 3000); }
-        function saveSettings() { const key = document.getElementById('apiKeyInput').value; if(key) localStorage.setItem('gemini_api_key', key); PROFILE.model = document.getElementById('modelSelect').value; localStorage.setItem('analyst_profile', JSON.stringify(PROFILE)); showToast("Saved"); }
+        function saveSettings() { 
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if(key.length > 5) localStorage.setItem('gemini_api_key', key);
+            App.profile.model = document.getElementById('modelSelect').value;
+            localStorage.setItem('analyst_profile', JSON.stringify(App.profile)); 
+            showToast("Saved"); 
+        }
         function loadData() { 
-            const h = localStorage.getItem('analyst_history'); if(h) HISTORY = JSON.parse(h);
-            const k = localStorage.getItem('gemini_api_key'); if(k) document.getElementById('apiKeyInput').value = k;
-            if(PROFILE.model) addModelOption(PROFILE.model, true);
+            const h = localStorage.getItem('analyst_history'); if(h) App.history = JSON.parse(h);
+            const p = localStorage.getItem('analyst_profile'); if(p) App.profile = JSON.parse(p);
+            if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
+            if(App.profile.model) addModelOption(App.profile.model, true);
         }
         function renderHistory() {
-            const list = document.getElementById('historyList'); list.innerHTML = "";
-            HISTORY.forEach(h => {
+            const list = document.getElementById('historyList'); 
+            const frag = document.createDocumentFragment();
+            list.innerHTML = "";
+            App.history.forEach(h => {
                 let d = document.createElement('div'); d.className = 'history-item';
                 d.innerHTML = `<div><div class="h-date">${new Date(h.date).toLocaleDateString()}</div><div class="h-desc">${h.desc}</div></div><div class="h-stat">${h.stats.avgWatts}W</div>`;
-                list.appendChild(d);
+                frag.appendChild(d);
             });
+            list.appendChild(frag);
         }
         function exportHistory() {
             let csv = "Log ID,Date,Description,Avg Watts\n";
-            HISTORY.forEach(h => { csv += `${h.id},${h.date},"${h.desc}",${h.stats.avgWatts}\n`; });
+            App.history.forEach(h => { csv += `${h.id},${h.date},"${h.desc}",${h.stats.avgWatts}\n`; });
             const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = 'analyst_export.csv'; a.click();
         }
@@ -501,7 +520,7 @@
             } catch(e) { showToast("Error", 'error'); }
         }
         function addModelOption(name, s) { const o = document.createElement('option'); o.value=name; o.innerText=name; if(s) o.selected=true; document.getElementById('modelSelect').appendChild(o); }
-        async function connectBluetooth() { try { await navigator.bluetooth.requestDevice({filters:[{namePrefix:'PM5'}],optionalServices:[PM5_SERVICE]}); STATE.connected=true; document.getElementById('btConnectBtn').innerText="LINKED"; document.getElementById('btConnectBtn').style.color="#00FF00"; } catch(e){showToast("BT Error",'error');} }
+        async function connectBluetooth() { try { await navigator.bluetooth.requestDevice({filters:[{namePrefix:'PM5'}],optionalServices:[PM5_SERVICE]}); App.state.connected=true; document.getElementById('btConnectBtn').innerText="LINKED"; document.getElementById('btConnectBtn').style.color="#00FF00"; } catch(e){showToast("BT Error",'error');} }
     </script>
 </body>
 </html>
