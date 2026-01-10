@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V7.1 (REFINED)</title>
+    <title>ANALYST V8.1 (ARCHITECTURE)</title>
     <style>
         :root { --bg: #050505; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #111; --border: #222; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); font-family: 'Roboto', -apple-system, sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
         /* TOAST */
-        #toast { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 12px 24px; border-radius: 30px; z-index: 2000; font-size: 13px; font-weight: bold; transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); box-shadow: 0 10px 30px rgba(0,0,0,0.5); display:flex; align-items:center; gap:10px; }
+        #toast { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 12px 24px; border-radius: 30px; z-index: 3000; font-size: 13px; font-weight: bold; transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); box-shadow: 0 10px 30px rgba(0,0,0,0.5); display:flex; align-items:center; gap:10px; }
         #toast.active { top: 20px; }
         #toast.success { border-color: var(--accent); color: var(--accent); }
         #toast.error { border-color: var(--danger); color: var(--danger); }
 
-        /* SCREENS */
+        /* LAYOUT */
         .screen { display: none; flex-grow: 1; flex-direction: column; overflow: hidden; height: 100%; }
         .screen.active { display: flex; }
         .scroll-area { flex-grow: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
@@ -23,129 +23,149 @@
         .header-title { flex-grow: 1; text-align: center; font-weight: 700; font-size: 14px; letter-spacing: 1px; color: #888; text-transform: uppercase; }
         .header-btn { background: transparent; border: none; color: var(--accent); font-weight: bold; font-size: 12px; cursor: pointer; padding: 10px; }
 
-        /* CARDS */
+        /* UI ELEMENTS */
         .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; font-weight: 700; display:flex; justify-content:space-between; }
         
-        /* INPUTS & BUTTONS */
-        .btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 13px; margin-top: 8px; transition: transform 0.1s, filter 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn:active { transform: scale(0.98); }
+        .btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 13px; margin-top: 8px; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.7; }
         .btn-green { background: var(--accent); color: #000; }
         .btn-outline { background: transparent; border: 1px solid #444; color: #888; }
-        .btn-outline:hover { border-color: #666; color: #fff; background: #1a1a1a; }
         .btn-danger { background: rgba(255,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
-        .btn-blue { background: var(--rest); color: white; }
+        
+        input, textarea, select { background: #080808; border: 1px solid #333; color: white; padding: 12px; border-radius: 6px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; }
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-        input, textarea, select { background: #080808; border: 1px solid #333; color: white; padding: 12px; border-radius: 6px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; transition: border 0.2s; }
-        input:focus, textarea:focus { border-color: var(--accent); }
+        /* SETTINGS MENU ITEMS */
+        .settings-menu-btn { width: 100%; text-align: left; padding: 18px 10px; border-bottom: 1px solid #222; background: transparent; color: white; font-size:14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .settings-menu-btn:hover { background: #151515; }
+        .settings-menu-btn:after { content: '›'; color: #666; font-size: 20px; font-weight: bold; }
+        .settings-icon { margin-right: 10px; width: 20px; text-align: center; display: inline-block; }
+        .settings-section { display: none; }
+        .settings-section.active { display: block; animation: slideIn 0.2s; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
-        /* BUILDER TIMELINE */
-        #builderList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .step-card { background: #151515; border: 1px solid #333; border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; }
-        .step-icon { font-size: 18px; text-align: center; }
-        .step-main { font-weight: bold; font-size: 14px; color: #fff; }
-        .step-sub { font-size: 11px; color: #888; margin-top: 2px; }
-        .type-work { color: var(--accent); }
-        .type-rest { color: var(--rest); }
-
-        /* STRATEGY ROOM */
-        .strategy-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .stat-badge { background: #222; padding: 10px; border-radius: 6px; border: 1px solid #333; text-align: center; }
-        .stat-val { font-size: 18px; font-weight: bold; color: #fff; }
-        .stat-lbl { font-size: 10px; color: #666; margin-top: 2px; }
-        .chat-box { background: #080808; border: 1px solid #333; border-radius: 8px; height: 150px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.4; color: #ccc; margin-bottom: 10px; white-space: pre-wrap; }
-        .chat-input-area { display: flex; gap: 10px; }
-
-        /* DASHBOARD */
-        .main-deck { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 0; }
-        .metric-huge { font-size: 14vh; font-weight: 900; line-height: 0.9; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
-        .metric-sub { font-size: 4vh; color: #888; font-weight: 700; margin-top: 10px; font-variant-numeric: tabular-nums; }
-        .lower-deck { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-top: 1px solid var(--border); }
-        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); padding: 20px; }
-        .hr-bar-container { width: 100%; height: 6px; background: #222; margin-top: 8px; border-radius: 3px; display: flex; overflow: hidden; }
-        .hr-zone { height: 100%; opacity: 0.2; flex-grow: 1; margin: 0 1px; transition: opacity 0.3s; }
-        .hr-zone.active { opacity: 1; box-shadow: 0 0 10px currentColor; }
-        .z1 { background: #666; } .z2 { background: #0088FF; } .z3 { background: #00FF00; } .z4 { background: #FFAA00; } .z5 { background: #FF0000; } 
-
-        /* LOGS */
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; background: #151515; margin-bottom: 1px; transition: background 0.2s; }
-        .history-item:hover { background: #222; }
+        /* BUILDER & LOGS */
+        .step-card { background: #151515; border: 1px solid #333; border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; margin-bottom: 8px; cursor: pointer; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; background: #151515; margin-bottom: 1px; }
         .h-date { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
         .h-desc { font-weight: bold; font-size: 14px; margin-top: 4px; color: #eee; }
         .h-stat { font-family: monospace; color: var(--accent); font-size: 14px; font-weight: bold; }
 
+        /* DASHBOARD */
+        .main-deck { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0; }
+        .metric-huge { font-size: 14vh; font-weight: 900; line-height: 0.9; letter-spacing: -3px; color:white; text-align: center; margin-top:40px; }
+        .metric-sub { font-size: 4vh; color: #888; font-weight: 700; margin-top: 10px; text-align: center; }
+        .lower-deck { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-top: 1px solid var(--border); }
+        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); padding: 15px; }
+        .hr-bar-container { width: 100%; height: 8px; background: #222; margin-top: 8px; border-radius: 4px; display: flex; overflow: hidden; }
+        .hr-zone { height: 100%; opacity: 0.2; flex-grow: 1; margin: 0 1px; transition: opacity 0.3s; }
+        .hr-zone.active { opacity: 1; box-shadow: 0 0 8px currentColor; }
+        .z1 { background: #666; } .z2 { background: #0088FF; } .z3 { background: #00FF00; } .z4 { background: #FFAA00; } .z5 { background: #FF0000; } 
+
+        /* TABS */
+        .manual-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid #333; }
+        .m-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; }
+        .m-tab.active { color: white; border-bottom: 2px solid var(--accent); }
+
         /* NAV BAR */
         .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; flex-shrink: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-btn { flex: 1; background: transparent; border: none; color: #666; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; }
+        .nav-btn { flex: 1; background: transparent; border: none; color: #666; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .nav-btn.active { color: var(--accent); background: #1a1a1a; }
         .nav-icon { font-size: 20px; margin-bottom: 4px; }
+
+        /* MODAL */
+        #editModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        #editModal.active { display: flex; }
+        .modal-content { background: #111; padding: 20px; border-radius: 12px; border: 1px solid #333; width: 90%; max-width: 400px; }
+        .chat-box { background: #080808; border: 1px solid #333; border-radius: 8px; height: 150px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.4; color: #ccc; margin-bottom: 10px; white-space: pre-wrap; }
 
         @media (max-width: 600px) { .metric-huge { font-size: 18vw; } .metric-sub { font-size: 5vh; } }
     </style>
 </head>
 <body>
 
-    <div id="toast" role="alert" aria-live="assertive"><span>Notification</span></div>
+    <div id="toast"><span>Notification</span></div>
 
-    <div id="screenBuilder" class="screen active" role="main" aria-label="Mission Builder">
+    <div id="screenBuilder" class="screen active">
         <div class="screen-header">
             <div class="header-title">MISSION CONTROL</div>
-            <button class="header-btn" onclick="connectBluetooth()" id="btConnectBtn" aria-label="Connect Bluetooth">CONNECT PM5</button>
+            <button class="header-btn" onclick="connectBluetooth()" id="btConnectBtn">CONNECT PM5</button>
         </div>
         <div class="scroll-area">
+            
             <div class="card">
                 <div class="section-header">AI COMMANDER</div>
-                <textarea id="aiInput" rows="2" placeholder="e.g. 3 x 2000m, 4min rest" aria-label="Workout Description"></textarea>
+                <textarea id="aiInput" rows="2" placeholder="e.g. 4 x 500m. 2 min rest. aim for 1.45 per row"></textarea>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-blue" id="btnGen" style="flex:2" onclick="generateMission()" aria-label="Generate Plan">GENERATE PLAN</button>
-                    <button class="btn btn-green" style="flex:1" onclick="launchJustRow()" aria-label="Start Just Row">ROW NOW</button>
+                    <button class="btn btn-outline" style="flex:2" onclick="generateMission()" id="btnGen">GENERATE PLAN</button>
+                    <button class="btn btn-green" style="flex:1" onclick="launchJustRow()">JUST ROW</button>
                 </div>
             </div>
 
             <div class="section-header" style="margin: 0 5px 10px 5px;">MISSION PLAN</div>
-            <div id="builderList" aria-live="polite"></div>
-            <button class="btn btn-outline" onclick="addManualStep()" aria-label="Add Manual Step">+ ADD STEP</button>
+            <div id="builderList"></div>
+            
+            <div class="input-grid" style="margin-top:10px;">
+                <button class="btn btn-outline" onclick="addManualStep()">+ ADD STEP</button>
+                <button class="btn btn-outline" onclick="toggleManualCard()">MANUAL BUILDER</button>
+            </div>
+
+            <div class="card" id="manualCard" style="display:none; margin-top:15px;">
+                <div class="section-header">MANUAL TEMPLATE</div>
+                <div class="manual-tabs">
+                    <button class="m-tab active" onclick="setManualMode('SINGLE')" id="tabSingle">SINGLE</button>
+                    <button class="m-tab" onclick="setManualMode('INTERVAL')" id="tabInterval">INTERVALS</button>
+                </div>
+                <div id="inputsSingle">
+                    <label>DISTANCE (M)</label><input type="number" id="inpDist" value="2000">
+                </div>
+                <div id="inputsInterval" style="display:none;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div><label>SETS</label><input type="number" id="inpSets" value="4"></div>
+                        <div><label>DIST (M)</label><input type="number" id="inpIntDist" value="500"></div>
+                    </div>
+                    <label>REST (SEC)</label><input type="number" id="inpRest" value="60">
+                </div>
+                <button class="btn btn-outline" onclick="launchManual()">APPLY TEMPLATE</button>
+            </div>
 
             <div style="height:30px;"></div>
-            <button class="btn btn-green" onclick="goToStrategy()" aria-label="Go to Strategy Room">ANALYZE & STRATEGIZE →</button>
+            <button class="btn btn-green" onclick="goToStrategy()">ANALYZE & STRATEGIZE →</button>
         </div>
     </div>
 
-    <div id="screenStrategy" class="screen" aria-label="Strategy Room">
+    <div id="screenStrategy" class="screen">
         <div class="screen-header">
-            <button class="header-btn" onclick="nav('screenBuilder')" aria-label="Back to Builder">← EDIT</button>
+            <button class="header-btn" onclick="nav('screenBuilder')">← EDIT</button>
             <div class="header-title">STRATEGY ROOM</div>
             <div style="width:40px;"></div>
         </div>
         <div class="scroll-area">
             <div class="card">
                 <div class="section-header">MISSION BRIEF</div>
-                <div id="stratSummary" style="font-size:16px; font-weight:bold; color:white; margin-bottom:10px;"></div>
-                <div class="strategy-grid" style="grid-template-columns: 1fr 1fr;">
-                    <div class="stat-badge"><div class="stat-val" id="stratEstTime">--</div><div class="stat-lbl">EST TIME</div></div>
-                    <div class="stat-badge"><div class="stat-val" id="stratEstDist">--</div><div class="stat-lbl">EST DIST</div></div>
-                </div>
+                <div id="stratSummary" style="font-size:16px; font-weight:bold; color:white;"></div>
             </div>
-
+            
             <div class="card" id="historyMatchCard">
                 <div class="section-header">HISTORICAL CONTEXT</div>
-                <div id="historyMatchContent" style="font-size:13px; color:#ccc; line-height:1.5;">Searching memory...</div>
+                <div id="historyMatchContent" style="font-size:13px; color:#ccc; line-height:1.5;"></div>
             </div>
 
             <div class="card">
                 <div class="section-header">ANALYST ADVICE</div>
-                <div class="chat-box" id="coachChat" aria-live="polite">Waiting for mission data...</div>
-                <div class="chat-input-area">
-                    <input type="text" id="coachInput" placeholder="Ask for strategy..." aria-label="Ask Coach">
-                    <button class="btn btn-outline" style="width:auto; margin:0;" onclick="askCoach()" aria-label="Send Question">ASK</button>
+                <div class="chat-box" id="coachChat">Analyst initialized. Awaiting commands.</div>
+                <div class="input-grid" style="grid-template-columns: 1fr auto;">
+                    <input type="text" id="coachInput" placeholder="Ask specific question...">
+                    <button class="btn btn-outline" style="margin:0; margin-bottom:10px;" onclick="askCoach()">ASK</button>
                 </div>
             </div>
 
-            <button class="btn btn-green" onclick="startMission(false)" aria-label="Start Rowing">ACCEPT PLAN & ROW</button>
+            <button class="btn btn-green" onclick="startMission(false)">ROW NOW</button>
         </div>
     </div>
 
-    <div id="dashScreen" class="screen" aria-label="Dashboard">
+    <div id="dashScreen" class="screen">
         <div class="comms-bar" style="border-bottom:1px solid #333; padding:10px 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:10px; color:#666;">LIVE TELEMETRY</span>
@@ -182,75 +202,196 @@
         </div>
         
         <div style="background:#111; padding:10px; display:flex; justify-content:center; align-items:center;">
-            <button class="btn btn-outline" style="width:auto; padding:10px 30px;" onclick="endMission()" aria-label="End Session">FINISH & SAVE</button>
+            <button class="btn btn-outline" style="width:auto; padding:10px 30px;" onclick="endMission()">FINISH & SAVE</button>
         </div>
     </div>
 
-    <div id="screenHistory" class="screen" aria-label="History Log">
+    <div id="screenHistory" class="screen">
         <div class="screen-header">
-            <div class="header-title">MISSION LOGS</div>
-            <button class="header-btn" onclick="exportHistory()" aria-label="Export CSV">EXPORT CSV</button>
+            <div class="header-title">TRAINING LOGS</div>
+            <button class="header-btn" onclick="exportHistory()">EXPORT CSV</button>
         </div>
         <div class="scroll-area" id="historyList"></div>
     </div>
 
-    <div id="screenSettings" class="screen" aria-label="Settings">
+    <div id="screenSettings" class="screen">
         <div class="screen-header"><div class="header-title">SETTINGS</div></div>
         <div class="scroll-area">
-            <div class="card">
-                <div class="section-header">SYSTEM</div>
-                <input type="password" id="apiKeyInput" placeholder="Paste Gemini Key..." aria-label="API Key">
-                <select id="modelSelect" style="margin-top:10px;" aria-label="AI Model"><option value="" disabled>Scan to load models</option></select>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
-                    <button class="btn btn-outline" onclick="scanModels()" aria-label="Scan Models">SCAN</button>
-                    <button class="btn btn-green" onclick="saveSettings()" aria-label="Save Settings">SAVE</button>
-                </div>
-            </div>
             
-            <div class="card">
-                <div class="section-header">MEMORY BANK</div>
-                <label style="font-size:10px; color:#666;">UPLOAD CSV TO UPDATE MEMORY</label>
-                <input type="file" id="csvInput" accept=".csv" style="margin-top:5px;" aria-label="Upload CSV">
-                <button class="btn btn-outline" onclick="processCSV()" aria-label="Import History">IMPORT HISTORY</button>
+            <div id="settingsMenu">
+                <button class="settings-menu-btn" onclick="openSetting('setAccount')"><span class="settings-icon">👤</span> PROFILE & ACCOUNT</button>
+                <button class="settings-menu-btn" onclick="openSetting('setZones')"><span class="settings-icon">❤️</span> TRAINING ZONES</button>
+                <button class="settings-menu-btn" onclick="openSetting('setPrefs')"><span class="settings-icon">⚙️</span> APP PREFERENCES</button>
+                <button class="settings-menu-btn" onclick="openSetting('setIntegrations')"><span class="settings-icon">🔗</span> INTEGRATIONS</button>
+                <button class="settings-menu-btn" onclick="openSetting('setData')"><span class="settings-icon">💾</span> DATA & SYSTEM</button>
+                <button class="settings-menu-btn" onclick="openSetting('setAbout')"><span class="settings-icon">ℹ️</span> ABOUT</button>
             </div>
 
-            <button class="btn btn-danger" onclick="clearData()" aria-label="Factory Reset">FACTORY RESET</button>
+            <div id="setAccount" class="settings-section">
+                <div class="card">
+                    <div class="section-header">BIO-DATA</div>
+                    <div class="input-grid">
+                        <div><label>AGE</label><input type="number" id="bioAge"></div>
+                        <div><label>WEIGHT (KG)</label><input type="number" id="bioWeight"></div>
+                    </div>
+                    <label>CLASS</label><select id="bioClass"><option>Heavyweight</option><option>Lightweight</option></select>
+                </div>
+                <div class="card">
+                    <div class="section-header">ACCOUNT</div>
+                    <button class="btn btn-outline" onclick="showToast('Feature Coming Soon')">CHANGE EMAIL</button>
+                    <button class="btn btn-outline" onclick="showToast('Feature Coming Soon')">RESET PASSWORD</button>
+                </div>
+                <button class="btn btn-green" onclick="saveSettings()">SAVE</button>
+                <button class="btn btn-outline" onclick="closeSetting()">BACK</button>
+            </div>
+
+            <div id="setZones" class="settings-section">
+                <div class="card">
+                    <div class="section-header">HEART RATE ZONES (BPM)</div>
+                    <div class="input-grid">
+                        <div><label>Z5 (Max)</label><input type="number" id="hrZ5"></div>
+                        <div><label>Z4 (Thresh)</label><input type="number" id="hrZ4"></div>
+                        <div><label>Z3 (Aerobic)</label><input type="number" id="hrZ3"></div>
+                        <div><label>Z2 (Endur)</label><input type="number" id="hrZ2"></div>
+                        <div><label>Z1 (Recov)</label><input type="number" id="hrZ1"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header">POWER ZONES (WATTS)</div>
+                    <div class="input-grid">
+                        <div><label>FTP (Func. Threshold)</label><input type="number" placeholder="250"></div>
+                        <div><label>MAX POWER</label><input type="number" placeholder="600"></div>
+                    </div>
+                </div>
+                <button class="btn btn-green" onclick="saveSettings()">SAVE</button>
+                <button class="btn btn-outline" onclick="closeSetting()">BACK</button>
+            </div>
+
+            <div id="setPrefs" class="settings-section">
+                <div class="card">
+                    <div class="section-header">DISPLAY</div>
+                    <label>PRIMARY UNIT</label>
+                    <select><option>Split (/500m)</option><option>Watts</option><option>Calories/Hr</option></select>
+                    <label>THEME</label>
+                    <select><option>Dark (Default)</option><option>High Contrast</option></select>
+                </div>
+                <button class="btn btn-green" onclick="saveSettings()">SAVE</button>
+                <button class="btn btn-outline" onclick="closeSetting()">BACK</button>
+            </div>
+
+            <div id="setIntegrations" class="settings-section">
+                <div class="card">
+                    <div class="section-header">CONNECTIONS</div>
+                    <button class="btn btn-outline" onclick="showToast('Connecting to Concept2...')">🔗 CONNECT CONCEPT2 LOGBOOK</button>
+                    <button class="btn btn-outline" onclick="showToast('Connecting to Strava...')">🔗 CONNECT STRAVA</button>
+                    <button class="btn btn-outline" onclick="showToast('Connecting to Apple Health...')">🔗 CONNECT APPLE HEALTH</button>
+                </div>
+                <button class="btn btn-outline" onclick="closeSetting()">BACK</button>
+            </div>
+
+            <div id="setData" class="settings-section">
+                <div class="card">
+                    <div class="section-header">SYSTEM</div>
+                    <label>API KEY</label><input type="password" id="apiKeyInput" placeholder="Paste Key...">
+                    <select id="modelSelect" style="margin-top:10px;"><option value="gemini-1.5-flash">Default</option></select>
+                    <div class="input-grid" style="margin-top:10px;">
+                        <button class="btn btn-outline" onclick="scanModels()">SCAN</button>
+                        <button class="btn btn-green" onclick="testConnection()">TEST</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header">DATA MANAGEMENT</div>
+                    <label>IMPORT CSV HISTORY</label>
+                    <input type="file" id="csvInput" accept=".csv" onchange="processCSV(this)">
+                    <div style="font-size:10px; color:#666; margin-top:5px;">Supports Concept2 Logbook Export</div>
+                </div>
+                <button class="btn btn-danger" onclick="clearData()">FACTORY RESET</button>
+                <button class="btn btn-outline" onclick="closeSetting()">BACK</button>
+            </div>
+
+            <div id="setAbout" class="settings-section">
+                <div class="card">
+                    <div class="section-header">ABOUT</div>
+                    <div style="color:#888; font-size:14px;">ANALYST V8.1 (ARCHITECTURE)</div>
+                    <div style="color:#666; font-size:12px; margin-top:10px;">Built for Performance Rowing</div>
+                    <button class="btn btn-outline" onclick="showToast('Terms opened')">TERMS OF SERVICE</button>
+                    <button class="btn btn-outline" onclick="showToast('Privacy opened')">PRIVACY POLICY</button>
+                </div>
+                <button class="btn btn-outline" onclick="closeSetting()">BACK</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="screenLogDetail" class="screen" style="background:#000; z-index:4000;">
+        <div class="screen-header">
+            <button class="header-btn" onclick="nav('screenHistory')">← BACK</button>
+            <div class="header-title">SESSION ANALYSIS</div>
+            <div style="width:40px;"></div>
+        </div>
+        <div class="scroll-area">
+            <div class="card" id="logDetailContent"></div>
+        </div>
+    </div>
+
+    <div id="editModal">
+        <div class="modal-content">
+            <div class="section-header">EDIT STEP</div>
+            <label>TYPE</label>
+            <select id="editType"><option value="WORK">WORK</option><option value="REST">REST</option></select>
+            <div class="input-grid">
+                <div><label>DIST (m)</label><input type="number" id="editDist" placeholder="0"></div>
+                <div><label>TIME (sec)</label><input type="number" id="editTime" placeholder="0"></div>
+            </div>
+            <div style="border-top:1px solid #333; margin:10px 0; padding-top:10px;">
+                <label style="color:var(--accent);">TARGETS</label>
+                <div class="input-grid">
+                    <div><label>PACE</label><input type="text" id="editPace" placeholder="1:50"></div>
+                    <div><label>RATE</label><input type="number" id="editRate" placeholder="26"></div>
+                </div>
+                <label>WATTS</label><input type="number" id="editWatts" placeholder="200">
+            </div>
+            <div class="input-grid" style="margin-top:10px;">
+                <button class="btn btn-outline" onclick="closeEditModal()">CANCEL</button>
+                <button class="btn btn-green" onclick="saveEditStep()">SAVE</button>
+            </div>
         </div>
     </div>
 
     <div class="nav-bar">
-        <button class="nav-btn active" onclick="nav('screenBuilder')" id="navBuild" aria-label="Build Tab"><span class="nav-icon">⚡</span>BUILD</button>
-        <button class="nav-btn" onclick="nav('dashScreen')" id="navDash" aria-label="Row Tab"><span class="nav-icon">⏱</span>ROW</button>
-        <button class="nav-btn" onclick="nav('screenHistory')" id="navHist" aria-label="Logs Tab"><span class="nav-icon">☰</span>LOGS</button>
-        <button class="nav-btn" onclick="nav('screenSettings')" id="navSet" aria-label="Settings Tab"><span class="nav-icon">⚙</span>SET</button>
+        <button class="nav-btn active" onclick="nav('screenBuilder')" id="navBuild">BUILD</button>
+        <button class="nav-btn" onclick="nav('dashScreen')" id="navDash">ROW</button>
+        <button class="nav-btn" onclick="nav('screenHistory')" id="navHist">LOGS</button>
+        <button class="nav-btn" onclick="nav('screenSettings')" id="navSet">SETTINGS</button>
     </div>
 
     <script>
-        // --- CONSTANTS ---
+        // --- DATA LAYER ---
         const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
         const PM5_CHAR_32 = 'ce060032-43e5-11e4-916c-0800200c9a66'; 
         
-        // --- STATE MANAGEMENT ---
         const App = {
             mission: { description: "", intervals: [] },
             state: { active: false, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: false },
             history: [],
-            profile: { hrZones: { z1: 108, z5: 180 }, model: "gemini-1.5-flash" }
+            profile: { hrZones: { z1: 108, z2: 125, z3: 144, z4: 162, z5: 180 }, model: "gemini-1.5-flash", bio: { age: 41, weight: 85 } }
         };
 
-        // PRE-LOADED HISTORY (Your Data)
-        const SEED_DATA = [
+        // --- HARDCODED HISTORY ---
+        const PRELOADED_HISTORY = [
             {id: 110986164, date: "2026-01-10T09:47:00", desc: "3 x 2000m / 4:00r", stats: {avgWatts: 228, dist: 6000, avgRate: 27, avgHR: 174, pace: "1:55.3"}},
             {id: 110898284, date: "2026-01-08T21:25:00", desc: "8 x 1:00 / 1:00r (Power)", stats: {avgWatts: 227, dist: 2077, avgRate: 21, avgHR: 152, pace: "1:55.5"}},
-            {id: 110897422, date: "2026-01-05T18:46:00", desc: "4 x 1500m / 4:00r", stats: {avgWatts: 233, dist: 6000, avgRate: 27, avgHR: 176, pace: "1:54.4"}},
-            {id: 106289732, date: "2025-12-08T18:10:00", desc: "2000m Test", stats: {avgWatts: 256, dist: 2000, avgRate: 27, avgHR: 0, pace: "1:51.0"}}
+            {id: 110897422, date: "2026-01-08T21:06:00", desc: "4 x 5min / 1:00r (Pyramid)", stats: {avgWatts: 163, dist: 1162, avgRate: 25, avgHR: 142, pace: "2:09.0"}},
+            {id: 110896149, date: "2026-01-08T20:43:00", desc: "5:00 row", stats: {avgWatts: 195, dist: 1234, avgRate: 25, avgHR: 139, pace: "2:01.5"}},
+            {id: 110594382, date: "2026-01-05T18:46:00", desc: "4 x 1500m / 4:00r", stats: {avgWatts: 233, dist: 6000, avgRate: 27, avgHR: 176, pace: "1:54.4"}},
+            {id: 106289732, date: "2025-12-08T18:10:00", desc: "2000m Test", stats: {avgWatts: 256, dist: 2000, avgRate: 27, avgHR: 0, pace: "1:51.0"}},
+            {id: 105800000, date: "2025-08-28T20:57:00", desc: "3 x 2000m / 4:00r (Old)", stats: {avgWatts: 207, dist: 6000, avgRate: 22, avgHR: 0, pace: "1:59.0"}}
         ];
 
         window.onload = () => {
             loadData();
-            // Seed check
-            if(App.history.length === 0) {
-                App.history = SEED_DATA;
+            if (App.history.length === 0) {
+                App.history = PRELOADED_HISTORY;
                 localStorage.setItem('analyst_history', JSON.stringify(App.history));
             }
             renderHistory();
@@ -259,268 +400,210 @@
 
         // --- NAVIGATION ---
         function nav(id) {
-            document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             if(id==='screenBuilder') document.getElementById('navBuild').classList.add('active');
             else if(id==='dashScreen') document.getElementById('navDash').classList.add('active');
             else if(id==='screenHistory') document.getElementById('navHist').classList.add('active');
             else if(id==='screenSettings') document.getElementById('navSet').classList.add('active');
         }
 
-        // --- STRATEGY ROOM ---
-        function goToStrategy() {
-            if(App.mission.intervals.length === 0) return showToast("Build a mission first", 'error');
-            
-            nav('screenStrategy');
-            
-            // 1. Populate Summary
-            const workInts = App.mission.intervals.filter(i=>i.type==='WORK');
-            const totalWorkTime = workInts.reduce((a,b) => a + (b.duration||0), 0);
-            const totalWorkDist = workInts.reduce((a,b) => a + (b.dist||0), 0);
-            
-            let summary = App.mission.description;
-            if(!summary) {
-                if(totalWorkDist > 0) summary = `${workInts.length} Intervals (${totalWorkDist}m Total)`;
-                else summary = `${workInts.length} Intervals (${Math.floor(totalWorkTime/60)} min Total)`;
-            }
-            document.getElementById('stratSummary').innerText = summary;
-            document.getElementById('stratEstDist').innerText = totalWorkDist > 0 ? totalWorkDist + "m" : "N/A";
-            document.getElementById('stratEstTime').innerText = totalWorkTime > 0 ? Math.floor(totalWorkTime/60) + "m" : "N/A";
-
-            findSimilarSession();
-            askCoach(true);
+        function showToast(msg, type='success') {
+            const t = document.getElementById('toast');
+            t.innerText = (type==='success'?'✔ ':'⚠ ') + msg;
+            t.className = type + ' active';
+            setTimeout(()=>t.className='', 3000);
         }
 
-        function findSimilarSession() {
-            const currentDesc = (App.mission.description || "").toLowerCase();
-            let match = App.history.find(h => currentDesc.includes("2000") && h.desc.includes("2000"));
-            if(!match) match = App.history.find(h => currentDesc.includes("500") && h.desc.includes("500"));
-            
-            const div = document.getElementById('historyMatchContent');
-            if(match) {
-                div.innerHTML = `
-                    <div style="color:var(--accent); font-weight:bold;">MATCH FOUND: ${new Date(match.date).toLocaleDateString()}</div>
-                    <div>${match.desc}</div>
-                    <div style="margin-top:5px; font-family:monospace;">
-                        Avg Pace: ${match.stats.pace || "N/A"} <br>
-                        Avg Watts: ${match.stats.avgWatts}W <br>
-                        Avg Rate: ${match.stats.avgRate} s/m
-                    </div>
-                `;
-            } else {
-                div.innerHTML = "No direct match found in memory. Analyzing general capacity...";
-            }
+        // --- SETTINGS LOGIC ---
+        function openSetting(id) {
+            document.getElementById('settingsMenu').style.display = 'none';
+            document.getElementById(id).classList.add('active');
+        }
+        function closeSetting() {
+            document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('settingsMenu').style.display = 'block';
+        }
+        function processCSV(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const lines = e.target.result.split('\n');
+                let added = 0;
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(',');
+                    if (cols.length > 10) {
+                        App.history.push({
+                            id: cols[0],
+                            date: new Date(cols[1]).toISOString(),
+                            desc: cols[2].replace(/"/g, ''),
+                            stats: { avgWatts: parseInt(cols[12])||0, dist: parseInt(cols[7])||0, avgRate: parseInt(cols[9])||0, avgHR: parseInt(cols[15])||0, pace: cols[11] }
+                        });
+                        added++;
+                    }
+                }
+                App.history.sort((a,b) => new Date(b.date) - new Date(a.date));
+                localStorage.setItem('analyst_history', JSON.stringify(App.history));
+                renderHistory();
+                showToast(`Imported ${added} Sessions`, 'success');
+            };
+            reader.readAsText(file);
         }
 
-        async function askCoach(isAuto = false) {
-            const key = localStorage.getItem('gemini_api_key');
-            if(!key) { document.getElementById('coachChat').innerText = "Please set API Key in Settings."; return; }
-            
-            const chat = document.getElementById('coachChat');
-            const userQ = isAuto ? "Analyze this workout based on my history." : document.getElementById('coachInput').value;
-            
-            if(!isAuto) chat.innerText += `\n\nYOU: ${userQ}`;
-            if(isAuto) chat.innerText = `ANALYST: Analyzing Mission Parameters...`;
-            else chat.innerText += `\n\nANALYST: Thinking...`;
-            
-            chat.scrollTop = chat.scrollHeight;
-
-            const historyContext = App.history.slice(0, 5).map(h => `${h.date.split('T')[0]}: ${h.desc} (Avg ${h.stats.avgWatts}W)`).join('\n');
-            const workoutContext = JSON.stringify(App.mission.intervals);
-            
-            const PROMPT = `
-            Act as an elite rowing coach. 
-            User Workout: ${App.mission.description || "Custom Interval"}.
-            Structure: ${workoutContext}.
-            User History (Last 5):
-            ${historyContext}
-            User Question: ${userQ}
-            Provide a concise, strategic answer.
-            `;
-
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
-                });
-                const d = await r.json();
-                const reply = d.candidates[0].content.parts[0].text;
-                
-                chat.innerText = chat.innerText.replace("Thinking...", "").replace("Analyzing Mission Parameters...", "");
-                chat.innerText += isAuto ? reply : "\n" + reply;
-                chat.scrollTop = chat.scrollHeight;
-            } catch(e) {
-                chat.innerText += `\n[Error: ${e.message}]`;
-            }
+        // --- BUILDER & AI ---
+        function toggleManualCard() {
+            const el = document.getElementById('manualCard');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
 
-        // --- BUILDER ---
         async function generateMission() {
             const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
-            if(!key) return showToast("API Key Required", 'error');
+            if(!key) return showToast("API Key Missing", 'error');
             const input = document.getElementById('aiInput').value;
             const btn = document.getElementById('btnGen');
             btn.innerText = "THINKING...";
-            
+
             const PROMPT = `Parse workout: "${input}". Return JSON: { "description": "txt", "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "watts": 0, "rate": 0, "pace_target": 0 }] }. RULES: 1. "1:45" pace = 105s pace_target. 2. Time in seconds.`;
 
             try {
+                // Extended timeout to 45s
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 45000); 
+
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 const d = await r.json();
+                if(!d.candidates) throw new Error("No response");
                 const jsonText = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'');
                 const result = JSON.parse(jsonText.substring(jsonText.indexOf('{'), jsonText.lastIndexOf('}')+1));
-                App.mission.intervals = result.intervals;
-                App.mission.description = result.description;
+                
+                App.mission = result;
                 renderBuilderList();
                 showToast("Plan Generated", 'success');
-            } catch(e) { showToast("AI Error: " + e.message, 'error'); }
+            } catch(e) { showToast(e.name === 'AbortError' ? "Timeout: Retry" : "AI Error: " + e.message, 'error'); }
             btn.innerText = "GENERATE PLAN";
         }
 
         function renderBuilderList() {
             const list = document.getElementById('builderList');
-            // Use Fragment for performance
             const fragment = document.createDocumentFragment();
             list.innerHTML = "";
             
+            if(App.mission.intervals.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding:20px; color:#444; border:1px dashed #333; border-radius:6px;">Empty Plan</div>`;
+                return;
+            }
+
             App.mission.intervals.forEach((step, idx) => {
                 let div = document.createElement('div');
                 div.className = 'step-card';
-                let typeClass = step.type === 'WORK' ? 'type-work' : 'type-rest';
-                let mainText = step.dist > 0 ? `${step.dist}m` : formatTime(step.duration);
+                let main = step.dist > 0 ? `${step.dist}m` : (step.duration >= 9999 ? "OPEN" : `${Math.floor(step.duration/60)}:${(step.duration%60).toString().padStart(2,'0')}`);
                 let sub = [];
-                if(step.pace_target) sub.push(`@ ${formatTime(step.pace_target)}`);
+                if(step.pace_target) sub.push(`@ ${Math.floor(step.pace_target/60)}:${(step.pace_target%60).toString().padStart(2,'0')}`);
                 if(step.watts) sub.push(`@ ${step.watts}W`);
                 
-                div.innerHTML = `<div class="step-icon ${typeClass}">${step.type==='WORK'?'⚡':'💤'}</div><div class="step-details"><div class="step-main">${step.type} ${mainText}</div><div class="step-sub">${sub.join(' ')}</div></div><div class="step-del" onclick="deleteStep(${idx})">×</div>`;
+                div.innerHTML = `
+                    <div class="step-icon ${step.type==='WORK'?'type-work':'type-rest'}">${step.type==='WORK'?'⚡':'💤'}</div>
+                    <div onclick="editStep(${idx})">
+                        <div class="step-main">${step.type} ${main}</div>
+                        <div class="step-sub">${sub.join(' ')}</div>
+                    </div>
+                    <div style="text-align:right; font-size:18px; color:#666;" onclick="App.mission.intervals.splice(${idx},1);renderBuilderList()">×</div>
+                `;
                 fragment.appendChild(div);
             });
             list.appendChild(fragment);
         }
 
-        function deleteStep(idx) { App.mission.intervals.splice(idx, 1); renderBuilderList(); }
-        function addManualStep() { App.mission.intervals.push({ type: 'WORK', dist: 500, duration: 0 }); renderBuilderList(); }
+        // --- EDIT MODAL ---
+        let EDIT_INDEX = -1;
+        function editStep(idx) {
+            EDIT_INDEX = idx;
+            const step = App.mission.intervals[idx];
+            document.getElementById('editType').value = step.type;
+            document.getElementById('editDist').value = step.dist || "";
+            document.getElementById('editTime').value = step.duration || "";
+            document.getElementById('editRate').value = step.rate || "";
+            document.getElementById('editWatts').value = step.watts || "";
+            document.getElementById('editModal').classList.add('active');
+        }
+        function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+        function saveEditStep() {
+            const step = App.mission.intervals[EDIT_INDEX];
+            step.type = document.getElementById('editType').value;
+            step.dist = parseInt(document.getElementById('editDist').value) || 0;
+            step.duration = parseInt(document.getElementById('editTime').value) || 0;
+            step.rate = parseInt(document.getElementById('editRate').value) || 0;
+            step.watts = parseInt(document.getElementById('editWatts').value) || 0;
+            if(step.dist > 0) step.duration = 0;
+            closeEditModal();
+            renderBuilderList();
+        }
+        function addManualStep() { App.mission.intervals.push({ type:'WORK', dist:500, duration:0 }); renderBuilderList(); editStep(App.mission.intervals.length-1); }
+        function launchJustRow() { App.mission.intervals = [{ type:'WORK', dist:0, duration:99999 }]; startMission(false); }
+        function launchManualTemplate() {
+            App.mission.intervals = [];
+            const sets = parseInt(document.getElementById('inpSets').value);
+            const dist = parseInt(document.getElementById('inpIntDist').value);
+            const rest = parseInt(document.getElementById('inpRest').value);
+            for(let i=0; i<sets; i++) {
+                App.mission.intervals.push({ type:'WORK', dist:dist, duration:0 });
+                if(i < sets-1 && rest > 0) App.mission.intervals.push({ type:'REST', duration:rest, dist:0 });
+            }
+            renderBuilderList();
+            showToast("Template Applied");
+        }
+
+        // --- STRATEGY ---
+        function goToStrategy() {
+            if(App.mission.intervals.length === 0) return showToast("Empty Plan", 'error');
+            nav('screenStrategy');
+            const work = App.mission.intervals.filter(i=>i.type==='WORK');
+            document.getElementById('stratSummary').innerText = `${work.length} Intervals (${work.reduce((a,b)=>a+(b.dist||0),0)}m Total)`;
+            
+            const desc = JSON.stringify(App.mission.intervals);
+            const match = App.history.find(h => desc.includes("2000") && h.desc.includes("2000"));
+            const div = document.getElementById('historyMatchContent');
+            if(match) div.innerHTML = `MATCH: ${new Date(match.date).toLocaleDateString()} - ${match.desc} (Avg ${match.stats.pace})`;
+            else div.innerHTML = "No direct match. Analyzing capacity...";
+            
+            askCoach(true);
+        }
+
+        async function askCoach(auto) {
+            const key = localStorage.getItem('gemini_api_key');
+            if(!key) return;
+            const chat = document.getElementById('coachChat');
+            const q = auto ? "Analyze this session" : document.getElementById('coachInput').value;
+            chat.innerText += `\n\n> ${q}\nThinking...`;
+            
+            const context = App.history.slice(0,3).map(h=>`${h.desc}: ${h.stats.pace}`).join('; ');
+            const prompt = `Coach me for this workout: ${JSON.stringify(App.mission.intervals)}. My history: ${context}. User asks: ${q}. Short answer.`;
+            
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
+                });
+                const d = await r.json();
+                chat.innerText = chat.innerText.replace("Thinking...", d.candidates[0].content.parts[0].text);
+            } catch(e) { chat.innerText += "Error"; }
+        }
 
         // --- DASHBOARD ---
-        function startMission(isSim) {
+        function startMission(sim) {
             nav('dashScreen');
-            App.state = { active: true, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null, connected: App.state.connected };
-            setupNextInterval();
-            if(isSim) App.state.simLoop = setInterval(() => processTelemetry(2.5, 26, 150, 220), 500);
+            App.state = { active:true, intervalIdx:0, timeLeft:0, distLeft:0, log:[], simLoop:null, connected: App.state.connected };
+            setupInterval();
+            if(sim) App.state.simLoop = setInterval(()=>processTelemetry(2.5, 26, 150, 220), 500);
             else if(!App.state.connected) connectBluetooth();
         }
 
-        function setupNextInterval() {
+        function setupInterval() {
             if(App.state.intervalIdx >= App.mission.intervals.length) { endMission(); return; }
-            const int = App.mission.intervals[App.state.intervalIdx];
-            App.state.timeLeft = int.duration > 0 ? int.duration : 99999;
-            App.state.distLeft = int.dist > 0 ? int.dist : 0;
-            
-            document.getElementById('phaseBadge').innerText = int.type;
-            document.getElementById('phaseBadge').style.background = int.type==='WORK'?'var(--accent)':'var(--rest)';
-            document.getElementById('intervalInfo').innerText = `${int.type} ${App.state.intervalIdx+1}/${App.mission.intervals.length}`;
-            
-            const tgtW = document.getElementById('tgtWatts');
-            if(int.pace_target > 0) { tgtW.innerText = `TGT: ${formatTime(int.pace_target)}`; tgtW.style.display="inline"; }
-            else if(int.watts > 0) { tgtW.innerText = `TGT: ${int.watts}W`; tgtW.style.display="inline"; }
-            else tgtW.style.display="none";
-        }
-
-        function processTelemetry(speed, rate, hr, watts) {
-            if(watts > 0 && !App.state.active && !document.getElementById('dashScreen').classList.contains('active')) { launchJustRow(); return; }
-            if(!App.state.active) return;
-            const int = App.mission.intervals[App.state.intervalIdx];
-            App.state.timeLeft -= 0.5;
-            if(speed > 0.1 && App.state.distLeft > 0) App.state.distLeft -= (speed * 0.5);
-            
-            if((int.dist > 0 && App.state.distLeft <= 0) || (int.duration > 0 && int.duration < 99999 && App.state.timeLeft <= 0)) {
-                App.state.intervalIdx++; setupNextInterval(); return;
-            }
-            
-            let paceSec = speed > 0.1 ? 500/speed : 0;
-            document.getElementById('dispPace').innerText = formatTime(paceSec);
-            document.getElementById('dispWatts').innerText = watts;
-            document.getElementById('dispRate').innerText = rate;
-            document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
-            document.getElementById('dispDist').innerText = Math.floor(App.state.distLeft > 0 ? App.state.distLeft : 0);
-            
-            updateHRZones(hr);
-
-            if(int.type === 'WORK') App.state.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate, p:paceSec });
-        }
-
-        function updateHRZones(hr) {
-            const z = App.profile.hrZones;
-            const zones = [z.z1, z.z2, z.z3, z.z4, z.z5];
-            document.querySelectorAll('.hr-zone').forEach((el, idx) => {
-                el.classList.toggle('active', hr >= zones[idx]);
-            });
-        }
-
-        function endMission() {
-            App.state.active = false; if(App.state.simLoop) clearInterval(App.state.simLoop); showToast("Mission Complete", 'success');
-            let sumW=0, count=0; App.state.log.forEach(l=>{sumW+=l.w; count++;});
-            const session = { id: Date.now(), date: new Date().toISOString(), desc: App.mission.description || "Row", stats: { avgWatts: count?Math.round(sumW/count):0, dist: 0, time: count*0.5, avgRate: 0, avgHR: 0, pace: "2:00" } };
-            App.history.unshift(session); localStorage.setItem('analyst_history', JSON.stringify(App.history));
-            renderHistory(); nav('screenHistory');
-        }
-
-        // --- UTILS ---
-        function formatTime(sec) {
-            if(sec >= 99999) return "OPEN";
-            let m = Math.floor(sec/60); let s = Math.floor(sec%60);
-            return `${m}:${s.toString().padStart(2,'0')}`;
-        }
-        function launchJustRow() { App.mission.intervals = [{ type:'WORK', duration:999999, dist:0 }]; startMission(false); }
-        function showToast(msg, type='success') { const t = document.getElementById('toast'); t.innerText = (type==='success'?'✔ ':'⚠ ') + msg; t.className = type + ' active'; setTimeout(()=>t.className='', 3000); }
-        function saveSettings() { 
-            const key = document.getElementById('apiKeyInput').value.trim();
-            if(key.length > 5) localStorage.setItem('gemini_api_key', key);
-            App.profile.model = document.getElementById('modelSelect').value;
-            localStorage.setItem('analyst_profile', JSON.stringify(App.profile)); 
-            showToast("Saved"); 
-        }
-        function loadData() { 
-            const h = localStorage.getItem('analyst_history'); if(h) App.history = JSON.parse(h);
-            const p = localStorage.getItem('analyst_profile'); if(p) App.profile = JSON.parse(p);
-            if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
-            if(App.profile.model) addModelOption(App.profile.model, true);
-        }
-        function renderHistory() {
-            const list = document.getElementById('historyList'); 
-            const frag = document.createDocumentFragment();
-            list.innerHTML = "";
-            App.history.forEach(h => {
-                let d = document.createElement('div'); d.className = 'history-item';
-                d.innerHTML = `<div><div class="h-date">${new Date(h.date).toLocaleDateString()}</div><div class="h-desc">${h.desc}</div></div><div class="h-stat">${h.stats.avgWatts}W</div>`;
-                frag.appendChild(d);
-            });
-            list.appendChild(frag);
-        }
-        function exportHistory() {
-            let csv = "Log ID,Date,Description,Avg Watts\n";
-            App.history.forEach(h => { csv += `${h.id},${h.date},"${h.desc}",${h.stats.avgWatts}\n`; });
-            const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'analyst_export.csv'; a.click();
-        }
-        function clearData() { if(confirm("Reset?")) { localStorage.clear(); location.reload(); } }
-        async function scanModels() {
-            const key = document.getElementById('apiKeyInput').value; if(!key) return showToast("No Key", 'error');
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-                const data = await r.json();
-                document.getElementById('modelSelect').innerHTML = "";
-                data.models.forEach(m => { if(m.supportedGenerationMethods?.includes("generateContent")) addModelOption(m.name.replace("models/", ""), false); });
-                showToast("Models Found");
-            } catch(e) { showToast("Error", 'error'); }
-        }
-        function addModelOption(name, s) { const o = document.createElement('option'); o.value=name; o.innerText=name; if(s) o.selected=true; document.getElementById('modelSelect').appendChild(o); }
-        async function connectBluetooth() { try { await navigator.bluetooth.requestDevice({filters:[{namePrefix:'PM5'}],optionalServices:[PM5_SERVICE]}); App.state.connected=true; document.getElementById('btConnectBtn').innerText="LINKED"; document.getElementById('btConnectBtn').style.color="#00FF00"; } catch(e){showToast("BT Error",'error');} }
-    </script>
-</body>
-</html>
