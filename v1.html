@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V11.1 (FINAL POLISH)</title>
+    <title>ANALYST V11.2 (INTUITIVE)</title>
     <style>
         :root { --bg: #050505; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #121212; --border: #2a2a2a; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -34,7 +34,6 @@
         .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; font-weight: 700; display:flex; justify-content:space-between; }
         
-        /* ACCESSIBLE BUTTONS */
         .btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 13px; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap:8px; transition: all 0.2s ease; background: #222; color: #fff; border: 1px solid transparent; }
         .btn:hover { transform: scale(1.02); border-color: #444; background: #2a2a2a; }
         .btn:active { transform: scale(0.98); opacity: 0.8; }
@@ -158,7 +157,7 @@
             <div id="builderList"></div>
             
             <div style="height:20px;"></div>
-            <button class="btn btn-green" onclick="goToStrategy()">ANALYZE & STRATEGIZE →</button>
+            <button class="btn btn-green" onclick="goToStrategy()" aria-label="Go to Strategy">ANALYZE & STRATEGIZE →</button>
         </div>
     </div>
 
@@ -268,13 +267,14 @@
             pendingPlan: null
         };
 
-        const PRELOAD_HISTORY = [{"id":"110986164","date":"2026-01-10T09:47:00","desc":"v2000m/4:00r...3 row","stats":{"work_time_fmt":"23:04.0","work_time_sec":1384.0,"rest_time_fmt":"12:00.0","rest_time_sec":720.0,"work_dist":6000,"rest_dist":143,"avg_rate":27,"stroke_count":645,"pace":"01:55.3","avg_watts":228,"cal_hr":1085,"total_cal":416,"avg_hr":174,"drag":135,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":"first 2k fine..."}},{"id":"110898284","date":"2026-01-08T21:25:00","desc":"v1:00/1:00r...8 row","stats":{"work_time_fmt":"08:00.0","work_time_sec":480.0,"rest_time_fmt":"08:00.0","rest_time_sec":480.0,"work_dist":2077,"rest_dist":142,"avg_rate":21,"stroke_count":173,"pace":"01:55.5","avg_watts":227,"cal_hr":1080,"total_cal":141,"avg_hr":152,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110897422","date":"2026-01-08T21:06:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1162,"rest_dist":0,"avg_rate":25,"stroke_count":127,"pace":"02:09.0","avg_watts":163,"cal_hr":859,"total_cal":71,"avg_hr":142,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":"Focussing on s/r only..."}},{"id":"110896911","date":"2026-01-08T20:59:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"nan","rest_time_sec":null,"work_dist":1200,"rest_dist":0,"avg_rate":25,"stroke_count":126,"pace":"02:05.0","avg_watts":179,"cal_hr":916,"total_cal":75,"avg_hr":143,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110896557","date":"2026-01-08T20:51:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"nan","rest_time_sec":null,"work_dist":1230,"rest_dist":0,"avg_rate":25,"stroke_count":128,"pace":"02:01.9","avg_watts":193,"cal_hr":964,"total_cal":78,"avg_hr":146,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110896149","date":"2026-01-08T20:43:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1234,"rest_dist":0,"avg_rate":25,"stroke_count":127,"pace":"02:01.5","avg_watts":195,"cal_hr":970,"total_cal":78,"avg_hr":139,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110710851","date":"2026-01-05T18:46:00","desc":"v1500m/4:00r...4 row","stats":{"work_time_fmt":"22:53.4","work_time_sec":1373.4,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":6000,"rest_dist":169,"avg_rate":27,"stroke_count":647,"pace":"01:54.4","avg_watts":233,"cal_hr":1103,"total_cal":418,"avg_hr":176,"drag":146,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110604360","date":"2026-01-03T09:52:00","desc":"v1500m/4:00r...4 row","stats":{"work_time_fmt":"23:04.7","work_time_sec":1384.7,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":6000,"rest_dist":184,"avg_rate":26,"stroke_count":636,"pace":"01:55.3","avg_watts":228,"cal_hr":1083,"total_cal":415,"avg_hr":174,"drag":143,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110394222","date":"2025-12-29T18:31:00","desc":"v1250m/4:00r...4 row","stats":{"work_time_fmt":"19:20.8","work_time_sec":1160.8,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":5000,"rest_dist":160,"avg_rate":26,"stroke_count":524,"pace":"01:56.0","avg_watts":224,"cal_hr":1070,"total_cal":342,"avg_hr":0,"drag":137,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110319537","date":"2025-12-27T09:58:00","desc":"v800m/5:00r...6 row","stats":{"work_time_fmt":"18:13.1","work_time_sec":1093.1,"rest_time_fmt":"30:00.0","rest_time_sec":1800.0,"work_dist":4800,"rest_dist":196,"avg_rate":27,"stroke_count":513,"pace":"01:53.8","avg_watts":237,"cal_hr":1115,"total_cal":341,"avg_hr":0,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"109804644","date":"2025-12-15T18:44:00","desc":"v3:00/r...3 row","stats":{"work_time_fmt":"06:00.0","work_time_sec":360.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1482,"rest_dist":0,"avg_rate":28,"stroke_count":168,"pace":"02:01.4","avg_watts":195,"cal_hr":972,"total_cal":97,"avg_hr":0,"drag":133,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"109804359","date":"2025-12-15T18:33:00","desc":"v3:00/r...3 row","stats":{"work_time_fmt":"06:00.0","work_time_sec":360.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1465,"rest_dist":0,"avg_rate":25,"stroke_count":153,"pace":"02:02.8","avg_watts":189,"cal_hr":949,"total_cal":94,"avg_hr":0,"drag":133,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"109804091","date":"2025-12-15T18:24:00","desc":"v3:00/r...3 row","stats":{"work_time_fmt":"06:00.0","work_time_sec":360.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1456,"rest_dist":0,"avg_rate":23,"stroke_count":140,"pace":"02:03.6","avg_watts":185,"cal_hr":937,"total_cal":93,"avg_hr":0,"drag":133,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"109803869","date":"2025-12-15T18:15:00","desc":"v3:00/r...3 row","stats":{"work_time_fmt":"06:00.0","work_time_sec":360.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1471,"rest_dist":0,"avg_rate":21,"stroke_count":129,"pace":"02:02.3","avg_watts":191,"cal_hr":957,"total_cal":95,"avg_hr":0,"drag":133,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"109803625","date":"2025-12-15T18:04:00","desc":"5:40 row","stats":{"work_time_fmt":"05:40.2","work_time_sec":340.2,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1319,"rest_dist":0,"avg_rate":19,"stroke_count":109,"pace":"02:08.9","avg_watts":163,"cal_hr":861,"total_cal":81,"avg_hr":0,"drag":133,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"109803877","date":"2025-12-15T17:56:00","desc":"4:21 row","stats":{"work_time_fmt":"04:21.1","work_time_sec":261.1,"rest_time_fmt":"","rest_time_sec":null,"work_dist":884,"rest_dist":0,"avg_rate":21,"stroke_count":90,"pace":"02:27.6","avg_watts":109,"cal_hr":673,"total_cal":48,"avg_hr":0,"drag":122,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"109713405","date":"2025-12-13T12:35:00","desc":"40:00 row","stats":{"work_time_fmt":"40:00.0","work_time_sec":2400.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":9483,"rest_dist":0,"avg_rate":23,"stroke_count":921,"pace":"02:06.5","avg_watts":173,"cal_hr":894,"total_cal":592,"avg_hr":0,"drag":129,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":"DF 129"}},{"id":"109526930","date":"2025-12-09T21:22:00","desc":"40:00 row","stats":{"work_time_fmt":"40:00.0","work_time_sec":2400.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":9292,"rest_dist":0,"avg_rate":23,"stroke_count":929,"pace":"02:09.1","avg_watts":162,"cal_hr":859,"total_cal":569,"avg_hr":0,"drag":135,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"109462925","date":"2025-12-08T18:10:00","desc":"2000m row","stats":{"work_time_fmt":"07:24.2","work_time_sec":444.2,"rest_time_fmt":"","rest_time_sec":null,"work_dist":2000,"rest_dist":0,"avg_rate":27,"stroke_count":202,"pace":"01:51.0","avg_watts":256,"cal_hr":1179,"total_cal":143,"avg_hr":0,"drag":143,"age":41,"weight":"Hwt","type":"RowErg","ranked":"Yes","comments":""}},{"id":"105488743","date":"2025-08-26T21:12:00","desc":"32:00 row","stats":{"work_time_fmt":"32:00.0","work_time_sec":1920.0,"rest_time_fmt":"","rest_time_sec":0.0,"work_dist":7726,"rest_dist":0,"avg_rate":25,"stroke_count":807,"pace":"02:04.2","avg_watts":182,"cal_hr":927,"total_cal":491,"avg_hr":0,"drag":117,"age":40,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}}];
+        const PRELOAD_HISTORY = [{"id":"110986164","date":"2026-01-10T09:47:00","desc":"v2000m/4:00r...3 row","stats":{"work_time_fmt":"23:04.0","work_time_sec":1384.0,"rest_time_fmt":"12:00.0","rest_time_sec":720.0,"work_dist":6000,"rest_dist":143,"avg_rate":27,"stroke_count":645,"pace":"01:55.3","avg_watts":228,"cal_hr":1085,"total_cal":416,"avg_hr":174,"drag":135,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":"first 2k fine..."}},{"id":"110898284","date":"2026-01-08T21:25:00","desc":"v1:00/1:00r...8 row","stats":{"work_time_fmt":"08:00.0","work_time_sec":480.0,"rest_time_fmt":"08:00.0","rest_time_sec":480.0,"work_dist":2077,"rest_dist":142,"avg_rate":21,"stroke_count":173,"pace":"01:55.5","avg_watts":227,"cal_hr":1080,"total_cal":141,"avg_hr":152,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110897422","date":"2026-01-08T21:06:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1162,"rest_dist":0,"avg_rate":25,"stroke_count":127,"pace":"02:09.0","avg_watts":163,"cal_hr":859,"total_cal":71,"avg_hr":142,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":"Focussing on s/r only..."}},{"id":"110896911","date":"2026-01-08T20:59:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"nan","rest_time_sec":null,"work_dist":1200,"rest_dist":0,"avg_rate":25,"stroke_count":126,"pace":"02:05.0","avg_watts":179,"cal_hr":916,"total_cal":75,"avg_hr":143,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110896557","date":"2026-01-08T20:51:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"nan","rest_time_sec":null,"work_dist":1230,"rest_dist":0,"avg_rate":25,"stroke_count":128,"pace":"02:01.9","avg_watts":193,"cal_hr":964,"total_cal":78,"avg_hr":146,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110896149","date":"2026-01-08T20:43:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1234,"rest_dist":0,"avg_rate":25,"stroke_count":127,"pace":"02:01.5","avg_watts":195,"cal_hr":970,"total_cal":78,"avg_hr":139,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110710851","date":"2026-01-05T18:46:00","desc":"v1500m/4:00r...4 row","stats":{"work_time_fmt":"22:53.4","work_time_sec":1373.4,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":6000,"rest_dist":169,"avg_rate":27,"stroke_count":647,"pace":"01:54.4","avg_watts":233,"cal_hr":1103,"total_cal":418,"avg_hr":176,"drag":146,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110604360","date":"2026-01-03T09:52:00","desc":"v1500m/4:00r...4 row","stats":{"work_time_fmt":"23:04.7","work_time_sec":1384.7,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":6000,"rest_dist":184,"avg_rate":26,"stroke_count":636,"pace":"01:55.3","avg_watts":228,"cal_hr":1083,"total_cal":415,"avg_hr":174,"drag":143,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110394222","date":"2025-12-29T18:31:00","desc":"v1250m/4:00r...4 row","stats":{"work_time_fmt":"19:20.8","work_time_sec":1160.8,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":5000,"rest_dist":160,"avg_rate":26,"stroke_count":524,"pace":"01:56.0","avg_watts":224,"cal_hr":1070,"total_cal":342,"avg_hr":0,"drag":137,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110319537","date":"2025-12-27T09:58:00","desc":"v800m/5:00r...6 row","stats":{"work_time_fmt":"18:13.1","work_time_sec":1093.1,"rest_time_fmt":"30:00.0","rest_time_sec":1800.0,"work_dist":4800,"rest_dist":196,"avg_rate":27,"stroke_count":513,"pace":"01:53.8","avg_watts":237,"cal_hr":1115,"total_cal":341,"avg_hr":0,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"105488743","date":"2025-08-26T21:12:00","desc":"32:00 row","stats":{"work_time_fmt":"32:00.0","work_time_sec":1920.0,"rest_time_fmt":"","rest_time_sec":0.0,"work_dist":7726,"rest_dist":0,"avg_rate":25,"stroke_count":807,"pace":"02:04.2","avg_watts":182,"cal_hr":927,"total_cal":491,"avg_hr":0,"drag":117,"age":40,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}}];
 
         window.onload = () => {
             loadData();
-            // FORCE REFRESH HISTORY TO V11.1 DATA
-            App.history = PRELOAD_HISTORY;
-            localStorage.setItem('analyst_history', JSON.stringify(App.history));
+            if (App.history.length < 5) {
+                App.history = PRELOAD_HISTORY;
+                localStorage.setItem('analyst_history', JSON.stringify(App.history));
+            }
             renderHistory();
             renderTimeline();
         };
@@ -498,7 +498,17 @@
         function loadData() {
             const h = localStorage.getItem('analyst_history'); if(h) App.history = JSON.parse(h);
             const p = localStorage.getItem('analyst_profile');
-            if(p) { App.profile = JSON.parse(p); document.getElementById('hrZ5').value = App.profile.hrZones.z5; document.getElementById('hrZ1').value = App.profile.hrZones.z1; }
+            // FIX: Ensure 'model' exists, fallback to default if missing
+            if(p) {
+                const profile = JSON.parse(p);
+                App.profile = { 
+                    ...App.profile, 
+                    ...profile, 
+                    model: profile.model || "gemini-1.5-flash" 
+                };
+                document.getElementById('hrZ5').value = App.profile.hrZones?.z5 ?? 180;
+                document.getElementById('hrZ1').value = App.profile.hrZones?.z1 ?? 108;
+            }
             if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
         }
         
@@ -533,16 +543,16 @@
             renderTimeline();
         }
         
-        // --- IMPROVED AI CLEANER ---
+        // --- SMART JSON CLEANER ---
         function cleanJson(text) {
-            // Locate JSON array by finding first [ and last ]
+            // Find the array part only
             const start = text.indexOf('[');
             const end = text.lastIndexOf(']') + 1;
             if (start === -1 || end === 0) return text; 
             
             let json = text.substring(start, end);
-            // Regex to quote unquoted keys (e.g., type: "WORK" -> "type": "WORK")
-            json = json.replace(/(\w+)(?=\s*:)/g, '"$1"');
+            // Sanitize keys (ensure "key": value)
+            json = json.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
             return json;
         }
 
@@ -552,11 +562,10 @@
             const input = document.getElementById('aiInput').value;
             const btn = document.getElementById('btnGen');
             
-            // FIX: Force default model if missing
             const model = App.profile.model || "gemini-1.5-flash";
             
             btn.innerText = "...";
-            const PROMPT = `Parse workout: "${input}". Return JSON ARRAY: [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "targets": { "pace": 0, "watts": 0, "rate": 0 } }]. RULES: Pace "1:45"->105s. STRICT JSON ONLY. NO COMMENTS.`;
+            const PROMPT = `Parse workout: "${input}". Return JSON ARRAY: [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "targets": { "pace": 0, "watts": 0, "rate": 0 } }]. RULES: Pace "1:45"->105s. STRICT JSON.`;
             
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
@@ -564,7 +573,6 @@
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
                 });
                 const d = await r.json();
-                
                 if(d.error) throw new Error(d.error.message);
                 
                 let txt = d.candidates[0].content.parts[0].text;
@@ -594,21 +602,24 @@
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
                 });
                 const d = await r.json();
+                if(d.error) throw new Error(d.error.message);
+                
                 const reply = d.candidates[0].content.parts[0].text;
                 const parts = reply.split("<<<PLAN>>>");
                 chat.lastElementChild.innerText = parts[0]; 
                 
                 if(parts.length > 1) {
                     try {
-                        const jsonStr = cleanJson(parts[1]); // Sanitize
+                        const jsonStr = cleanJson(parts[1]); // Smart Clean
                         App.pendingPlan = JSON.parse(jsonStr);
                         
-                        // Mission Brief Update Logic
-                        let summary = App.pendingPlan.map(s => {
-                           if(s.type === 'REST') return `${formatTime(s.duration)}r`;
-                           return s.dist ? `${s.dist}m` : `${formatTime(s.duration)}`;
-                        }).join(' + ');
-                        document.getElementById('stratSummary').innerText = summary;
+                        // INTELLIGENT NORMALIZATION (The Fix for "Edit" bug)
+                        App.pendingPlan.forEach(s => {
+                            if(s.targets?.pace && typeof s.targets.pace === 'string' && s.targets.pace.includes(':')) {
+                                const p = s.targets.pace.split(':');
+                                s.targets.pace = parseInt(p[0])*60 + parseInt(p[1]);
+                            }
+                        });
 
                         chat.innerHTML += `<div style='text-align:center;margin-top:10px;'><button class='btn btn-green' onclick='applyPendingPlan()'>APPLY PLAN TO BUILDER</button></div>`;
                     } catch(err) { console.log("JSON Parse Failed"); }
@@ -633,11 +644,6 @@
                return s.dist ? `${s.dist}m` : `${formatTime(s.duration)}`;
             }).join(' + ');
             document.getElementById('stratSummary').innerText = summary;
-            
-            // History Matching
-            const json = JSON.stringify(App.mission.intervals);
-            const match = App.history.find(h => (h.dist > 0 && json.includes(h.dist)) || h.desc.includes("2000"));
-            // (Note: Context box was removed from UI per user request, but logic kept for internal AI use)
             
             askCoach(true);
         }
