@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V10.0 (APEX)</title>
+    <title>ANALYST V10.1 (TRANSPARENT)</title>
     <style>
         :root { --bg: #050505; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #121212; --border: #2a2a2a; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -71,16 +71,16 @@
         .h-title { font-size: 14px; font-weight: bold; color: #fff; }
         .h-stats { font-family: monospace; color: var(--accent); font-size: 13px; }
 
-        /* DASHBOARD */
-        .metric-huge { font-size: 18vw; font-weight: 900; line-height: 0.9; letter-spacing: -4px; color:white; text-align: center; font-variant-numeric: tabular-nums; }
-        .metric-sub { font-size: 5vh; color: #888; font-weight: 700; margin-top: 10px; text-align: center; font-variant-numeric: tabular-nums; }
-        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; border: 1px solid #222; margin: 5px; border-radius: 12px; padding: 15px; }
-
-        /* SETTINGS */
+        /* SETTINGS MENU */
         .settings-menu-btn { width: 100%; text-align: left; padding: 18px 10px; border-bottom: 1px solid #222; background: transparent; color: white; font-size:14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
         .settings-menu-btn:hover { background: #1a1a1a; }
         .settings-section { display: none; height: 100%; }
         .settings-section.active { display: block; animation: fadeIn 0.2s; }
+
+        /* DASHBOARD */
+        .metric-huge { font-size: 18vw; font-weight: 900; line-height: 0.9; letter-spacing: -4px; color:white; text-align: center; font-variant-numeric: tabular-nums; }
+        .metric-sub { font-size: 5vh; color: #888; font-weight: 700; margin-top: 10px; text-align: center; font-variant-numeric: tabular-nums; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; border: 1px solid #222; margin: 5px; border-radius: 12px; padding: 15px; }
 
         /* NAV BAR */
         .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; flex-shrink: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
@@ -101,6 +101,8 @@
         /* CHAT */
         .chat-msg { background: #1a1a1a; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #333; font-size: 13px; color: #ddd; line-height: 1.4; white-space: pre-wrap; }
         .chat-msg.system { border-color: var(--accent); background: rgba(0, 255, 153, 0.05); }
+        .plan-preview { background:#111; padding:10px; border-radius:6px; margin:10px 0; border:1px solid #444; }
+        .plan-row { display:flex; justify-content:space-between; font-size:12px; color:#aaa; padding:4px 0; border-bottom:1px solid #222; }
 
         /* RESPONSIVE */
         @media (max-width: 600px) { .input-grid { grid-template-columns: 1fr; } .metric-huge { font-size: 20vw; } .btn { font-size: 14px; padding: 16px; } }
@@ -116,7 +118,7 @@
             
             <div class="card" id="aiCard">
                 <div class="section-header">AI COMMANDER</div>
-                <textarea id="aiInput" rows="2" placeholder="e.g. 4x500m @ 1:45, 2min rest..."></textarea>
+                <textarea id="aiInput" rows="2" placeholder="e.g. 4x500m @ 1:45, 2min rest..." aria-label="AI Workout Description"></textarea>
                 <button class="btn btn-outline" id="btnGen" onclick="generateMission()" aria-label="Generate Plan">GENERATE PLAN</button>
             </div>
 
@@ -167,6 +169,7 @@
         <div class="screen-header"><button class="header-btn" onclick="nav('screenBuilder')" aria-label="Back">← BACK</button><div class="header-title">STRATEGY</div><div style="width:40px;"></div></div>
         <div class="scroll-area">
             <div class="card"><div class="section-header">MISSION BRIEF</div><div id="stratSummary" style="font-size:16px; color:white;"></div></div>
+            <div class="card"><div class="section-header">CONTEXT</div><div id="matchContent" style="color:#ccc; font-size:13px;"></div></div>
             <div class="card">
                 <div class="section-header">COACH</div>
                 <div id="coachChat" style="max-height:300px; overflow-y:auto; margin-bottom:10px;"></div>
@@ -261,30 +264,18 @@
             pendingPlan: null
         };
 
-        const PRELOAD_HISTORY = [
-            {"id":"110986164","date":"2026-01-10T09:47:00","desc":"v2000m/4:00r...3 row","stats":{"work_time_fmt":"23:04.0","work_time_sec":1384.0,"rest_time_fmt":"12:00.0","rest_time_sec":720.0,"work_dist":6000,"rest_dist":143,"avg_rate":27,"stroke_count":645,"pace":"01:55.3","avg_watts":228,"cal_hr":1085,"total_cal":416,"avg_hr":174,"drag":135,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":"first 2k fine..."}},
-            {"id":"110898284","date":"2026-01-08T21:25:00","desc":"v1:00/1:00r...8 row","stats":{"work_time_fmt":"08:00.0","work_time_sec":480.0,"rest_time_fmt":"08:00.0","rest_time_sec":480.0,"work_dist":2077,"rest_dist":142,"avg_rate":21,"stroke_count":173,"pace":"01:55.5","avg_watts":227,"cal_hr":1080,"total_cal":141,"avg_hr":152,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"110897422","date":"2026-01-08T21:06:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":0.0,"work_dist":1162,"rest_dist":0,"avg_rate":25,"stroke_count":127,"pace":"02:09.0","avg_watts":163,"cal_hr":859,"total_cal":71,"avg_hr":142,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"110896911","date":"2026-01-08T20:59:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":0.0,"work_dist":1200,"rest_dist":0,"avg_rate":25,"stroke_count":126,"pace":"02:05.0","avg_watts":179,"cal_hr":916,"total_cal":75,"avg_hr":143,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"110896557","date":"2026-01-08T20:51:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":0.0,"work_dist":1230,"rest_dist":0,"avg_rate":25,"stroke_count":128,"pace":"02:01.9","avg_watts":193,"cal_hr":964,"total_cal":78,"avg_hr":146,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"110896149","date":"2026-01-08T20:43:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":0.0,"work_dist":1234,"rest_dist":0,"avg_rate":25,"stroke_count":127,"pace":"02:01.5","avg_watts":195,"cal_hr":970,"total_cal":78,"avg_hr":139,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"110710851","date":"2026-01-05T18:46:00","desc":"v1500m/4:00r...4 row","stats":{"work_time_fmt":"22:53.4","work_time_sec":1373.4,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":6000,"rest_dist":113,"avg_rate":27,"stroke_count":647,"pace":"01:54.4","avg_watts":233,"cal_hr":1103,"total_cal":418,"avg_hr":176,"drag":146,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"110604360","date":"2026-01-03T09:52:00","desc":"v1500m/4:00r...4 row","stats":{"work_time_fmt":"23:04.7","work_time_sec":1384.7,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":6000,"rest_dist":184,"avg_rate":26,"stroke_count":636,"pace":"01:55.3","avg_watts":228,"cal_hr":1083,"total_cal":415,"avg_hr":174,"drag":143,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"110394222","date":"2025-12-29T18:31:00","desc":"v1250m/4:00r...4 row","stats":{"work_time_fmt":"19:20.8","work_time_sec":1160.8,"rest_time_fmt":"16:00.0","rest_time_sec":960.0,"work_dist":5000,"rest_dist":160,"avg_rate":26,"stroke_count":524,"pace":"01:56.0","avg_watts":224,"cal_hr":1070,"total_cal":342,"avg_hr":0,"drag":137,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"110319537","date":"2025-12-27T09:58:00","desc":"v800m/5:00r...6 row","stats":{"work_time_fmt":"18:13.1","work_time_sec":1093.1,"rest_time_fmt":"30:00.0","rest_time_sec":1800.0,"work_dist":4800,"rest_dist":196,"avg_rate":27,"stroke_count":513,"pace":"01:53.8","avg_watts":237,"cal_hr":1115,"total_cal":341,"avg_hr":0,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},
-            {"id":"105700000","date":"2025-08-26T20:54:00","desc":"5000m row","stats":{"work_time_fmt":"19:45.0","work_time_sec":1185.0,"rest_time_fmt":"","rest_time_sec":0.0,"work_dist":5000,"rest_dist":0,"avg_rate":26,"stroke_count":526,"pace":"01:58.5","avg_watts":210,"cal_hr":1023,"total_cal":334,"avg_hr":136,"drag":130,"age":40,"weight":"Hwt","type":"RowErg","ranked":"Yes","comments":""}}
-        ];
+        const PRELOAD_HISTORY = [{"id":"110986164","date":"2026-01-10T09:47:00","desc":"v2000m/4:00r...3 row","stats":{"work_time_fmt":"23:04.0","work_time_sec":1384.0,"rest_time_fmt":"12:00.0","rest_time_sec":720.0,"work_dist":6000,"rest_dist":143,"avg_rate":27,"stroke_count":645,"pace":"01:55.3","avg_watts":228,"cal_hr":1085,"total_cal":416,"avg_hr":174,"drag":135,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":"first 2k fine..."}},{"id":"110898284","date":"2026-01-08T21:25:00","desc":"v1:00/1:00r...8 row","stats":{"work_time_fmt":"08:00.0","work_time_sec":480.0,"rest_time_fmt":"08:00.0","rest_time_sec":480.0,"work_dist":2077,"rest_dist":142,"avg_rate":21,"stroke_count":173,"pace":"01:55.5","avg_watts":227,"cal_hr":1080,"total_cal":141,"avg_hr":152,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110897422","date":"2026-01-08T21:06:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"","rest_time_sec":null,"work_dist":1162,"rest_dist":0,"avg_rate":25,"stroke_count":127,"pace":"02:09.0","avg_watts":163,"cal_hr":859,"total_cal":71,"avg_hr":142,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":"Focussing on s/r only..."}},{"id":"110896911","date":"2026-01-08T20:59:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"nan","rest_time_sec":null,"work_dist":1200,"rest_dist":0,"avg_rate":25,"stroke_count":126,"pace":"02:05.0","avg_watts":179,"cal_hr":916,"total_cal":75,"avg_hr":143,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}},{"id":"110896557","date":"2026-01-08T20:51:00","desc":"5:00 row","stats":{"work_time_fmt":"05:00.0","work_time_sec":300.0,"rest_time_fmt":"nan","rest_time_sec":null,"work_dist":1230,"rest_dist":0,"avg_rate":25,"stroke_count":128,"pace":"02:01.9","avg_watts":193,"cal_hr":964,"total_cal":78,"avg_hr":146,"drag":124,"age":41,"weight":"Hwt","type":"RowErg","ranked":"No","comments":""}}];
 
         window.onload = () => {
             loadData();
-            // Force inject correct history
-            App.history = PRELOAD_HISTORY;
-            localStorage.setItem('analyst_history', JSON.stringify(App.history));
+            if (App.history.length < 5) {
+                App.history = PRELOAD_HISTORY;
+                localStorage.setItem('analyst_history', JSON.stringify(App.history));
+            }
             renderHistory();
             renderTimeline();
         };
 
-        // --- NAVIGATION ---
         function nav(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -303,7 +294,6 @@
         }
         function hideToast() { document.getElementById('toast').classList.remove('active'); }
 
-        // --- SETTINGS LOGIC ---
         function openSetting(id) {
             document.getElementById('settingsMenu').style.display = 'none';
             document.getElementById(id).classList.add('active');
@@ -313,7 +303,6 @@
             document.getElementById('settingsMenu').style.display = 'block';
         }
 
-        // --- BUILDER LOGIC ---
         let BUILD_MODE = 'DIST';
         function setBuildMode(mode) {
             BUILD_MODE = mode;
@@ -332,13 +321,6 @@
             const isOn = el.classList.contains('open');
             document.getElementById(id==='advPacer'?'lblPacer':'lblTgt').innerText = isOn ? "ON" : "OFF";
             document.getElementById(id==='advPacer'?'lblPacer':'lblTgt').style.color = isOn ? "var(--accent)" : "#666";
-        }
-
-        function updateIntInput() {
-            const type = document.getElementById('mIntType').value;
-            document.getElementById('intValBox').innerHTML = type==='DIST' ? 
-                `<label>WORK DIST (M)</label><input type="number" id="mIntVal" value="500">` : 
-                `<label>WORK TIME (MIN)</label><input type="number" id="mIntVal" value="1">`;
         }
 
         function addToPlan() {
@@ -564,21 +546,7 @@
             const q = auto ? "Tactical advice?" : document.getElementById('coachIn').value;
             if(!auto) chat.innerHTML += `<div class='chat-msg'>${q}</div>`;
             chat.innerHTML += `<div class='chat-msg system'>Thinking...</div>`;
-            
-            // CONTEXT INJECTION (Fixes the "Match" issue)
-            const lastSession = App.history[0];
-            const prompt = `
-            Act as an elite rowing coach.
-            Current Workout Plan: ${JSON.stringify(App.mission.intervals)}.
-            User's Last Relevant Session: ${JSON.stringify(lastSession)}.
-            User Question: ${q}.
-            
-            RULES:
-            1. If recommending a plan change, append the JSON at the end like this: <<<PLAN>>>[{"type":"WORK"...}]
-            2. Do not show the JSON code in the text explanation.
-            3. Be specific (e.g. "Since you held 1:55 last time, aim for 1:54").
-            `;
-
+            const prompt = `Coach me for: ${JSON.stringify(App.mission.intervals)}. Last session: ${JSON.stringify(App.history[0])}. Q: ${q}. Answer with <<<PLAN>>>JSON if changes needed.`;
             try {
                 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
@@ -586,15 +554,12 @@
                 });
                 const d = await r.json();
                 const reply = d.candidates[0].content.parts[0].text;
+                const parts = reply.split("<<<PLAN>>>");
+                chat.lastElementChild.innerText = parts[0];
                 
-                // HIDE JSON FROM CHAT
-                const cleanReply = reply.split("<<<PLAN>>>")[0];
-                chat.lastElementChild.innerText = cleanReply;
-                
-                // SHOW BUTTON IF PLAN DETECTED
-                if(reply.includes("<<<PLAN>>>")) {
-                    App.pendingPlan = JSON.parse(reply.split("<<<PLAN>>>")[1]);
-                    chat.innerHTML += `<button class='btn btn-green' onclick='applyPendingPlan()'>APPLY PROPOSED PLAN</button>`;
+                if(parts.length > 1) {
+                    App.pendingPlan = JSON.parse(parts[1]);
+                    chat.innerHTML += `<div style='text-align:center;margin-top:10px;'><button class='btn btn-green' onclick='applyPendingPlan()'>APPLY PLAN TO BUILDER</button></div>`;
                 }
             } catch(e) { chat.innerText += "Error"; }
         }
@@ -603,6 +568,7 @@
             if(App.pendingPlan) {
                 App.mission.intervals = App.pendingPlan;
                 renderTimeline();
+                nav('screenBuilder');
                 showToast("Plan Updated", 'success');
             }
         }
@@ -610,7 +576,10 @@
         function goToStrategy() {
             if(App.mission.intervals.length === 0) return showToast("Empty Plan", 'error');
             nav('screenStrategy');
+            const json = JSON.stringify(App.mission.intervals);
+            const match = App.history.find(h => (h.dist > 0 && json.includes(h.dist)) || h.desc.includes("2000"));
             document.getElementById('stratSummary').innerText = `${App.mission.intervals.length} Steps`;
+            document.getElementById('matchContent').innerText = match ? `Match: ${match.date.split('T')[0]} - ${match.stats.pace}` : "No match.";
             askCoach(true);
         }
         
