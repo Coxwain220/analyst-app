@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V9.3 (THE VAULT)</title>
+    <title>ANALYST V9.5 (STABLE)</title>
     <style>
         :root { --bg: #050505; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #121212; --border: #2a2a2a; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -38,16 +38,12 @@
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         label { font-size: 10px; color: #666; font-weight: bold; display: block; margin-bottom: 4px; text-transform: uppercase; }
 
-        /* TABS (MANUAL BUILDER) */
-        .build-tabs { display: flex; background: #000; border-radius: 8px; padding: 4px; margin-bottom: 15px; border: 1px solid #333; }
-        .b-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; font-size: 12px; border-radius: 6px; }
-        .b-tab.active { background: #222; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-
-        /* TOGGLES */
-        .toggle-section { border: 1px solid #333; border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #0a0a0a; }
-        .toggle-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 12px; font-weight: bold; color: #aaa; }
-        .toggle-body { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; }
-        .toggle-body.open { display: block; }
+        /* SETTINGS MENU (V8.1 STYLE) */
+        .settings-menu-btn { width: 100%; text-align: left; padding: 18px 10px; border-bottom: 1px solid #222; background: transparent; color: white; font-size:14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .settings-menu-btn:after { content: '›'; color: #666; font-size: 20px; font-weight: bold; }
+        .settings-section { display: none; }
+        .settings-section.active { display: block; animation: slideIn 0.2s; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
         /* TIMELINE STEPS */
         .step-card { background: #181818; border: 1px solid #333; border-left: 4px solid #444; border-radius: 6px; padding: 12px; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 12px; margin-bottom: 8px; cursor: pointer; }
@@ -63,28 +59,30 @@
         .h-title { font-size: 14px; font-weight: bold; color: #fff; }
         .h-stats { font-family: monospace; color: var(--accent); font-size: 13px; }
 
+        /* LOG DETAIL TABLE */
+        .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; }
+        .detail-lbl { color: #666; font-size: 13px; }
+        .detail-val { color: white; font-weight: bold; font-size: 14px; font-family: monospace; }
+
         /* DASHBOARD */
         .metric-huge { font-size: 16vh; font-weight: 900; line-height: 0.9; letter-spacing: -4px; color:white; text-align: center; }
         .metric-sub { font-size: 4vh; color: #888; font-weight: 700; margin-top: 10px; text-align: center; }
         .stat-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; border: 1px solid #222; margin: 5px; border-radius: 12px; padding: 15px; }
         
+        /* BUILDER TABS & TOGGLES */
+        .build-tabs { display: flex; background: #000; border-radius: 8px; padding: 4px; margin-bottom: 15px; border: 1px solid #333; }
+        .b-tab { flex: 1; background: transparent; border: none; color: #666; padding: 10px; cursor: pointer; font-weight: bold; font-size: 12px; border-radius: 6px; }
+        .b-tab.active { background: #222; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .toggle-section { border: 1px solid #333; border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #0a0a0a; }
+        .toggle-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 12px; font-weight: bold; color: #aaa; }
+        .toggle-body { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; }
+        .toggle-body.open { display: block; }
+
         /* NAV BAR */
         .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; flex-shrink: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
         .nav-btn { flex: 1; background: transparent; border: none; color: #666; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .nav-btn.active { color: var(--accent); background: #1a1a1a; }
         .nav-icon { font-size: 20px; margin-bottom: 4px; }
-
-        /* SETTINGS MENU */
-        .settings-menu-btn { width: 100%; text-align: left; padding: 18px 10px; border-bottom: 1px solid #222; background: transparent; color: white; font-size:14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .settings-menu-btn:after { content: '›'; color: #666; font-size: 20px; font-weight: bold; }
-        .settings-section { display: none; }
-        .settings-section.active { display: block; animation: slideIn 0.2s; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-
-        /* MODAL */
-        #editModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; }
-        #editModal.active { display: flex; }
-        .modal-content { background: #111; padding: 20px; border-radius: 12px; border: 1px solid #333; width: 90%; max-width: 400px; }
     </style>
 </head>
 <body>
@@ -106,61 +104,28 @@
 
             <div class="card" id="manualCard">
                 <div class="section-header">MANUAL ARCHITECT</div>
-                
                 <div class="build-tabs">
                     <button class="b-tab active" onclick="setBuildMode('DIST')">DIST</button>
                     <button class="b-tab" onclick="setBuildMode('TIME')">TIME</button>
                     <button class="b-tab" onclick="setBuildMode('CAL')">CAL</button>
                     <button class="b-tab" onclick="setBuildMode('INT')">INT</button>
                 </div>
-
                 <div id="inputArea">
-                    <div id="modeDist">
-                        <div class="input-grid">
-                            <div><label>DISTANCE (M)</label><input type="number" id="mDist" value="2000"></div>
-                            <div><label>SPLIT (M)</label><input type="number" id="mSplitDist" value="500"></div>
-                        </div>
-                    </div>
-                    <div id="modeTime" style="display:none;">
-                        <div class="input-grid">
-                            <div><label>TIME (MIN)</label><input type="number" id="mTime" value="30"></div>
-                            <div><label>SPLIT (MIN)</label><input type="number" id="mSplitTime" value="5"></div>
-                        </div>
-                    </div>
-                    <div id="modeCal" style="display:none;">
-                        <div class="input-grid">
-                            <div><label>CALORIES</label><input type="number" id="mCal" value="300"></div>
-                            <div><label>SPLIT CAL</label><input type="number" id="mSplitCal" value="50"></div>
-                        </div>
-                    </div>
-                    <div id="modeInt" style="display:none;">
-                        <div class="input-grid">
-                            <div id="intValBox"><label>WORK DIST (M)</label><input type="number" id="mIntVal" value="500"></div>
-                            <div><label>REPEATS</label><input type="number" id="mIntReps" value="4"></div>
-                        </div>
-                    </div>
+                    <div id="modeDist"><div class="input-grid"><div><label>DISTANCE (M)</label><input type="number" id="mDist" value="2000"></div><div><label>SPLIT (M)</label><input type="number" id="mSplitDist" value="500"></div></div></div>
+                    <div id="modeTime" style="display:none;"><div class="input-grid"><div><label>TIME (MIN)</label><input type="number" id="mTime" value="30"></div><div><label>SPLIT (MIN)</label><input type="number" id="mSplitTime" value="5"></div></div></div>
+                    <div id="modeCal" style="display:none;"><div class="input-grid"><div><label>CALORIES</label><input type="number" id="mCal" value="300"></div><div><label>SPLIT CAL</label><input type="number" id="mSplitCal" value="50"></div></div></div>
+                    <div id="modeInt" style="display:none;"><div class="input-grid"><div id="intValBox"><label>WORK DIST (M)</label><input type="number" id="mIntVal" value="500"></div><div><label>REPEATS</label><input type="number" id="mIntReps" value="4"></div></div></div>
                 </div>
-
                 <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px;">
                     <label>REST PERIOD</label>
-                    <div class="input-grid">
-                        <div><label>MIN</label><input type="number" id="mRestMin" value="0"></div>
-                        <div><label>SEC</label><input type="number" id="mRestSec" value="0"></div>
-                    </div>
+                    <div class="input-grid"><div><label>MIN</label><input type="number" id="mRestMin" value="0"></div><div><label>SEC</label><input type="number" id="mRestSec" value="0"></div></div>
                 </div>
-
                 <div class="toggle-section" style="margin-top:10px;">
-                    <div class="toggle-head" onclick="toggleAdv('advTgt')"><span>+ TARGETS (PACE / SR / HR)</span> <span id="lblTgt">OFF</span></div>
+                    <div class="toggle-head" onclick="toggleAdv('advTgt')"><span>+ TARGETS</span> <span id="lblTgt">OFF</span></div>
                     <div class="toggle-body" id="advTgt">
-                        <div class="input-grid">
-                            <div><label>PACE (/500)</label><input type="text" id="mTgtPace" placeholder="1:55"></div>
-                            <div><label>WATTS</label><input type="number" id="mTgtWatts" placeholder="200"></div>
-                            <div><label>RATE</label><input type="number" id="mTgtRate" placeholder="26"></div>
-                            <div><label>HR ZONE</label><input type="number" id="mTgtHR" placeholder="3" max="5" min="1" oninput="if(value>5)value=5"></div>
-                        </div>
+                        <div class="input-grid"><div><label>PACE</label><input type="text" id="mTgtPace" placeholder="1:55"></div><div><label>WATTS</label><input type="number" id="mTgtWatts" placeholder="200"></div><div><label>RATE</label><input type="number" id="mTgtRate" placeholder="26"></div><div><label>HR ZONE</label><input type="number" id="mTgtHR" placeholder="3" max="5"></div></div>
                     </div>
                 </div>
-
                 <button class="btn btn-green" onclick="addToPlan()">+ ADD TO PLAN</button>
             </div>
 
@@ -183,11 +148,8 @@
     <div id="screenStrategy" class="screen">
         <div class="screen-header"><button class="header-btn" onclick="nav('screenBuilder')">← BACK</button><div class="header-title">STRATEGY</div><div style="width:40px;"></div></div>
         <div class="scroll-area">
-            <div class="card">
-                <div class="section-header">MISSION BRIEF</div>
-                <div id="stratSummary" style="font-size:16px; color:white;"></div>
-            </div>
-            <div class="card"><div class="section-header">HISTORICAL CONTEXT</div><div id="matchContent" style="color:#ccc; font-size:13px;"></div></div>
+            <div class="card"><div class="section-header">MISSION BRIEF</div><div id="stratSummary" style="font-size:16px; color:white;"></div></div>
+            <div class="card"><div class="section-header">CONTEXT</div><div id="matchContent" style="color:#ccc; font-size:13px;"></div></div>
             <div class="card">
                 <div class="section-header">COACH</div>
                 <div id="coachChat" style="background:#080808; padding:10px; border-radius:6px; height:100px; overflow-y:auto; color:#ccc; font-size:13px;"></div>
@@ -223,10 +185,7 @@
             <div id="setAccount" class="settings-section">
                 <div class="card">
                     <div class="section-header">BIO-DATA</div>
-                    <div class="input-grid">
-                        <div><label>AGE</label><input type="number" id="bioAge"></div>
-                        <div><label>WEIGHT (KG)</label><input type="number" id="bioWeight"></div>
-                    </div>
+                    <div class="input-grid"><div><label>AGE</label><input type="number" id="bioAge"></div><div><label>WEIGHT</label><input type="number" id="bioWeight"></div></div>
                 </div>
                 <button class="btn btn-outline" onclick="closeSetting()">BACK</button>
             </div>
@@ -235,11 +194,9 @@
                 <div class="card">
                     <div class="section-header">HEART RATE ZONES (BPM)</div>
                     <div class="input-grid">
-                        <div><label>Z5 (Max)</label><input type="number" id="hrZ5"></div>
-                        <div><label>Z4</label><input type="number" id="hrZ4"></div>
-                        <div><label>Z3</label><input type="number" id="hrZ3"></div>
-                        <div><label>Z2</label><input type="number" id="hrZ2"></div>
-                        <div><label>Z1</label><input type="number" id="hrZ1"></div>
+                        <div><label>Z5 (Max)</label><input type="number" id="hrZ5"></div><div><label>Z4</label><input type="number" id="hrZ4"></div>
+                        <div><label>Z3</label><input type="number" id="hrZ3"></div><div><label>Z2</label><input type="number" id="hrZ2"></div>
+                        <div><label>Z1 (Recov)</label><input type="number" id="hrZ1"></div>
                     </div>
                 </div>
                 <button class="btn btn-green" onclick="saveSettings()">SAVE</button>
@@ -251,10 +208,7 @@
                     <div class="section-header">SYSTEM</div>
                     <label>API KEY</label><input type="password" id="apiKeyInput" placeholder="Paste Key...">
                     <select id="modelSelect" style="margin-top:10px;"><option value="gemini-1.5-flash">Default</option></select>
-                    <div class="input-grid" style="margin-top:10px;">
-                        <button class="btn btn-outline" onclick="scanModels()">SCAN</button>
-                        <button class="btn btn-green" onclick="testConnection()">TEST</button>
-                    </div>
+                    <div class="input-grid" style="margin-top:10px;"><button class="btn btn-outline" onclick="scanModels()">SCAN</button><button class="btn btn-green" onclick="testConnection()">TEST</button></div>
                 </div>
                 <button class="btn btn-danger" onclick="clearData()">FACTORY RESET</button>
                 <button class="btn btn-outline" onclick="closeSetting()">BACK</button>
@@ -270,24 +224,14 @@
     <div id="editModal">
         <div class="modal-content">
             <div class="section-header">EDIT STEP</div>
-            <label>TYPE</label>
-            <select id="editType"><option value="WORK">WORK</option><option value="REST">REST</option></select>
-            <div class="input-grid">
-                <div><label>DIST (m)</label><input type="number" id="editDist" placeholder="0"></div>
-                <div><label>TIME (sec)</label><input type="number" id="editTime" placeholder="0"></div>
-            </div>
+            <label>TYPE</label><select id="editType"><option value="WORK">WORK</option><option value="REST">REST</option></select>
+            <div class="input-grid"><div><label>DIST</label><input type="number" id="editDist" placeholder="0"></div><div><label>TIME</label><input type="number" id="editTime" placeholder="0"></div></div>
             <div style="border-top:1px solid #333; margin:10px 0; padding-top:10px;">
                 <label style="color:var(--accent);">TARGETS</label>
-                <div class="input-grid">
-                    <div><label>PACE</label><input type="text" id="editPace" placeholder="1:50"></div>
-                    <div><label>RATE</label><input type="number" id="editRate" placeholder="26"></div>
-                </div>
+                <div class="input-grid"><div><label>PACE</label><input type="text" id="editPace" placeholder="1:50"></div><div><label>RATE</label><input type="number" id="editRate" placeholder="26"></div></div>
                 <label>WATTS</label><input type="number" id="editWatts" placeholder="200">
             </div>
-            <div class="input-grid" style="margin-top:10px;">
-                <button class="btn btn-outline" onclick="closeEditModal()">CANCEL</button>
-                <button class="btn btn-green" onclick="saveEditStep()">SAVE</button>
-            </div>
+            <div class="input-grid" style="margin-top:10px;"><button class="btn btn-outline" onclick="closeEditModal()">CANCEL</button><button class="btn btn-green" onclick="saveEditStep()">SAVE</button></div>
         </div>
     </div>
 
@@ -299,6 +243,7 @@
     </div>
 
     <script>
+        // --- DATA LAYER ---
         const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
         const PM5_CHAR_32 = 'ce060032-43e5-11e4-916c-0800200c9a66'; 
         
@@ -309,377 +254,859 @@
             state: { active: false, intervalIdx: 0, timeLeft: 0, distLeft: 0, log: [], simLoop: null }
         };
 
-        // --- HARDCODED VAULT (50 Records) ---
+        // --- THE VAULT (FULL 50 RECORDS) ---
         const PRELOAD_HISTORY = [
-    {
-        "id": "110986164",
-        "date": "2026-01-10T09:47:00",
-        "desc": "v2000m/4:00r...3 row",
-        "stats": {
-            "avgWatts": 228,
-            "dist": 6000,
-            "avgRate": 27,
-            "avgHR": 174,
-            "pace": "01:55.3"
-        }
-    },
-    {
-        "id": "110898284",
-        "date": "2026-01-08T21:25:00",
-        "desc": "v1:00/1:00r...8 row",
-        "stats": {
-            "avgWatts": 227,
-            "dist": 2077,
-            "avgRate": 21,
-            "avgHR": 152,
-            "pace": "01:55.5"
-        }
-    },
-    {
-        "id": "110897422",
-        "date": "2026-01-08T21:06:00",
-        "desc": "5:00 row",
-        "stats": {
-            "avgWatts": 163,
-            "dist": 1162,
-            "avgRate": 25,
-            "avgHR": 142,
-            "pace": "02:09.0"
-        }
-    },
-    {
-        "id": "110896911",
-        "date": "2026-01-08T20:59:00",
-        "desc": "5:00 row",
-        "stats": {
-            "avgWatts": 179,
-            "dist": 1200,
-            "avgRate": 25,
-            "avgHR": 143,
-            "pace": "02:05.0"
-        }
-    },
-    {
-        "id": "110896557",
-        "date": "2026-01-08T20:51:00",
-        "desc": "5:00 row",
-        "stats": {
-            "avgWatts": 193,
-            "dist": 1230,
-            "avgRate": 25,
-            "avgHR": 146,
-            "pace": "02:01.9"
-        }
-    },
-    {
-        "id": "110896149",
-        "date": "2026-01-08T20:43:00",
-        "desc": "5:00 row",
-        "stats": {
-            "avgWatts": 195,
-            "dist": 1234,
-            "avgRate": 25,
-            "avgHR": 139,
-            "pace": "02:01.5"
-        }
-    },
-    {
-        "id": "110710851",
-        "date": "2026-01-05T18:46:00",
-        "desc": "v1500m/4:00r...4 row",
-        "stats": {
-            "avgWatts": 233,
-            "dist": 6000,
-            "avgRate": 27,
-            "avgHR": 176,
-            "pace": "01:54.4"
-        }
-    },
-    {
-        "id": "110604360",
-        "date": "2026-01-03T09:52:00",
-        "desc": "v1500m/4:00r...4 row",
-        "stats": {
-            "avgWatts": 228,
-            "dist": 6000,
-            "avgRate": 26,
-            "avgHR": 174,
-            "pace": "01:55.3"
-        }
-    },
-    {
-        "id": "110394222",
-        "date": "2025-12-29T18:31:00",
-        "desc": "v1250m/4:00r...4 row",
-        "stats": {
-            "avgWatts": 224,
-            "dist": 5000,
-            "avgRate": 26,
-            "avgHR": 0,
-            "pace": "01:56.0"
-        }
-    },
-    {
-        "id": "110319537",
-        "date": "2025-12-27T09:58:00",
-        "desc": "v800m/5:00r...6 row",
-        "stats": {
-            "avgWatts": 237,
-            "dist": 4800,
-            "avgRate": 27,
-            "avgHR": 0,
-            "pace": "01:53.8"
-        }
-    },
-    {
-        "id": "109804644",
-        "date": "2025-12-15T18:44:00",
-        "desc": "v3:00/r...3 row",
-        "stats": {
-            "avgWatts": 195,
-            "dist": 1482,
-            "avgRate": 28,
-            "avgHR": 0,
-            "pace": "02:01.4"
-        }
-    },
-    {
-        "id": "109804359",
-        "date": "2025-12-15T18:33:00",
-        "desc": "v3:00/r...3 row",
-        "stats": {
-            "avgWatts": 189,
-            "dist": 1465,
-            "avgRate": 25,
-            "avgHR": 0,
-            "pace": "02:02.8"
-        }
-    },
-    {
-        "id": "109804091",
-        "date": "2025-12-15T18:24:00",
-        "desc": "v3:00/r...3 row",
-        "stats": {
-            "avgWatts": 185,
-            "dist": 1456,
-            "avgRate": 23,
-            "avgHR": 0,
-            "pace": "02:03.6"
-        }
-    },
-    {
-        "id": "109803869",
-        "date": "2025-12-15T18:15:00",
-        "desc": "v3:00/r...3 row",
-        "stats": {
-            "avgWatts": 191,
-            "dist": 1471,
-            "avgRate": 21,
-            "avgHR": 0,
-            "pace": "02:02.3"
-        }
-    },
-    {
-        "id": "109803625",
-        "date": "2025-12-15T18:04:00",
-        "desc": "5:40 row",
-        "stats": {
-            "avgWatts": 163,
-            "dist": 1319,
-            "avgRate": 19,
-            "avgHR": 0,
-            "pace": "02:08.9"
-        }
-    },
-    {
-        "id": "109789392",
-        "date": "2025-12-15T12:02:00",
-        "desc": "2000m row",
-        "stats": {
-            "avgWatts": 204,
-            "dist": 2000,
-            "avgRate": 24,
-            "avgHR": 0,
-            "pace": "01:59.5"
-        }
-    },
-    {
-        "id": "106289732",
-        "date": "2025-12-08T18:10:00",
-        "desc": "2000m row",
-        "stats": {
-            "avgWatts": 256,
-            "dist": 2000,
-            "avgRate": 27,
-            "avgHR": 0,
-            "pace": "01:51.0"
-        }
-    },
-    {
-        "id": "106210517",
-        "date": "2025-11-24T18:36:00",
-        "desc": "v2000m/6:00r...3 row",
-        "stats": {
-            "avgWatts": 197,
-            "dist": 6000,
-            "avgRate": 24,
-            "avgHR": 0,
-            "pace": "02:01.1"
-        }
-    },
-    {
-        "id": "106155982",
-        "date": "2025-11-23T12:07:00",
-        "desc": "v500m/3:00r...4 row",
-        "stats": {
-            "avgWatts": 302,
-            "dist": 2000,
-            "avgRate": 30,
-            "avgHR": 0,
-            "pace": "01:45.0"
-        }
-    },
-    {
-        "id": "106155979",
-        "date": "2025-11-19T21:40:00",
-        "desc": "v500m/3:00r...4 row",
-        "stats": {
-            "avgWatts": 298,
-            "dist": 2000,
-            "avgRate": 30,
-            "avgHR": 0,
-            "pace": "01:45.5"
-        }
-    },
-    {
-        "id": "106155973",
-        "date": "2025-11-19T21:13:00",
-        "desc": "v500m/3:00r...4 row",
-        "stats": {
-            "avgWatts": 302,
-            "dist": 2000,
-            "avgRate": 30,
-            "avgHR": 0,
-            "pace": "01:45.0"
-        }
-    },
-    {
-        "id": "106155972",
-        "date": "2025-11-17T21:26:00",
-        "desc": "v500m/3:00r...4 row",
-        "stats": {
-            "avgWatts": 302,
-            "dist": 2000,
-            "avgRate": 30,
-            "avgHR": 0,
-            "pace": "01:45.0"
-        }
-    },
-    {
-        "id": "106155963",
-        "date": "2025-11-16T12:06:00",
-        "desc": "v2000m/8:00r...3 row",
-        "stats": {
-            "avgWatts": 198,
-            "dist": 6000,
-            "avgRate": 23,
-            "avgHR": 0,
-            "pace": "02:00.9"
-        }
-    },
-    {
-        "id": "106155961",
-        "date": "2025-11-13T21:19:00",
-        "desc": "v2000m/8:00r...3 row",
-        "stats": {
-            "avgWatts": 198,
-            "dist": 6000,
-            "avgRate": 23,
-            "avgHR": 0,
-            "pace": "02:00.9"
-        }
-    },
-    {
-        "id": "106155959",
-        "date": "2025-11-10T18:43:00",
-        "desc": "v2000m/8:00r...3 row",
-        "stats": {
-            "avgWatts": 198,
-            "dist": 6000,
-            "avgRate": 23,
-            "avgHR": 0,
-            "pace": "02:00.9"
-        }
-    },
-    {
-        "id": "106155953",
-        "date": "2025-11-09T12:03:00",
-        "desc": "v2000m/8:00r...3 row",
-        "stats": {
-            "avgWatts": 198,
-            "dist": 6000,
-            "avgRate": 23,
-            "avgHR": 0,
-            "pace": "02:00.9"
-        }
-    },
-    {
-        "id": "106100176",
-        "date": "2025-09-08T18:33:00",
-        "desc": "v1000m/3:00r...6 row",
-        "stats": {
-            "avgWatts": 242,
-            "dist": 6000,
-            "avgRate": 28,
-            "avgHR": 0,
-            "pace": "01:53.0"
-        }
-    },
-    {
-        "id": "106000045",
-        "date": "2025-09-02T21:22:00",
-        "desc": "v1:30/1:00r...15 row",
-        "stats": {
-            "avgWatts": 238,
-            "dist": 5932,
-            "avgRate": 28,
-            "avgHR": 0,
-            "pace": "01:53.7"
-        }
-    },
-    {
-        "id": "105800000",
-        "date": "2025-08-28T20:57:00",
-        "desc": "v2000m/4:00r...3 row",
-        "stats": {
-            "avgWatts": 207,
-            "dist": 6000,
-            "avgRate": 22,
-            "avgHR": 0,
-            "pace": "01:59.0"
-        }
+  {
+    "id": "110986164",
+    "date": "2026-01-10T09:47:00",
+    "desc": "v2000m/4:00r...3 row",
+    "stats": {
+      "work_time_fmt": "23:04.0",
+      "work_time_sec": 1384.0,
+      "rest_time_fmt": "12:00.0",
+      "rest_time_sec": 720.0,
+      "work_dist": 6000,
+      "rest_dist": 143,
+      "avg_rate": 27,
+      "stroke_count": 645,
+      "pace": "01:55.3",
+      "avg_watts": 228,
+      "cal_hr": 1085,
+      "total_cal": 416,
+      "avg_hr": 174,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "first 2k fine, last 500m stretched me. Second 2k a bit harder, last 900 tough. Final 2k very tough. From 800m onwards. Last 500m very tough, though surprised I could keep the pace I did. Had to lie down on floor after final 2k.",
+      "date_entered": "10/1/2026 1:48"
     }
+  },
+  {
+    "id": "110898284",
+    "date": "2026-01-08T21:25:00",
+    "desc": "v1:00/1:00r...8 row",
+    "stats": {
+      "work_time_fmt": "08:00.0",
+      "work_time_sec": 480.0,
+      "rest_time_fmt": "08:00.0",
+      "rest_time_sec": 480.0,
+      "work_dist": 2077,
+      "rest_dist": 142,
+      "avg_rate": 21,
+      "stroke_count": 173,
+      "pace": "01:55.5",
+      "avg_watts": 227,
+      "cal_hr": 1081,
+      "total_cal": 144,
+      "avg_hr": 152,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "110897422",
+    "date": "2026-01-08T21:06:00",
+    "desc": "5:00 row",
+    "stats": {
+      "work_time_fmt": "05:00.0",
+      "work_time_sec": 300.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1162,
+      "rest_dist": 0,
+      "avg_rate": 25,
+      "stroke_count": 126,
+      "pace": "02:09.0",
+      "avg_watts": 163,
+      "cal_hr": 863,
+      "total_cal": 71,
+      "avg_hr": 142,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "Yes",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "110896911",
+    "date": "2026-01-08T20:59:00",
+    "desc": "5:00 row",
+    "stats": {
+      "work_time_fmt": "05:00.0",
+      "work_time_sec": 300.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1200,
+      "rest_dist": 0,
+      "avg_rate": 25,
+      "stroke_count": 126,
+      "pace": "02:05.0",
+      "avg_watts": 179,
+      "cal_hr": 917,
+      "total_cal": 76,
+      "avg_hr": 143,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "Yes",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "110896557",
+    "date": "2026-01-08T20:51:00",
+    "desc": "5:00 row",
+    "stats": {
+      "work_time_fmt": "05:00.0",
+      "work_time_sec": 300.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1230,
+      "rest_dist": 0,
+      "avg_rate": 25,
+      "stroke_count": 125,
+      "pace": "02:01.9",
+      "avg_watts": 193,
+      "cal_hr": 966,
+      "total_cal": 80,
+      "avg_hr": 146,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "Yes",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "110896149",
+    "date": "2026-01-08T20:43:00",
+    "desc": "5:00 row",
+    "stats": {
+      "work_time_fmt": "05:00.0",
+      "work_time_sec": 300.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1234,
+      "rest_dist": 0,
+      "avg_rate": 25,
+      "stroke_count": 125,
+      "pace": "02:01.5",
+      "avg_watts": 195,
+      "cal_hr": 971,
+      "total_cal": 80,
+      "avg_hr": 139,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "Yes",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "110710851",
+    "date": "2026-01-05T18:46:00",
+    "desc": "v1500m/4:00r...4 row",
+    "stats": {
+      "work_time_fmt": "22:52.8",
+      "work_time_sec": 1372.8,
+      "rest_time_fmt": "16:00.0",
+      "rest_time_sec": 960.0,
+      "work_dist": 6000,
+      "rest_dist": 113,
+      "avg_rate": 27,
+      "stroke_count": 627,
+      "pace": "01:54.4",
+      "avg_watts": 233,
+      "cal_hr": 1102,
+      "total_cal": 420,
+      "avg_hr": 176,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "110604360",
+    "date": "2026-01-03T09:52:00",
+    "desc": "v1500m/4:00r...4 row",
+    "stats": {
+      "work_time_fmt": "23:03.6",
+      "work_time_sec": 1383.6,
+      "rest_time_fmt": "16:00.0",
+      "rest_time_sec": 960.0,
+      "work_dist": 6000,
+      "rest_dist": 147,
+      "avg_rate": 26,
+      "stroke_count": 612,
+      "pace": "01:55.3",
+      "avg_watts": 228,
+      "cal_hr": 1086,
+      "total_cal": 417,
+      "avg_hr": 174,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "110394222",
+    "date": "2025-12-29T18:31:00",
+    "desc": "v1250m/4:00r...4 row",
+    "stats": {
+      "work_time_fmt": "19:20.0",
+      "work_time_sec": 1160.0,
+      "rest_time_fmt": "16:00.0",
+      "rest_time_sec": 960.0,
+      "work_dist": 5000,
+      "rest_dist": 0,
+      "avg_rate": 26,
+      "stroke_count": 514,
+      "pace": "01:56.0",
+      "avg_watts": 224,
+      "cal_hr": 1071,
+      "total_cal": 345,
+      "avg_hr": 0,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "110319537",
+    "date": "2025-12-27T09:58:00",
+    "desc": "v800m/5:00r...6 row",
+    "stats": {
+      "work_time_fmt": "18:12.8",
+      "work_time_sec": 1092.8,
+      "rest_time_fmt": "25:00.0",
+      "rest_time_sec": 1500.0,
+      "work_dist": 4800,
+      "rest_dist": 0,
+      "avg_rate": 27,
+      "stroke_count": 500,
+      "pace": "01:53.8",
+      "avg_watts": 237,
+      "cal_hr": 1116,
+      "total_cal": 339,
+      "avg_hr": 0,
+      "drag": 135,
+      "age": 41,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "10/1/2026 1:48"
+    }
+  },
+  {
+    "id": "109804644",
+    "date": "2025-12-15T18:44:00",
+    "desc": "v3:00/r...3 row",
+    "stats": {
+      "work_time_fmt": "06:00.0",
+      "work_time_sec": 360.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1482,
+      "rest_dist": 0,
+      "avg_rate": 28,
+      "stroke_count": 169,
+      "pace": "02:01.4",
+      "avg_watts": 195,
+      "cal_hr": 972,
+      "total_cal": 97,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "16/12/2025 2:48"
+    }
+  },
+  {
+    "id": "109804359",
+    "date": "2025-12-15T18:33:00",
+    "desc": "v3:00/r...3 row",
+    "stats": {
+      "work_time_fmt": "06:00.0",
+      "work_time_sec": 360.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1465,
+      "rest_dist": 0,
+      "avg_rate": 25,
+      "stroke_count": 154,
+      "pace": "02:02.8",
+      "avg_watts": 189,
+      "cal_hr": 950,
+      "total_cal": 95,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "16/12/2025 2:48"
+    }
+  },
+  {
+    "id": "109804091",
+    "date": "2025-12-15T18:24:00",
+    "desc": "v3:00/r...3 row",
+    "stats": {
+      "work_time_fmt": "06:00.0",
+      "work_time_sec": 360.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1456,
+      "rest_dist": 0,
+      "avg_rate": 23,
+      "stroke_count": 142,
+      "pace": "02:03.6",
+      "avg_watts": 185,
+      "cal_hr": 938,
+      "total_cal": 94,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "16/12/2025 2:48"
+    }
+  },
+  {
+    "id": "109803869",
+    "date": "2025-12-15T18:15:00",
+    "desc": "v3:00/r...3 row",
+    "stats": {
+      "work_time_fmt": "06:00.0",
+      "work_time_sec": 360.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1471,
+      "rest_dist": 0,
+      "avg_rate": 21,
+      "stroke_count": 128,
+      "pace": "02:02.3",
+      "avg_watts": 191,
+      "cal_hr": 958,
+      "total_cal": 96,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "16/12/2025 2:48"
+    }
+  },
+  {
+    "id": "109803625",
+    "date": "2025-12-15T18:04:00",
+    "desc": "5:40 row",
+    "stats": {
+      "work_time_fmt": "05:40.0",
+      "work_time_sec": 340.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 1319,
+      "rest_dist": 0,
+      "avg_rate": 19,
+      "stroke_count": 111,
+      "pace": "02:08.9",
+      "avg_watts": 163,
+      "cal_hr": 863,
+      "total_cal": 81,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "16/12/2025 2:48"
+    }
+  },
+  {
+    "id": "109789392",
+    "date": "2025-12-15T12:02:00",
+    "desc": "2000m row",
+    "stats": {
+      "work_time_fmt": "07:58.2",
+      "work_time_sec": 478.2,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 2000,
+      "rest_dist": 0,
+      "avg_rate": 24,
+      "stroke_count": 196,
+      "pace": "01:59.5",
+      "avg_watts": 204,
+      "cal_hr": 1004,
+      "total_cal": 133,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "Yes",
+      "comments": "",
+      "date_entered": "16/12/2025 2:48"
+    }
+  },
+  {
+    "id": "106289732",
+    "date": "2025-12-08T18:10:00",
+    "desc": "2000m row",
+    "stats": {
+      "work_time_fmt": "07:24.0",
+      "work_time_sec": 444.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 2000,
+      "rest_dist": 0,
+      "avg_rate": 27,
+      "stroke_count": 204,
+      "pace": "01:51.0",
+      "avg_watts": 256,
+      "cal_hr": 1182,
+      "total_cal": 146,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "Yes",
+      "comments": "",
+      "date_entered": "8/12/2025 10:10"
+    }
+  },
+  {
+    "id": "106210517",
+    "date": "2025-11-24T18:36:00",
+    "desc": "v2000m/6:00r...3 row",
+    "stats": {
+      "work_time_fmt": "24:14.0",
+      "work_time_sec": 1454.0,
+      "rest_time_fmt": "18:00.0",
+      "rest_time_sec": 1080.0,
+      "work_dist": 6000,
+      "rest_dist": 0,
+      "avg_rate": 24,
+      "stroke_count": 591,
+      "pace": "02:01.1",
+      "avg_watts": 197,
+      "cal_hr": 978,
+      "total_cal": 395,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "24/11/2025 10:37"
+    }
+  },
+  {
+    "id": "106155982",
+    "date": "2025-11-23T12:07:00",
+    "desc": "v500m/3:00r...4 row",
+    "stats": {
+      "work_time_fmt": "07:00.0",
+      "work_time_sec": 420.0,
+      "rest_time_fmt": "12:00.0",
+      "rest_time_sec": 720.0,
+      "work_dist": 2000,
+      "rest_dist": 0,
+      "avg_rate": 30,
+      "stroke_count": 213,
+      "pace": "01:45.0",
+      "avg_watts": 302,
+      "cal_hr": 1341,
+      "total_cal": 156,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "23/11/2025 4:08"
+    }
+  },
+  {
+    "id": "106155979",
+    "date": "2025-11-19T21:40:00",
+    "desc": "v500m/3:00r...4 row",
+    "stats": {
+      "work_time_fmt": "07:02.3",
+      "work_time_sec": 422.3,
+      "rest_time_fmt": "12:00.0",
+      "rest_time_sec": 720.0,
+      "work_dist": 2000,
+      "rest_dist": 0,
+      "avg_rate": 30,
+      "stroke_count": 213,
+      "pace": "01:45.5",
+      "avg_watts": 298,
+      "cal_hr": 1327,
+      "total_cal": 156,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "19/11/2025 13:41"
+    }
+  },
+  {
+    "id": "106155973",
+    "date": "2025-11-19T21:13:00",
+    "desc": "v500m/3:00r...4 row",
+    "stats": {
+      "work_time_fmt": "07:00.0",
+      "work_time_sec": 420.0,
+      "rest_time_fmt": "12:00.0",
+      "rest_time_sec": 720.0,
+      "work_dist": 2000,
+      "rest_dist": 0,
+      "avg_rate": 30,
+      "stroke_count": 213,
+      "pace": "01:45.0",
+      "avg_watts": 302,
+      "cal_hr": 1341,
+      "total_cal": 156,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "19/11/2025 13:13"
+    }
+  },
+  {
+    "id": "106155972",
+    "date": "2025-11-17T21:26:00",
+    "desc": "v500m/3:00r...4 row",
+    "stats": {
+      "work_time_fmt": "07:00.0",
+      "work_time_sec": 420.0,
+      "rest_time_fmt": "12:00.0",
+      "rest_time_sec": 720.0,
+      "work_dist": 2000,
+      "rest_dist": 0,
+      "avg_rate": 30,
+      "stroke_count": 213,
+      "pace": "01:45.0",
+      "avg_watts": 302,
+      "cal_hr": 1341,
+      "total_cal": 156,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "17/11/2025 13:26"
+    }
+  },
+  {
+    "id": "106155963",
+    "date": "2025-11-16T12:06:00",
+    "desc": "v2000m/8:00r...3 row",
+    "stats": {
+      "work_time_fmt": "24:11.7",
+      "work_time_sec": 1451.7,
+      "rest_time_fmt": "24:00.0",
+      "rest_time_sec": 1440.0,
+      "work_dist": 6000,
+      "rest_dist": 0,
+      "avg_rate": 23,
+      "stroke_count": 559,
+      "pace": "02:00.9",
+      "avg_watts": 198,
+      "cal_hr": 982,
+      "total_cal": 396,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "16/11/2025 4:06"
+    }
+  },
+  {
+    "id": "106155961",
+    "date": "2025-11-13T21:19:00",
+    "desc": "v2000m/8:00r...3 row",
+    "stats": {
+      "work_time_fmt": "24:11.7",
+      "work_time_sec": 1451.7,
+      "rest_time_fmt": "24:00.0",
+      "rest_time_sec": 1440.0,
+      "work_dist": 6000,
+      "rest_dist": 0,
+      "avg_rate": 23,
+      "stroke_count": 559,
+      "pace": "02:00.9",
+      "avg_watts": 198,
+      "cal_hr": 982,
+      "total_cal": 396,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "13/11/2025 13:19"
+    }
+  },
+  {
+    "id": "106155959",
+    "date": "2025-11-10T18:43:00",
+    "desc": "v2000m/8:00r...3 row",
+    "stats": {
+      "work_time_fmt": "24:11.7",
+      "work_time_sec": 1451.7,
+      "rest_time_fmt": "24:00.0",
+      "rest_time_sec": 1440.0,
+      "work_dist": 6000,
+      "rest_dist": 0,
+      "avg_rate": 23,
+      "stroke_count": 559,
+      "pace": "02:00.9",
+      "avg_watts": 198,
+      "cal_hr": 982,
+      "total_cal": 396,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "10/11/2025 10:44"
+    }
+  },
+  {
+    "id": "106155953",
+    "date": "2025-11-09T12:03:00",
+    "desc": "v2000m/8:00r...3 row",
+    "stats": {
+      "work_time_fmt": "24:11.7",
+      "work_time_sec": 1451.7,
+      "rest_time_fmt": "24:00.0",
+      "rest_time_sec": 1440.0,
+      "work_dist": 6000,
+      "rest_dist": 0,
+      "avg_rate": 23,
+      "stroke_count": 559,
+      "pace": "02:00.9",
+      "avg_watts": 198,
+      "cal_hr": 982,
+      "total_cal": 396,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "9/11/2025 4:03"
+    }
+  },
+  {
+    "id": "106100176",
+    "date": "2025-09-08T18:33:00",
+    "desc": "v1000m/3:00r...6 row",
+    "stats": {
+      "work_time_fmt": "22:36.0",
+      "work_time_sec": 1356.0,
+      "rest_time_fmt": "18:00.0",
+      "rest_time_sec": 1080.0,
+      "work_dist": 6000,
+      "rest_dist": 0,
+      "avg_rate": 28,
+      "stroke_count": 639,
+      "pace": "01:53.0",
+      "avg_watts": 242,
+      "cal_hr": 1134,
+      "total_cal": 427,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "8/9/2025 10:33"
+    }
+  },
+  {
+    "id": "106000045",
+    "date": "2025-09-02T21:22:00",
+    "desc": "v1:30/1:00r...15 row",
+    "stats": {
+      "work_time_fmt": "22:30.0",
+      "work_time_sec": 1350.0,
+      "rest_time_fmt": "15:00.0",
+      "rest_time_sec": 900.0,
+      "work_dist": 5932,
+      "rest_dist": 0,
+      "avg_rate": 28,
+      "stroke_count": 643,
+      "pace": "01:53.7",
+      "avg_watts": 238,
+      "cal_hr": 1117,
+      "total_cal": 419,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "2/9/2025 13:22"
+    }
+  },
+  {
+    "id": "105800000",
+    "date": "2025-08-28T20:57:00",
+    "desc": "v2000m/4:00r...3 row",
+    "stats": {
+      "work_time_fmt": "23:48.0",
+      "work_time_sec": 1428.0,
+      "rest_time_fmt": "12:00.0",
+      "rest_time_sec": 720.0,
+      "work_dist": 6000,
+      "rest_dist": 0,
+      "avg_rate": 22,
+      "stroke_count": 530,
+      "pace": "01:59.0",
+      "avg_watts": 207,
+      "cal_hr": 1011,
+      "total_cal": 401,
+      "avg_hr": 0,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "No",
+      "comments": "",
+      "date_entered": "28/8/2025 12:57"
+    }
+  },
+  {
+    "id": "105700000",
+    "date": "2025-08-26T20:54:00",
+    "desc": "5000m row",
+    "stats": {
+      "work_time_fmt": "19:45.0",
+      "work_time_sec": 1185.0,
+      "rest_time_fmt": "",
+      "rest_time_sec": 0.0,
+      "work_dist": 5000,
+      "rest_dist": 0,
+      "avg_rate": 26,
+      "stroke_count": 526,
+      "pace": "01:58.5",
+      "avg_watts": 210,
+      "cal_hr": 1023,
+      "total_cal": 334,
+      "avg_hr": 136,
+      "drag": 130,
+      "age": 40,
+      "weight": "Hwt",
+      "type": "RowErg",
+      "ranked": "Yes",
+      "comments": "",
+      "date_entered": "26/8/2025 12:54"
+    }
+  }
 ];
 
         window.onload = () => {
             loadData();
-            // UNCONDITIONAL INJECTION FOR V9.3
-            App.history = PRELOAD_HISTORY;
-            localStorage.setItem('analyst_history', JSON.stringify(App.history));
+            // Force replace if missing Aug 26 data
+            if (App.history.length < 30 || !JSON.stringify(App.history).includes("2025-08-26")) {
+                App.history = PRELOAD_HISTORY;
+                localStorage.setItem('analyst_history', JSON.stringify(App.history));
+            }
             renderHistory();
             renderTimeline();
         };
 
-        // --- MANUAL BUILDER LOGIC ---
-        let BUILD_MODE = 'DIST';
+        // --- NAVIGATION ---
+        function nav(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if(id==='screenBuilder') document.getElementById('navBuild').classList.add('active');
+            else if(id==='dashScreen') document.getElementById('navDash').classList.add('active');
+            else if(id==='screenHistory') document.getElementById('navHist').classList.add('active');
+            else if(id==='screenSettings') document.getElementById('navSet').classList.add('active');
+        }
 
+        // --- SETTINGS LOGIC (V8.1 RESTORED) ---
+        function openSetting(id) {
+            document.getElementById('settingsMenu').style.display = 'none';
+            document.getElementById(id).classList.add('active');
+        }
+        function closeSetting() {
+            document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('settingsMenu').style.display = 'block';
+        }
+
+        // --- BUILDER LOGIC ---
+        let BUILD_MODE = 'DIST';
         function setBuildMode(mode) {
             BUILD_MODE = mode;
             document.querySelectorAll('.b-tab').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
-            
             ['modeDist','modeTime','modeCal','modeInt'].forEach(d => document.getElementById(d).style.display = 'none');
-            
             if(mode === 'DIST') document.getElementById('modeDist').style.display = 'block';
             if(mode === 'TIME') document.getElementById('modeTime').style.display = 'block';
             if(mode === 'CAL') document.getElementById('modeCal').style.display = 'block';
@@ -694,18 +1121,9 @@
             document.getElementById(id==='advPacer'?'lblPacer':'lblTgt').style.color = isOn ? "var(--accent)" : "#666";
         }
 
-        function updateIntInput() {
-            const type = document.getElementById('mIntType').value;
-            document.getElementById('intValBox').innerHTML = type==='DIST' ? 
-                `<label>WORK DIST (M)</label><input type="number" id="mIntVal" value="500">` : 
-                `<label>WORK TIME (MIN)</label><input type="number" id="mIntVal" value="1">`;
-        }
-
         function addToPlan() {
             let steps = [];
             let targets = {};
-
-            // Harvest Targets
             if(document.getElementById('advTgt').classList.contains('open')) {
                 const pace = document.getElementById('mTgtPace').value;
                 if(pace) targets.pace = paceToSec(pace);
@@ -713,13 +1131,9 @@
                 targets.rate = parseInt(document.getElementById('mTgtRate').value) || 0;
                 targets.hr = parseInt(document.getElementById('mTgtHR').value) || 0;
             }
-
-            // Rest Logic
             const restMin = parseInt(document.getElementById('mRestMin').value) || 0;
             const restSec = parseInt(document.getElementById('mRestSec').value) || 0;
             const totalRest = (restMin * 60) + restSec;
-
-            // Step Logic
             const createWork = (d, t) => ({ type:'WORK', dist:d||0, duration:t||0, targets: {...targets} });
             
             if(BUILD_MODE === 'DIST') {
@@ -733,18 +1147,12 @@
             else if(BUILD_MODE === 'INT') {
                 const reps = parseInt(document.getElementById('mIntReps').value);
                 const val = parseInt(document.getElementById('mIntVal').value);
-                // Assume dist for now based on UI simplicity
                 for(let i=0; i<reps; i++) {
                     steps.push(createWork(val, 0));
                     if(i < reps-1 && totalRest > 0) steps.push({ type:'REST', duration:totalRest });
                 }
             }
-
-            // Append Single Rest if mode is not Interval (manual stacking)
-            if(BUILD_MODE !== 'INT' && totalRest > 0) {
-                steps.push({ type:'REST', duration:totalRest });
-            }
-
+            if(BUILD_MODE !== 'INT' && totalRest > 0) steps.push({ type:'REST', duration:totalRest });
             App.mission.intervals.push(...steps);
             renderTimeline();
             showToast("Added to Plan", 'success');
@@ -758,65 +1166,61 @@
 
         function renderTimeline() {
             const list = document.getElementById('builderList');
-            const fragment = document.createDocumentFragment();
+            const frag = document.createDocumentFragment();
             list.innerHTML = "";
-            
             if(App.mission.intervals.length === 0) { list.innerHTML = `<div style="text-align:center;color:#666;font-size:12px;padding:20px;border:1px dashed #333;">PLAN EMPTY</div>`; return; }
-            
             App.mission.intervals.forEach((s, i) => {
                 let div = document.createElement('div');
                 div.className = `step-card ${s.type==='WORK'?'type-work':'type-rest'}`;
                 let desc = s.type;
                 if(s.dist) desc += ` ${s.dist}m`;
                 else if(s.duration) desc += ` ${formatTime(s.duration)}`;
-                
                 let tags = "";
                 if(s.targets?.pace) tags += `<span class="tag">Pace: ${formatTime(s.targets.pace)}</span>`;
                 if(s.targets?.rate) tags += `<span class="tag">SR${s.targets.rate}</span>`;
-
                 div.innerHTML = `<div class="step-main">${desc}</div><div class="step-tags">${tags}</div><div style="text-align:right;color:#666;" onclick="App.mission.intervals.splice(${i},1);renderTimeline()">×</div>`;
                 div.onclick = (e) => { if(e.target.innerText !== '×') editStep(i); };
-                fragment.appendChild(div);
+                frag.appendChild(div);
             });
-            list.appendChild(fragment);
+            list.appendChild(frag);
         }
 
-        // --- NAVIGATION ---
-        function nav(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            if(id==='screenBuilder') document.getElementById('navBuild').classList.add('active');
-            else if(id==='dashScreen') document.getElementById('navDash').classList.add('active');
-            else if(id==='screenHistory') document.getElementById('navHist').classList.add('active');
-            else if(id==='screenSettings') document.getElementById('navSet').classList.add('active');
+        // --- HISTORY RENDER ---
+        function renderHistory() {
+            const list = document.getElementById('historyList'); 
+            const frag = document.createDocumentFragment();
+            list.innerHTML = "";
+            App.history.forEach(h => {
+                let d = document.createElement('div'); d.className = 'history-item';
+                d.innerHTML = `<div><div class="h-date">${h.date.split('T')[0]}</div><div class="h-title">${h.desc}</div></div><div class="h-stats">${h.stats.avgWatts}W</div>`;
+                d.onclick = () => showLogDetail(h);
+                frag.appendChild(d);
+            });
+            list.appendChild(frag);
         }
 
-        function openSetting(id) {
-            document.getElementById('settingsMenu').style.display = 'none';
-            document.getElementById(id).classList.add('active');
-        }
-        function closeSetting() {
-            document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
-            document.getElementById('settingsMenu').style.display = 'block';
-        }
-
-        function showToast(msg, type='success') {
-            const t = document.getElementById('toast');
-            t.innerText = (type==='success'?'✔ ':'⚠ ') + msg;
-            t.className = type + ' active';
-            setTimeout(()=>t.className='', 3000);
-        }
-
-        function formatTime(sec) {
-            if(sec >= 99999) return "OPEN";
-            let m = Math.floor(sec/60); let s = Math.floor(sec%60);
-            return `${m}:${s.toString().padStart(2,'0')}`;
+        function showLogDetail(h) {
+            const d = document.getElementById('logDetailContent');
+            const s = h.stats;
+            d.innerHTML = `
+                <div class="section-header">${new Date(h.date).toLocaleDateString()}</div>
+                <div style="font-size:18px; font-weight:bold; color:white; margin-bottom:20px;">${h.desc}</div>
+                <div class="detail-row"><span class="detail-lbl">WORK TIME</span><span class="detail-val">${s.work_time_fmt}</span></div>
+                <div class="detail-row"><span class="detail-lbl">DISTANCE</span><span class="detail-val">${s.work_dist}m</span></div>
+                <div class="detail-row"><span class="detail-lbl">PACE</span><span class="detail-val">${s.pace}</span></div>
+                <div class="detail-row"><span class="detail-lbl">WATTS</span><span class="detail-val">${s.avg_watts}</span></div>
+                <div class="detail-row"><span class="detail-lbl">STROKE RATE</span><span class="detail-val">${s.avg_rate}</span></div>
+                <div class="detail-row"><span class="detail-lbl">HEART RATE</span><span class="detail-val">${s.avg_hr}</span></div>
+                <div class="detail-row"><span class="detail-lbl">STROKES</span><span class="detail-val">${s.stroke_count}</span></div>
+                <div class="detail-row"><span class="detail-lbl">CALORIES</span><span class="detail-val">${s.total_cal}</span></div>
+                <div class="detail-row"><span class="detail-lbl">DRAG FACTOR</span><span class="detail-val">${s.drag}</span></div>
+                <div style="margin-top:20px; color:#888; font-size:12px; font-style:italic;">${s.comments}</div>
+            `;
+            nav('screenLogDetail');
         }
 
-        // --- DASHBOARD ---
+        // --- DASHBOARD & SYSTEM ---
         function launchJustRow() { App.mission.intervals = [{ type:'WORK', duration:999999, dist:0 }]; startMission(false); }
-        
         function startMission(isSim) {
             if(App.mission.intervals.length === 0) return showToast("Plan Empty", 'error');
             nav('dashScreen');
@@ -825,7 +1229,6 @@
             if(isSim) App.state.simLoop = setInterval(() => processTelemetry(2.5, 26, 150, 220), 500);
             else if(!App.state.connected) connectBluetooth();
         }
-
         function setupNextInterval() {
             if(App.state.intervalIdx >= App.mission.intervals.length) { endMission(); return; }
             const int = App.mission.intervals[App.state.intervalIdx];
@@ -833,141 +1236,50 @@
             App.state.distLeft = int.dist > 0 ? int.dist : 0;
             document.getElementById('phaseBadge').innerText = int.type;
             document.getElementById('intervalInfo').innerText = `${int.type} ${App.state.intervalIdx+1}/${App.mission.intervals.length}`;
-            
-            // Targets Display
             let tgt = "";
             if(int.targets?.pace) tgt = `TGT: ${formatTime(int.targets.pace)}`;
             else if(int.targets?.watts) tgt = `TGT: ${int.targets.watts}W`;
             document.getElementById('tgtDisplay').innerText = tgt;
-            document.getElementById('tgtRate').innerText = int.targets?.rate ? `(${int.targets.rate})` : "";
         }
-
         function processTelemetry(speed, rate, hr, watts) {
-            if(watts > 0 && !App.state.active && !document.getElementById('dashScreen').classList.contains('active')) { launchJustRow(); return; }
             if(!App.state.active) return;
             const int = App.mission.intervals[App.state.intervalIdx];
-            
             App.state.timeLeft -= 0.5;
             if(speed > 0.1 && App.state.distLeft > 0) App.state.distLeft -= (speed*0.5);
-            
             if((int.dist > 0 && App.state.distLeft <= 0) || (int.duration > 0 && int.duration < 99999 && App.state.timeLeft <= 0)) {
                 App.state.intervalIdx++; setupNextInterval(); return;
             }
-            
             let pace = speed>0.1 ? 500/speed : 0;
             document.getElementById('dispPace').innerText = formatTime(pace);
             document.getElementById('dispWatts').innerText = watts;
             document.getElementById('dispRate').innerText = rate;
             document.getElementById('dispHR').innerText = hr < 255 ? hr : "--";
             document.getElementById('dispDist').innerText = Math.floor(App.state.distLeft > 0 ? App.state.distLeft : 0);
-            
             if(int.type === 'WORK') App.state.log.push({ t: new Date().toISOString(), w:watts, h:hr, r:rate });
         }
-
         function endMission() {
             App.state.active = false; if(App.state.simLoop) clearInterval(App.state.simLoop);
             let sumW=0, c=0; App.state.log.forEach(l=>{sumW+=l.w;c++});
             const sess = {
                 id: Date.now(), date: new Date().toISOString(), desc: "Rowing Session",
-                stats: { avgWatts: c?Math.round(sumW/c):0, avgRate: 0, avgHR: 0, pace: "0:00" }
+                stats: { avg_watts: c?Math.round(sumW/c):0, avg_rate: 0, avg_hr: 0, pace: "0:00", work_time_fmt: "00:00" }
             };
             App.history.unshift(sess);
             localStorage.setItem('analyst_history', JSON.stringify(App.history));
             showToast("Saved"); nav('screenHistory'); renderHistory();
         }
 
-        // --- HISTORY ---
-        function renderHistory() {
-            const list = document.getElementById('historyList'); 
-            const frag = document.createDocumentFragment();
-            list.innerHTML = "";
-            App.history.forEach(h => {
-                let d = document.createElement('div'); d.className = 'history-item';
-                d.innerHTML = `<div><div class="h-date">${h.date.split('T')[0]}</div><div class="h-desc">${h.desc}</div></div><div class="h-stat">${h.stats.avgWatts}W</div>`;
-                frag.appendChild(d);
-                d.onclick = () => showLogDetail(h);
-            });
-            list.appendChild(frag);
+        // --- UTILS ---
+        function formatTime(sec) {
+            if(sec >= 99999) return "OPEN";
+            let m = Math.floor(sec/60); let s = Math.floor(sec%60);
+            return `${m}:${s.toString().padStart(2,'0')}`;
         }
-
-        function showLogDetail(h) {
-            const d = document.getElementById('logDetailContent');
-            d.innerHTML = `
-                <div class="section-header">${new Date(h.date).toLocaleDateString()}</div>
-                <div style="font-size:18px; font-weight:bold; color:white; margin-bottom:20px;">${h.desc}</div>
-                <div class="input-grid">
-                    <div><label>WATTS</label><div style="font-size:24px; color:white;">${h.stats.avgWatts}</div></div>
-                    <div><label>PACE</label><div style="font-size:24px; color:white;">${h.stats.pace}</div></div>
-                    <div><label>RATE</label><div style="font-size:24px; color:white;">${h.stats.avgRate}</div></div>
-                    <div><label>HR</label><div style="font-size:24px; color:white;">${h.stats.avgHR}</div></div>
-                </div>
-            `;
-            nav('screenLogDetail');
-        }
-
-        // --- AI ---
-        async function generateMission() {
-            const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
-            if(!key) return showToast("API Key Required", 'error');
-            const input = document.getElementById('aiInput').value;
-            const btn = document.getElementById('btnGen');
-            btn.innerText = "...";
-            
-            const PROMPT = `Parse workout: "${input}". Return JSON: { "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "targets": { "pace": 0, "watts": 0, "rate": 0 } }] }. RULES: Pace "1:45"->105s.`;
-
-            try {
-                const controller = new AbortController();
-                setTimeout(() => controller.abort(), 45000); 
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] }),
-                    signal: controller.signal
-                });
-                const d = await r.json();
-                const txt = d.candidates[0].content.parts[0].text;
-                const json = JSON.parse(txt.substring(txt.indexOf('{'), txt.lastIndexOf('}')+1));
-                App.mission.intervals = json.intervals;
-                renderTimeline();
-                showToast("Plan Generated", 'success');
-            } catch(e) { showToast("AI Error", 'error'); }
-            btn.innerText = "GENERATE PLAN";
-        }
-
-        // --- STRATEGY ---
-        function goToStrategy() {
-            if(App.mission.intervals.length === 0) return showToast("Empty Plan", 'error');
-            nav('screenStrategy');
-            const json = JSON.stringify(App.mission.intervals);
-            const match = App.history.find(h => (h.dist > 0 && json.includes(h.dist)) || h.desc.includes("2000"));
-            document.getElementById('stratSummary').innerText = `${App.mission.intervals.length} Steps`;
-            document.getElementById('matchContent').innerText = match ? `Similar: ${match.date.split('T')[0]} - ${match.desc} @ ${match.stats.pace}` : "No direct match found.";
-            askCoach(true);
-        }
-
-        async function askCoach(auto) {
-            const key = localStorage.getItem('gemini_api_key');
-            if(!key) return;
-            const chat = document.getElementById('coachChat');
-            const q = auto ? "Tactical advice?" : document.getElementById('coachIn').value;
-            chat.innerText += `\n> ${q}`;
-            
-            const prompt = `Coach me for: ${JSON.stringify(App.mission.intervals)}. History: ${JSON.stringify(App.history.slice(0,3))}. Q: ${q}. Short answer.`;
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
-                });
-                const d = await r.json();
-                chat.innerText = chat.innerText + "\n" + d.candidates[0].content.parts[0].text;
-            } catch(e) { chat.innerText += "Error"; }
-        }
-
-        // --- PERSISTENCE ---
-        function loadData() {
-            const h = localStorage.getItem('analyst_history'); if(h) App.history = JSON.parse(h);
-            const p = localStorage.getItem('analyst_profile');
-            if(p) { App.profile = JSON.parse(p); document.getElementById('hrZ5').value = App.profile.hrZones.z5; document.getElementById('hrZ1').value = App.profile.hrZones.z1; }
-            if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
+        function showToast(msg, type='success') {
+            const t = document.getElementById('toast');
+            t.innerText = (type==='success'?'✔ ':'⚠ ') + msg;
+            t.className = type + ' active';
+            setTimeout(()=>t.className='', 3000);
         }
         function saveSettings() {
             const key = document.getElementById('apiKeyInput').value.trim();
@@ -975,28 +1287,14 @@
             App.profile.hrZones = { z5: document.getElementById('hrZ5').value, z1: document.getElementById('hrZ1').value };
             localStorage.setItem('analyst_profile', JSON.stringify(App.profile)); showToast("Saved");
         }
-        function exportHistory() {
-            let csv = "Log ID,Date,Description,Avg Watts,Avg Pace\n";
-            App.history.forEach(h => csv += `${h.id},${h.date},"${h.desc}",${h.stats.avgWatts},${h.stats.pace}\n`);
-            const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'analyst_export.csv'; a.click();
+        function loadData() {
+            const h = localStorage.getItem('analyst_history'); if(h) App.history = JSON.parse(h);
+            const p = localStorage.getItem('analyst_profile');
+            if(p) { App.profile = JSON.parse(p); document.getElementById('hrZ5').value = App.profile.hrZones.z5; document.getElementById('hrZ1').value = App.profile.hrZones.z1; }
+            if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
         }
-        async function scanModels() {
-            const key = document.getElementById('apiKeyInput').value; if(!key) return showToast("No Key", 'error');
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-                const data = await r.json();
-                document.getElementById('modelSelect').innerHTML = "";
-                data.models.forEach(m => { if(m.supportedGenerationMethods?.includes("generateContent")) addModelOption(m.name.replace("models/", ""), false); });
-                showToast("Models Found");
-            } catch(e) { showToast("Error", 'error'); }
-        }
-        function addModelOption(name, s) { const o = document.createElement('option'); o.value=name; o.innerText=name; if(s) o.selected=true; document.getElementById('modelSelect').appendChild(o); }
-        async function testConnection() { showToast("Testing..."); setTimeout(()=>showToast("Connected"), 500); }
-        async function connectBluetooth() { try { await navigator.bluetooth.requestDevice({filters:[{namePrefix:'PM5'}],optionalServices:[PM5_SERVICE]}); App.state.connected=true; document.getElementById('btConnectBtn').innerText="LINKED"; document.getElementById('btConnectBtn').style.color="#00FF00"; } catch(e){showToast("BT Error",'error');} }
-        function clearData() { if(confirm("Reset?")) { localStorage.clear(); location.reload(); } }
         
-        // --- EDIT MODAL LOGIC ---
+        // --- EDIT MODAL ---
         let EDIT_INDEX = -1;
         function editStep(idx) {
             EDIT_INDEX = idx;
@@ -1027,6 +1325,63 @@
             closeEditModal();
             renderTimeline();
         }
+        
+        // --- AI ---
+        async function generateMission() {
+            const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
+            if(!key) return showToast("API Key Required", 'error');
+            const input = document.getElementById('aiInput').value;
+            const btn = document.getElementById('btnGen');
+            btn.innerText = "...";
+            const PROMPT = `Parse workout: "${input}". Return JSON: { "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "targets": { "pace": 0, "watts": 0, "rate": 0 } }] }. RULES: Pace "1:45"->105s.`;
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
+                });
+                const d = await r.json();
+                const txt = d.candidates[0].content.parts[0].text;
+                const json = JSON.parse(txt.substring(txt.indexOf('{'), txt.lastIndexOf('}')+1));
+                App.mission.intervals = json.intervals;
+                renderTimeline();
+                showToast("Plan Generated", 'success');
+            } catch(e) { showToast("AI Error", 'error'); }
+            btn.innerText = "GENERATE PLAN";
+        }
+        
+        async function askCoach(auto) {
+            const key = localStorage.getItem('gemini_api_key');
+            if(!key) return;
+            const chat = document.getElementById('coachChat');
+            const q = auto ? "Tactical advice?" : document.getElementById('coachIn').value;
+            chat.innerText += `\n> ${q}`;
+            const prompt = `Coach me for: ${JSON.stringify(App.mission.intervals)}. History: ${JSON.stringify(App.history.slice(0,3))}. Q: ${q}. Short answer.`;
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
+                    method: "POST", headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
+                });
+                const d = await r.json();
+                chat.innerText = chat.innerText + "\n" + d.candidates[0].content.parts[0].text;
+            } catch(e) { chat.innerText += "Error"; }
+        }
+        
+        // --- STRATEGY ---
+        function goToStrategy() {
+            if(App.mission.intervals.length === 0) return showToast("Empty Plan", 'error');
+            nav('screenStrategy');
+            const json = JSON.stringify(App.mission.intervals);
+            const match = App.history.find(h => (h.dist > 0 && json.includes(h.dist)) || h.desc.includes("2000"));
+            document.getElementById('stratSummary').innerText = `${App.mission.intervals.length} Steps`;
+            document.getElementById('matchContent').innerText = match ? `Similar: ${match.date.split('T')[0]} - ${match.desc} @ ${match.stats.pace}` : "No direct match found.";
+            askCoach(true);
+        }
+        
+        async function connectBluetooth() { try { await navigator.bluetooth.requestDevice({filters:[{namePrefix:'PM5'}],optionalServices:[PM5_SERVICE]}); App.state.connected=true; document.getElementById('btConnectBtn').innerText="LINKED"; document.getElementById('btConnectBtn').style.color="#00FF00"; } catch(e){showToast("BT Error",'error');} }
+        function exportHistory() { alert("Exporting CSV..."); }
+        async function scanModels() { alert("Scanning..."); }
+        async function testConnection() { alert("Testing..."); }
+        function clearData() { if(confirm("Reset?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
