@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V10.5 (REFINED)</title>
+    <title>ANALYST V10.6 (FIXED)</title>
     <style>
         :root { --bg: #050505; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #121212; --border: #2a2a2a; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -34,11 +34,10 @@
         .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; font-weight: 700; display:flex; justify-content:space-between; }
         
-        /* ACCESSIBLE BUTTONS */
         .btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 13px; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap:8px; transition: all 0.2s ease; background: #222; color: #fff; border: 1px solid transparent; }
         .btn:hover { transform: scale(1.02); border-color: #444; background: #2a2a2a; }
         .btn:active { transform: scale(0.98); opacity: 0.8; }
-        .btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; } /* Focus State */
+        .btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
         
         .btn-green { background: var(--accent); color: #000; }
         .btn-green:hover { background: #00cc7a; border-color: transparent; }
@@ -309,7 +308,7 @@
 
         function validateApiKey() {
             const key = document.getElementById('apiKeyInput').value.trim();
-            if(!key && !localStorage.getItem('gemini_api_key')) {
+            if (!key && !localStorage.getItem('gemini_api_key')) {
                 showToast("API Key Required", 'error');
                 return false;
             }
@@ -323,8 +322,7 @@
             const targetTab = document.querySelector(`[data-mode=${mode}]`);
             if (targetTab) targetTab.classList.add('active');
             ['modeDist','modeTime','modeCal','modeInt'].forEach(d => document.getElementById(d).style.display = 'none');
-            const targetContent = document.getElementById(`mode${mode}`);
-            if (targetContent) targetContent.style.display = 'block';
+            document.getElementById(`mode${mode}`).style.display = 'block';
         }
 
         function toggleAdv(id) {
@@ -333,6 +331,13 @@
             const isOn = el.classList.contains('open');
             document.getElementById(id==='advPacer'?'lblPacer':'lblTgt').innerText = isOn ? "ON" : "OFF";
             document.getElementById(id==='advPacer'?'lblPacer':'lblTgt').style.color = isOn ? "var(--accent)" : "#666";
+        }
+
+        function updateIntInput() {
+            const type = document.getElementById('mIntType').value;
+            document.getElementById('intValBox').innerHTML = type==='DIST' ? 
+                `<label>WORK DIST (M)</label><input type="number" id="mIntVal" value="500">` : 
+                `<label>WORK TIME (MIN)</label><input type="number" id="mIntVal" value="1">`;
         }
 
         function addToPlan() {
@@ -494,7 +499,17 @@
         function loadData() {
             const h = localStorage.getItem('analyst_history'); if(h) App.history = JSON.parse(h);
             const p = localStorage.getItem('analyst_profile');
-            if(p) { App.profile = JSON.parse(p); document.getElementById('hrZ5').value = App.profile.hrZones?.z5 ?? 180; document.getElementById('hrZ1').value = App.profile.hrZones?.z1 ?? 108; }
+            // FIX: Ensure 'model' exists, fallback to default if missing
+            if(p) {
+                const profile = JSON.parse(p);
+                App.profile = { 
+                    ...App.profile, 
+                    ...profile, 
+                    model: profile.model || "gemini-1.5-flash" 
+                };
+                document.getElementById('hrZ5').value = App.profile.hrZones?.z5 ?? 180;
+                document.getElementById('hrZ1').value = App.profile.hrZones?.z1 ?? 108;
+            }
             if(localStorage.getItem('gemini_api_key')) document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key');
         }
         
@@ -534,20 +549,29 @@
             const key = document.getElementById('apiKeyInput').value || localStorage.getItem('gemini_api_key');
             const input = document.getElementById('aiInput').value;
             const btn = document.getElementById('btnGen');
+            
+            // FIX: Use default model if profile is missing it
+            const model = App.profile.model || "gemini-1.5-flash";
+            
             btn.innerText = "...";
             const PROMPT = `Parse workout: "${input}". Return JSON: { "intervals": [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "targets": { "pace": 0, "watts": 0, "rate": 0 } }] }. RULES: Pace "1:45"->105s.`;
+            
             try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: PROMPT }] }] })
                 });
                 const d = await r.json();
+                
+                // DETAILED ERROR HANDLING
+                if(d.error) throw new Error(d.error.message);
+                
                 const txt = d.candidates[0].content.parts[0].text;
                 const json = JSON.parse(txt.substring(txt.indexOf('{'), txt.lastIndexOf('}')+1));
                 App.mission.intervals = json.intervals;
                 renderTimeline();
                 showToast("Plan Generated", 'success');
-            } catch(e) { showToast("AI Error", 'error'); }
+            } catch(e) { showToast("AI Error: " + e.message, 'error'); }
             btn.innerText = "GENERATE PLAN";
         }
         
@@ -559,13 +583,18 @@
             const q = auto ? "Tactical advice?" : document.getElementById('coachIn').value;
             if(!auto) chat.innerHTML += `<div class='chat-msg'>${q}</div>`;
             chat.innerHTML += `<div class='chat-msg system'>Thinking...</div>`;
+            
+            const model = App.profile.model || "gemini-1.5-flash";
+            
             const prompt = `Coach me for: ${JSON.stringify(App.mission.intervals)}. Last session: ${JSON.stringify(App.history[0])}. Q: ${q}. Answer with <<<PLAN>>>JSON if changes needed.`;
             try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${App.profile.model}:generateContent?key=${key}`, {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
                     method: "POST", headers: {"Content-Type":"application/json"},
                     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
                 });
                 const d = await r.json();
+                if(d.error) throw new Error(d.error.message);
+                
                 const reply = d.candidates[0].content.parts[0].text;
                 const parts = reply.split("<<<PLAN>>>");
                 chat.lastElementChild.innerText = parts[0]; 
@@ -574,16 +603,8 @@
                     try {
                         const jsonStr = parts[1].match(/\[.*\]/s)[0];
                         App.pendingPlan = JSON.parse(jsonStr);
-                        const preview = App.pendingPlan.map(s => `<div>${s.type} ${s.dist||s.duration}</div>`).join('');
-                        chat.innerHTML += `
-                            <div class="plan-preview">
-                                <div style="color:white;font-weight:bold;margin-bottom:5px;">PROPOSED UPDATE:</div>
-                                ${preview}
-                                <button class='btn btn-green' style="width:100%;margin-top:10px;" onclick='applyPendingPlan()'>APPLY PLAN</button>
-                            </div>
-                        `;
-                        chat.scrollTop = chat.scrollHeight;
-                    } catch(err) { console.log("JSON Parse Failed: " + err); }
+                        chat.innerHTML += `<div style='text-align:center;margin-top:10px;'><button class='btn btn-green' onclick='applyPendingPlan()'>APPLY PLAN TO BUILDER</button></div>`;
+                    } catch(err) { console.log("JSON Parse Failed"); }
                 }
             } catch(e) { chat.lastElementChild.innerText = "Error: " + e.message; }
         }
