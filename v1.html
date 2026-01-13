@@ -116,8 +116,8 @@
             <div class="card">
                 <div class="section-header">MANUAL ARCHITECT</div>
                 <div class="build-tabs">
-                    <button class="b-tab active" data-mode="DIST" onclick="setBuildMode('DIST')">DIST</button>
-                    <button class="b-tab" data-mode="TIME" onclick="setBuildMode('TIME')">TIME</button>
+                    <button class="b-tab active" onclick="setBuildMode('DIST')">DIST</button>
+                    <button class="b-tab" onclick="setBuildMode('TIME')">TIME</button>
                 </div>
                 <div id="modeDist" class="input-grid"><div><label>DIST (M)</label><input type="number" id="mDist" value="2000"></div></div>
                 <div id="modeTime" class="input-grid" style="display:none;"><div><label>TIME (MIN)</label><input type="number" id="mTime" value="30"></div></div>
@@ -181,7 +181,7 @@
     <div id="screenHistory" class="screen"><div class="screen-header"><div class="header-title">LOGBOOK</div></div><div class="scroll-area" id="historyList"></div></div>
     <div id="screenSettings" class="screen"><div class="screen-header"><div class="header-title">SETTINGS</div></div><div class="scroll-area"><div class="card"><label>API KEY</label><input type="password" id="apiKeyInput"><button class="btn btn-danger" onclick="clearData()">RESET DATA</button></div></div></div>
 
-    <div class="nav-bar" role="navigation">
+    <div class="nav-bar">
         <button class="nav-btn active" onclick="nav('screenBuilder')">BUILD</button>
         <button class="nav-btn" onclick="nav('dashScreen')">ROW</button>
         <button class="nav-btn" onclick="nav('screenHistory')">LOGS</button>
@@ -189,6 +189,12 @@
     </div>
 
     <script>
+        // Global Error Trap
+        window.onerror = function(msg, url, line) {
+            alert("System Error: " + msg);
+            return true;
+        };
+
         const App = {
             mission: { intervals: [] },
             history: [],
@@ -198,9 +204,10 @@
 
         // CORRECTED PRELOAD (Aug 26 = 7726m, Jan 8 = 78 Cal)
         const PRELOAD_HISTORY = [
-            {id:"111095775", date:"2026-01-12T18:38:00", desc:"v3000m/6:00r...3 row", stats:{work_time_fmt:"19:53.1", work_dist:5250, pace:"01:53.6", avg_watts:239, cal_hr:1121, total_cal:370, avg_hr:177, drag:134}},
+            {id:"111095775", date:"2026-01-12T18:38:00", desc:"v3000m/6:00r...3 row", stats:{work_time_fmt:"19:53.1", work_dist:5250, pace:"01:53.6", avg_watts:239, cal_hr:1121, total_cal:370, avg_hr:177, drag:134, comments:"Splits: 3000m @ 1:54.8, 1500m @ 1:53.4, 750m @ 1:49.4"}},
+            {id:"110986164", date:"2026-01-10T09:47:00", desc:"v2000m/4:00r...3 row", stats:{work_time_fmt:"23:04.0", work_dist:6000, pace:"01:55.3", avg_watts:228, cal_hr:1085, total_cal:416, avg_hr:174, drag:135}},
             {id:"110896557", date:"2026-01-08T20:51:00", desc:"5:00 row", stats:{work_time_fmt:"05:00.0", work_dist:1230, pace:"02:01.9", avg_watts:193, cal_hr:964, total_cal:78, avg_hr:146, drag:124}},
-            {id:"105488743", date:"2025-08-26T21:12:00", desc:"32:00 row", stats:{work_time_fmt":"32:00.0", work_dist:7726, pace:"02:04.2", avg_watts:182, cal_hr:927, total_cal:491, avg_hr:0, drag:117}}
+            {id:"105488743", date:"2025-08-26T21:12:00", desc:"32:00 row", stats:{work_time_fmt:"32:00.0", work_dist:7726, pace:"02:04.2", avg_watts:182, cal_hr:927, total_cal:491, avg_hr:0, drag:117}}
         ];
 
         window.onload = () => {
@@ -272,7 +279,8 @@
 
         function resizeCanvas(id) {
             const cvs = document.getElementById(id);
-            if(cvs && cvs.parentElement) {
+            // CRASH FIX: Check parent
+            if(cvs && cvs.parentElement && cvs.offsetParent) {
                 cvs.width = cvs.parentElement.clientWidth;
                 cvs.height = cvs.parentElement.clientHeight;
             }
@@ -280,6 +288,7 @@
 
         function drawCurve(watts) {
             const cvs = document.getElementById('curveCanvas');
+            if(!cvs.offsetParent) return; // Don't draw if hidden
             const ctx = cvs.getContext('2d');
             ctx.clearRect(0,0,cvs.width,cvs.height);
             ctx.strokeStyle = '#00FF99'; ctx.lineWidth = 3;
@@ -292,6 +301,7 @@
 
         function drawBars() {
             const cvs = document.getElementById('barCanvas');
+            if(!cvs.offsetParent) return; // Don't draw if hidden
             const ctx = cvs.getContext('2d');
             ctx.clearRect(0,0,cvs.width,cvs.height);
             const barW = cvs.width / 30;
@@ -363,15 +373,16 @@
         }
 
         async function generateMission() {
-            // Regex Fallback Logic included in V11.6
-            alert("AI Connected (Simulated)");
+             const input = document.getElementById('aiInput').value;
+             // Regex Fallback Logic included in V11.6 logic (omitted for brevity in this UI demo)
+             alert("AI Connected (Simulated)");
         }
         
         function goToStrategy() {
             nav('screenStrategy');
             document.getElementById('stratSummary').innerText = App.mission.intervals.length + " Steps";
         }
-        
+
         function showToast(msg, type='success') {
             const t = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
