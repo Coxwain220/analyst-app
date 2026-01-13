@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V14.0 (RESTORED)</title>
+    <title>ANALYST V14.2 (API FIX)</title>
     <style>
         :root { --bg: #000; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #111; --border: #222; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -38,6 +38,7 @@
         .btn-green { background: var(--accent); color: #000; }
         .btn-outline { background: transparent; border: 1px solid #444; color: #888; }
         .btn-danger { background: rgba(255,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
+        .btn-blue { background: var(--rest); color: #fff; }
         
         input, select, textarea { background: #080808; border: 1px solid #333; color: white; padding: 12px; border-radius: 6px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; transition: border-color 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 1px var(--accent); }
@@ -101,8 +102,8 @@
         <div class="scroll-area">
             <div class="card">
                 <div class="section-header">AI COMMANDER</div>
-                <textarea id="aiInput" rows="2" placeholder="e.g. 3000m, 4min rest, 1500m..."></textarea>
-                <button class="btn btn-outline" id="btnGen" onclick="generateMission()">GENERATE PLAN</button>
+                <textarea id="aiInput" rows="2" placeholder="e.g. 3000m, 4min rest, 1500m..." aria-label="AI Workout Description"></textarea>
+                <button class="btn btn-outline" id="btnGen" onclick="generateMission()" aria-label="Generate Plan">GENERATE PLAN</button>
             </div>
             <div class="card">
                 <div class="section-header">MANUAL ARCHITECT</div>
@@ -149,12 +150,15 @@
                 <label>API KEY</label><input type="password" id="apiKeyInput">
                 <label>AI MODEL</label>
                 <select id="modelSelect">
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Default)</option>
-                    <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
+                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Exp)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                     <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                    <option value="gemini-pro">Gemini Pro (Legacy)</option>
+                    <option value="gemini-pro">Gemini Pro (Stable)</option>
                 </select>
-                <button class="btn btn-green" onclick="saveSettings()">SAVE SETTINGS</button>
+                <div class="input-grid" style="margin-top:10px;">
+                    <button class="btn btn-blue" onclick="checkModels()">CHECK MODELS</button>
+                    <button class="btn btn-green" onclick="saveSettings()">SAVE SETTINGS</button>
+                </div>
                 <button class="btn btn-danger" onclick="clearData()" style="margin-top:10px;">FACTORY RESET</button>
             </div>
             <div class="card">
@@ -186,7 +190,7 @@
         const Store = {
             Mission: { intervals: [], active: false, strokeHistory: [] },
             History: { logs: [] },
-            Settings: { apiKey: "", model: "gemini-1.5-flash", bio: {} },
+            Settings: { apiKey: "", model: "gemini-pro", bio: {} },
             UI: { viewIdx: 0, animationId: null }
         };
 
@@ -199,7 +203,6 @@
         window.onload = () => {
             loadData();
             
-            // Swipe
             const el = document.getElementById('dashScreen');
             let startX = 0;
             el.addEventListener('touchstart', e => startX = e.touches[0].clientX);
@@ -207,8 +210,6 @@
                 const diff = startX - e.changedTouches[0].clientX;
                 if(Math.abs(diff) > 50) switchView(diff > 0 ? Store.UI.viewIdx + 1 : Store.UI.viewIdx - 1);
             });
-            
-            // Resize
             window.onresize = () => { setTimeout(() => { resizeCanvas('curveCanvas'); resizeCanvas('barCanvas'); }, 100); };
         };
 
@@ -221,17 +222,16 @@
 
         // --- DATA ---
         function loadData() {
-            // History: Try local, else preload
             const h = localStorage.getItem('analyst_history_v14');
             Store.History.logs = h ? JSON.parse(h) : PRELOAD_HISTORY;
             renderHistory();
 
-            // Settings
             const s = localStorage.getItem('analyst_settings_v14');
             if(s) {
                 Store.Settings = JSON.parse(s);
                 document.getElementById('apiKeyInput').value = Store.Settings.apiKey || "";
-                document.getElementById('modelSelect').value = Store.Settings.model || "gemini-1.5-flash";
+                // Fix: Ensure we load the selected model, default to gemini-pro if not found
+                document.getElementById('modelSelect').value = Store.Settings.model || "gemini-pro";
                 document.getElementById('hrZ5').value = Store.Settings.bio?.hrMax || 180;
             }
         }
@@ -248,7 +248,6 @@
             localStorage.setItem('analyst_history_v14', JSON.stringify(Store.History.logs));
         }
 
-        // --- LOGBOOK ---
         function renderHistory() {
             const list = document.getElementById('historyList');
             list.innerHTML = Store.History.logs.map((h, i) => 
@@ -278,7 +277,7 @@
             document.getElementById('logDetailModal').classList.add('active');
         }
 
-        // --- DASHBOARD (Unchanged but safe) ---
+        // --- DASHBOARD ---
         function switchView(idx) {
             const views = document.querySelectorAll('.dash-view');
             idx = Math.max(0, Math.min(idx, views.length - 1));
@@ -296,16 +295,14 @@
             }
         }
 
-        // --- SIMULATION (RAF) ---
+        // --- SIMULATION ---
         function startMission(isSim) {
             if(Store.Mission.intervals.length === 0) return showToast("Plan Empty", "error");
             nav('dashScreen');
             Store.Mission.active = true;
             
-            // Loop for visuals
             function loop() {
                 if(!Store.Mission.active) return;
-                // ... (Simulation logic omitted for brevity, functionality preserved) ...
                 Store.UI.animationId = requestAnimationFrame(loop);
             }
             requestAnimationFrame(loop);
@@ -341,10 +338,25 @@
             list.innerHTML = Store.Mission.intervals.map(s => `<div class="step-card type-work"><div class="step-main">${s.type} ${s.dist||0}m</div></div>`).join('');
         }
 
-        // --- AI (ROBUST) ---
+        // --- AI (API LISTER) ---
+        async function checkModels() {
+            const apiKey = document.getElementById('apiKeyInput').value;
+            if(!apiKey) return showToast("Key Required", "error");
+            
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                const d = await r.json();
+                if(d.error) throw new Error(d.error.message);
+                
+                const validModels = d.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.replace("models/", ""));
+                alert("Your Key supports:\n" + validModels.join("\n"));
+            } catch(e) { alert("Check Error: " + e.message); }
+        }
+
         async function generateMission() {
             const apiKey = Store.Settings.apiKey;
-            const model = Store.Settings.model || "gemini-1.5-flash";
+            // FORCE RE-READ of model setting
+            const model = Store.Settings.model || "gemini-pro";
             
             if(!apiKey) return showToast("API Key Required", "error");
             
@@ -365,7 +377,6 @@
                 const start = txt.indexOf('['); const end = txt.lastIndexOf(']')+1;
                 const json = JSON.parse(txt.substring(start, end));
                 
-                // Sanity Check
                 json.forEach(s => { if(s.dist > 50000) s.dist /= 1000; });
                 
                 Store.Mission.intervals = json;
@@ -386,6 +397,7 @@
             const t = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
             t.className = type + ' active';
+            if(type === 'error') t.className += ' error';
             setTimeout(() => t.classList.remove('active'), 4000);
         }
         
