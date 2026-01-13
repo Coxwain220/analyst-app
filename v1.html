@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V15.1 (SAFE HARBOR)</title>
+    <title>ANALYST V16.0 (OFFLINE MASTER)</title>
     <style>
         :root { --bg: #000; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #111; --border: #222; }
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -38,6 +38,7 @@
         .btn-green { background: var(--accent); color: #000; }
         .btn-outline { background: transparent; border: 1px solid #444; color: #888; }
         .btn-danger { background: rgba(255,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
+        .btn-blue { background: var(--rest); color: #fff; }
         
         input, select, textarea { background: #080808; border: 1px solid #333; color: white; padding: 12px; border-radius: 6px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; transition: border-color 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 1px var(--accent); }
@@ -195,7 +196,13 @@
         const PRELOAD_HISTORY = [
             {id:"111095775", date:"2026-01-12T18:38:00", desc:"v3000m/6:00r...3 row", stats:{work_time_fmt:"19:53.1", work_dist:5250, pace:"01:53.6", avg_watts:239, cal_hr:1121, total_cal:370, avg_hr:177, drag:134, comments:"Splits: 3000m @ 1:54.8, 1500m @ 1:53.4, 750m @ 1:49.4. First 3k felt it..."}},
             {id:"110986164", date:"2026-01-10T09:47:00", desc:"v2000m/4:00r...3 row", stats:{work_time_fmt:"23:04.0", work_dist:6000, pace:"01:55.3", avg_watts:228, cal_hr:1085, total_cal:416, avg_hr:174, drag:135}},
-            {id:"105488743", date:"2025-08-26T21:12:00", desc:"32:00 row", stats:{work_time_fmt:"32:00.0", work_dist:7726, pace:"02:04.2", avg_watts:182, cal_hr:927, total_cal:491, avg_hr:0, drag:117}}
+            {id:"105488743", date:"2025-08-26T21:12:00", desc:"32:00 row", stats:{work_time_fmt:"32:00.0", work_dist:7726, pace:"02:04.2", avg_watts:182, cal_hr:927, total_cal:491, avg_hr:0, drag:117}},
+             {id:"110898284", date:"2026-01-08T21:25:00", desc:"v1:00/1:00r...8 row", stats:{work_time_fmt:"08:00.0", work_dist:2077, pace:"01:55.5", avg_watts:227, cal_hr:1080, total_cal:141, avg_hr:152, drag:124}},
+            {id:"110896557", date:"2026-01-08T20:51:00", desc:"5:00 row", stats:{work_time_fmt:"05:00.0", work_dist:1230, pace:"02:01.9", avg_watts:193, cal_hr:964, total_cal:78, avg_hr:146, drag:124}},
+            {id:"110710851", date:"2026-01-05T18:46:00", desc:"v1500m/4:00r...4 row", stats:{work_time_fmt:"22:53.4", work_dist:6000, pace:"01:54.4", avg_watts:233, cal_hr:1103, total_cal:418, avg_hr:176, drag:146}},
+            {id:"110604360", date:"2026-01-03T09:52:00", desc:"v1500m/4:00r...4 row", stats:{work_time_fmt:"23:04.7", work_dist:6000, pace:"01:55.3", avg_watts:228, cal_hr:1083, total_cal:415, avg_hr:174, drag:143}},
+            {id:"110394222", date:"2025-12-29T18:31:00", "desc": "v1250m/4:00r...4 row", stats:{work_time_fmt:"19:20.8", work_dist:5000, pace:"01:56.0", avg_watts:224, cal_hr:1070, total_cal:342, avg_hr:0, drag:137}},
+            {id:"110319537", date:"2025-12-27T09:58:00", desc:"v800m/5:00r...6 row", stats:{work_time_fmt:"18:13.1", work_dist:4800, pace:"01:53.8", avg_watts:237, cal_hr:1115, total_cal:341, avg_hr:0, drag:124}}
         ];
 
         window.onload = () => {
@@ -223,11 +230,11 @@
 
         // --- DATA ---
         function loadData() {
-            const h = localStorage.getItem('analyst_history_v15');
+            const h = localStorage.getItem('analyst_history_v16');
             Store.History.logs = h ? JSON.parse(h) : PRELOAD_HISTORY;
             renderHistory();
 
-            const s = localStorage.getItem('analyst_settings_v15');
+            const s = localStorage.getItem('analyst_settings_v16');
             if(s) {
                 Store.Settings = JSON.parse(s);
                 document.getElementById('apiKeyInput').value = Store.Settings.apiKey || "";
@@ -240,12 +247,12 @@
             Store.Settings.apiKey = document.getElementById('apiKeyInput').value.trim();
             Store.Settings.model = document.getElementById('modelSelect').value;
             Store.Settings.bio = { hrMax: document.getElementById('hrZ5').value };
-            localStorage.setItem('analyst_settings_v15', JSON.stringify(Store.Settings));
+            localStorage.setItem('analyst_settings_v16', JSON.stringify(Store.Settings));
             showToast("Settings Saved");
         }
 
         function saveHistory() {
-            localStorage.setItem('analyst_history_v15', JSON.stringify(Store.History.logs));
+            localStorage.setItem('analyst_history_v16', JSON.stringify(Store.History.logs));
         }
 
         function renderHistory() {
@@ -313,7 +320,6 @@
                 if(document.getElementById('curveCanvas').offsetParent) {
                     const ctx = document.getElementById('curveCanvas').getContext('2d');
                     ctx.clearRect(0,0,300,150); // Simple clear
-                    // Full drawing logic omitted for brevity in V15
                 }
                 
                 Store.UI.animationId = requestAnimationFrame(loop);
