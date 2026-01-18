@@ -3,546 +3,1412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ANALYST V17.0 (THE LINK)</title>
+    <title>Rowing Analyst Pro</title>
     <style>
-        :root { --bg: #000; --text: #e0e0e0; --accent: #00FF99; --warn: #FFD700; --danger: #FF4444; --rest: #00AAFF; --panel: #111; --border: #222; }
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; }
-        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Roboto', system-ui, sans-serif; }
-        body { display: flex; flex-direction: column; }
-
-        /* ANIMATIONS */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideDown { from { transform: translate(-50%, -100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-
-        /* TOAST */
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; border: 1px solid #444; padding: 12px 24px; border-radius: 30px; z-index: 6000; font-size: 13px; font-weight: bold; display:none; align-items:center; gap:15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); white-space: nowrap; }
-        #toast.active { display: flex; animation: slideDown 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), fadeOut 0.5s linear 3.5s forwards; }
-        #toast.success { border-color: var(--accent); color: var(--accent); }
-        #toast.error { border-color: var(--danger); color: var(--danger); }
-        .toast-close { cursor: pointer; opacity: 0.7; }
-
-        /* LAYOUT */
-        .screen { display: none; flex: 1; flex-direction: column; overflow: hidden; position: relative; animation: fadeIn 0.2s ease-in-out; }
-        .screen.active { display: flex; }
-        .scroll-area { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; -webkit-overflow-scrolling: touch; }
-        .screen-header { display: flex; align-items: center; padding: 15px; background: var(--panel); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .header-title { flex-grow: 1; text-align: center; font-weight: 800; font-size: 14px; letter-spacing: 1.5px; color: #888; text-transform: uppercase; }
-        .header-btn { background: transparent; border: 1px solid #333; color: var(--accent); font-weight: bold; font-size: 11px; cursor: pointer; padding: 8px 14px; border-radius: 4px; transition: background 0.2s; }
-        .header-btn:focus { outline: 2px solid var(--accent); }
-
-        /* UI ELEMENTS */
-        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .section-header { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; font-weight: 700; display:flex; justify-content:space-between; }
+        :root {
+            --bg: #000;
+            --text: #e0e0e0;
+            --accent: #00FF99;
+            --accent-dim: #00AA66;
+            --danger: #FF4444;
+            --rest: #00AAFF;
+            --panel: #111;
+            --border: #222;
+            --card-bg: #0a0a0a;
+        }
         
-        .btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 13px; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap:8px; transition: all 0.2s ease; background: #222; color: #fff; border: 1px solid transparent; }
-        .btn:hover { transform: scale(1.02); border-color: #444; background: #2a2a2a; }
-        .btn:active { transform: scale(0.98); opacity: 0.8; }
-        .btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
         
-        .btn-green { background: var(--accent); color: #000; }
-        .btn-outline { background: transparent; border: 1px solid #444; color: #888; }
-        .btn-blue { background: var(--rest); color: #fff; }
-        .btn-danger { background: rgba(255,68,68,0.1); border: 1px solid var(--danger); color: var(--danger); }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
         
-        input, select, textarea { background: #080808; border: 1px solid #333; color: white; padding: 12px; border-radius: 6px; width: 100%; font-family: inherit; margin-bottom: 10px; font-size: 16px; transition: border-color 0.2s; }
-        input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 1px var(--accent); }
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        label { font-size: 10px; color: #666; font-weight: bold; display: block; margin-bottom: 4px; text-transform: uppercase; }
-
-        /* DASHBOARD VIEWS */
-        #dashScreen { background: #000; }
-        .dash-viewport { flex: 1; display: flex; overflow: hidden; position: relative; }
-        .dash-view { min-width: 100%; height: 100%; display: flex; flex-direction: column; padding: 10px; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        /* TOAST NOTIFICATIONS */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--panel);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
         
-        .grid-data { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 5px; height: 100%; }
-        .data-cell { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #222; border-radius: 8px; position: relative; }
-        .data-val { font-size: 12vw; font-weight: 900; line-height: 1; color: white; font-variant-numeric: tabular-nums; }
-        .data-label { font-size: 2vh; color: #666; font-weight: bold; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
-
-        .chart-container { flex: 1; background: #080808; border: 1px solid #333; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        #curveCanvas, #barCanvas { width: 100%; height: 100%; }
-        .chart-overlay { position: absolute; top: 10px; left: 10px; font-size: 12px; color: var(--accent); font-weight: bold; }
-
-        .boat-lane { flex: 1; border-bottom: 1px dashed #333; position: relative; display: flex; align-items: center; }
-        .boat { font-size: 30px; position: absolute; transition: left 0.5s linear; transform: translateX(-50%); }
-        .boat-label { position: absolute; left: 10px; top: 10px; font-size: 10px; color: #666; }
-        .finish-line { position: absolute; right: 10%; height: 100%; width: 2px; background: #444; }
-
-        .large-row { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid #222; }
-        .large-val { font-size: 22vw; font-weight: 900; color: white; line-height: 1; font-variant-numeric: tabular-nums; }
-        .large-sub { display: flex; width: 100%; height: 35%; border-top: 1px solid #222; }
-        .large-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid #222; }
-
-        .dash-dots { display: flex; justify-content: center; gap: 8px; padding: 15px; background: #000; z-index: 10; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; cursor: pointer; transition: background 0.2s; }
-        .dot.active { background: var(--accent); transform: scale(1.2); }
-
-        /* NAV BAR */
-        .nav-bar { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; flex-shrink: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-btn { flex: 1; background: transparent; border: none; color: #666; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; }
-        .nav-btn.active { color: var(--accent); background: #1a1a1a; transform: translateY(-2px); }
-        .nav-btn:focus { outline: none; color: var(--accent); }
-
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.error {
+            border-color: var(--danger);
+            background: rgba(255,68,68,0.1);
+            color: var(--danger);
+        }
+        
+        .toast.success {
+            border-color: var(--accent);
+            background: rgba(0,255,153,0.1);
+            color: var(--accent);
+        }
+        
+        /* SCREENS */
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        .screen-header {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        
+        .screen-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #666;
+            text-transform: uppercase;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .header-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .header-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .header-btn.connected {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .scroll-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+        
+        /* CARDS */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .card-header {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        /* BUTTONS */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        
+        .btn-danger {
+            background: rgba(255,68,68,0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .btn + .btn {
+            margin-top: 12px;
+        }
+        
+        /* INPUTS */
+        input, textarea, select {
+            width: 100%;
+            background: #080808;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-group {
+            margin-bottom: 16px;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        /* DASHBOARD */
+        .dash-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .metric {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--text);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+        
+        /* WORKOUT PLAN */
+        .interval-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .interval-type {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+        
+        .interval-work {
+            color: var(--accent);
+        }
+        
+        .interval-rest {
+            color: var(--rest);
+        }
+        
+        .interval-detail {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        
+        .interval-remove {
+            background: transparent;
+            border: none;
+            color: var(--danger);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        
+        /* HISTORY */
+        .history-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .history-item:active {
+            transform: scale(0.98);
+            background: var(--panel);
+        }
+        
+        .history-date {
+            font-size: 11px;
+            color: #666;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .history-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        
+        .history-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--accent);
+            font-family: monospace;
+        }
+        
+        /* NAVIGATION */
+        .nav-bar {
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            height: 70px;
+            flex-shrink: 0;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .nav-item {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        
+        .nav-item.active {
+            color: var(--accent);
+            background: rgba(0,255,153,0.05);
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+        }
+        
         /* MODAL */
-        #logDetailModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: none; flex-direction: column; animation: slideUp 0.3s; }
-        #logDetailModal.active { display: flex; }
-        .modal-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #111; }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 9000;
+            display: none;
+            flex-direction: column;
+        }
         
-        .history-item { display: flex; justify-content: space-between; padding: 16px; border-bottom: 1px solid #222; cursor: pointer; transition: background 0.2s; }
-        .history-item:hover { background: #1a1a1a; }
-        .h-date { font-size: 11px; color: #666; font-weight: bold; }
-        .h-title { font-size: 14px; font-weight: bold; color: white; margin-top: 2px; }
-        .h-stats { font-family: monospace; color: var(--accent); font-size: 13px; }
-
-        @media (max-width: 600px) { .input-grid { grid-template-columns: 1fr; } .btn { font-size: 14px; padding: 16px; } }
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-header {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+        }
+        
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        
+        .modal-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        /* STATUS INDICATOR */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-connected {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+        }
+        
+        .status-disconnected {
+            background: #666;
+        }
+        
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .empty-state-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
 
-    <div id="toast"><span id="toastMsg">Notification</span><span class="toast-close" onclick="document.getElementById('toast').style.display='none'">×</span></div>
-
-    <div id="screenBuilder" class="screen active">
-        <div class="screen-header"><div class="header-title">MISSION CONTROL</div></div>
-        <div class="scroll-area">
-            <div class="card">
-                <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;">
-                    AI COMMANDER
-                    <div style="font-size:10px;color:#666;"><input type="checkbox" id="simMode" onchange="toggleSimMode()"> SIMULATION MODE</div>
-                </div>
-                <textarea id="aiInput" rows="2" placeholder="e.g. 3000m, 4min rest, 1500m..." aria-label="AI Workout"></textarea>
-                <button class="btn btn-outline" id="btnGen" onclick="generateMission()" aria-label="Generate">GENERATE PLAN</button>
-            </div>
-            <div class="card">
-                <div class="section-header">MANUAL ARCHITECT</div>
-                <div class="build-tabs">
-                    <button class="b-tab active" onclick="setBuildMode('DIST')">DIST</button>
-                    <button class="b-tab" onclick="setBuildMode('TIME')">TIME</button>
-                </div>
-                <div id="modeDist" class="input-grid"><div><label>DIST (M)</label><input type="number" id="mDist" value="2000"></div></div>
-                <div id="modeTime" class="input-grid" style="display:none;"><div><label>TIME (MIN)</label><input type="number" id="mTime" value="30"></div></div>
-                <div class="input-grid" style="margin-top:10px;"><div><label>REST (MIN)</label><input type="number" id="mRestMin" value="0"></div><div><label>REST (SEC)</label><input type="number" id="mRestSec" value="0"></div></div>
-                <button class="btn btn-green" onclick="addToPlan()">+ ADD TO PLAN</button>
-            </div>
-            <div class="section-header">FLIGHT PLAN</div>
-            <div id="builderList"></div>
-            <div style="height:20px;"></div>
-            <button class="btn btn-green" onclick="goToStrategy()">STRATEGY →</button>
-        </div>
-    </div>
-
-    <div id="dashScreen" class="screen">
+    <!-- BUILD SCREEN -->
+    <div id="screenBuild" class="screen active">
         <div class="screen-header">
-            <div class="header-title">DASHBOARD</div>
-            <button class="header-btn" id="btConnectBtn" onclick="connectBluetooth()" style="color:#666;">CONNECT PM5</button>
+            <div class="screen-title">Build Workout</div>
         </div>
-        <div class="dash-viewport" id="dashViewport">
-            <div class="dash-view"><div class="grid-data"><div class="data-cell"><div class="data-val" id="ad_time">0:00</div><div class="data-label">TIME</div></div><div class="data-cell"><div class="data-val" id="ad_dist">0</div><div class="data-label">METERS</div></div><div class="data-cell"><div class="data-val" id="ad_pace">0:00</div><div class="data-label">PACE</div></div><div class="data-cell"><div class="data-val" id="ad_watts">0</div><div class="data-label">WATTS</div></div><div class="data-cell"><div class="data-val" id="ad_rate">0</div><div class="data-label">S/M</div></div><div class="data-cell"><div class="data-val" id="ad_hr">--</div><div class="data-label">HR</div></div></div></div>
-            <div class="dash-view"><div class="section-header" style="justify-content:center;border:none;">FORCE CURVE</div><div class="chart-container"><canvas id="curveCanvas"></canvas><div class="chart-overlay">PEAK: <span id="fc_peak">0</span>N</div></div><div class="input-grid" style="margin-top:10px;height:80px;"><div class="data-cell"><div class="data-val" style="font-size:8vw;" id="fc_watts">0</div><div class="data-label">WATTS</div></div><div class="data-cell"><div class="data-val" style="font-size:8vw;" id="fc_rate">0</div><div class="data-label">S/M</div></div></div></div>
-            <div class="dash-view"><div class="section-header" style="justify-content:center;border:none;">PACEBOAT</div><div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;"><div class="boat-lane"><div class="boat-label">YOU</div><div class="finish-line"></div><div class="boat" id="boat_you" style="left:0%;">🚣</div></div><div class="boat-lane"><div class="boat-label">TARGET</div><div class="finish-line"></div><div class="boat" id="boat_tgt" style="left:0%;filter:grayscale(100%);">🚤</div></div></div></div>
-            <div class="dash-view"><div class="section-header" style="justify-content:center;border:none;">PACE HISTORY</div><div class="chart-container"><canvas id="barCanvas"></canvas></div></div>
-            <div class="dash-view"><div class="large-row"><div class="large-val" id="lp_pace">0:00</div><div class="data-label">AVE PACE</div></div><div class="large-sub"><div class="large-col"><div class="large-val" style="font-size:15vw;" id="lp_rate">0</div><div class="data-label">S/M</div></div><div class="large-col"><div class="large-val" style="font-size:15vw;" id="lp_time">0:00</div><div class="data-label">TIME</div></div></div></div>
+        <div class="scroll-content">
+            <!-- Quick Add -->
+            <div class="card">
+                <div class="card-header">Quick Add Interval</div>
+                <div class="input-group">
+                    <label>Distance (meters)</label>
+                    <input type="number" id="quickDist" placeholder="e.g. 2000" value="2000">
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Rest Min</label>
+                        <input type="number" id="quickRestMin" placeholder="0" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Rest Sec</label>
+                        <input type="number" id="quickRestSec" placeholder="0" value="0">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="app.addInterval()">Add Interval</button>
+            </div>
+
+            <!-- Current Plan -->
+            <div class="card">
+                <div class="card-header">Workout Plan</div>
+                <div id="planList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">No intervals added yet.<br>Add your first interval above.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <button class="btn btn-primary" onclick="app.startWorkout()" id="btnStart" disabled>Start Workout</button>
+            <button class="btn btn-outline" onclick="app.clearPlan()">Clear Plan</button>
         </div>
-        <div class="dash-dots"><div class="dot active" onclick="switchView(0)"></div><div class="dot" onclick="switchView(1)"></div><div class="dot" onclick="switchView(2)"></div><div class="dot" onclick="switchView(3)"></div><div class="dot" onclick="switchView(4)"></div></div>
-        <button class="btn btn-outline" style="margin:0 10px 10px 10px;" onclick="endMission()">FINISH</button>
     </div>
 
-    <div id="screenStrategy" class="screen"><div class="screen-header"><button class="header-btn" onclick="nav('screenBuilder')">← BACK</button><div class="header-title">STRATEGY</div></div><div class="scroll-area"><div class="card"><div class="section-header">MISSION BRIEF</div><div id="stratSummary" style="color:white; padding:10px;"></div></div><div class="card"><div class="section-header">COACH</div><div id="coachChat" style="height:200px; overflow-y:auto;"></div><div style="display:flex; margin-top:10px;"><input id="coachIn" type="text" placeholder="Ask..."><button class="btn btn-outline" onclick="askCoach()">ASK</button></div></div><button class="btn btn-green" onclick="startMission(false)">START ROW</button></div></div>
+    <!-- ROW SCREEN -->
+    <div id="screenRow" class="screen">
+        <div class="screen-header">
+            <button class="header-btn" onclick="app.endWorkout()">End</button>
+            <div class="screen-title">Rowing</div>
+            <button class="header-btn" id="btBtn" onclick="app.connectBluetooth()">
+                <span class="status-indicator status-disconnected" id="btStatus"></span>
+                Connect
+            </button>
+        </div>
+        <div class="scroll-content">
+            <div class="dash-metrics">
+                <div class="metric">
+                    <div class="metric-value" id="metricTime">0:00</div>
+                    <div class="metric-label">Time</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metricDist">0</div>
+                    <div class="metric-label">Meters</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metricPace">0:00</div>
+                    <div class="metric-label">Pace</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metricWatts">0</div>
+                    <div class="metric-label">Watts</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metricRate">0</div>
+                    <div class="metric-label">S/M</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metricHR">--</div>
+                    <div class="metric-label">HR</div>
+                </div>
+            </div>
 
+            <!-- Current Interval Info -->
+            <div class="card" id="currentInterval" style="display:none;">
+                <div class="card-header">Current Interval</div>
+                <div style="text-align:center; padding:20px;">
+                    <div style="font-size:24px; font-weight:900; color:var(--accent);" id="intervalInfo">Interval 1 of 3</div>
+                    <div style="font-size:16px; color:#666; margin-top:8px;" id="intervalTarget">Target: 2000m</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORY SCREEN -->
     <div id="screenHistory" class="screen">
-        <div class="screen-header"><div class="header-title">LOGBOOK</div></div>
-        <div class="scroll-area" id="historyList"></div>
+        <div class="screen-header">
+            <div class="screen-title">Workout History</div>
+        </div>
+        <div class="scroll-content" id="historyList">
+            <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <div class="empty-state-text">No workouts recorded yet.<br>Complete your first workout to see it here.</div>
+            </div>
+        </div>
     </div>
 
+    <!-- SETTINGS SCREEN -->
     <div id="screenSettings" class="screen">
-        <div class="screen-header"><div class="header-title">SETTINGS</div></div>
-        <div class="scroll-area">
+        <div class="screen-header">
+            <div class="screen-title">Settings</div>
+        </div>
+        <div class="scroll-content">
             <div class="card">
-                <div class="section-header">SYSTEM</div>
-                <label>API KEY</label><input type="password" id="apiKeyInput">
-                <label>AI MODEL</label>
-                <select id="modelSelect">
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                    <option value="gemini-pro">Gemini Pro</option>
-                </select>
-                <button class="btn btn-green" onclick="saveSettings()">SAVE SETTINGS</button>
-                <button class="btn btn-danger" onclick="clearData()" style="margin-top:10px;">FACTORY RESET</button>
+                <div class="card-header">Profile</div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Age</label>
+                        <input type="number" id="settingAge" placeholder="25">
+                    </div>
+                    <div class="input-group">
+                        <label>Weight (kg)</label>
+                        <input type="number" id="settingWeight" placeholder="75">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Max Heart Rate</label>
+                    <input type="number" id="settingMaxHR" placeholder="190">
+                </div>
             </div>
+
             <div class="card">
-                <div class="section-header">PROFILE</div>
-                <div class="input-grid"><div><label>AGE</label><input type="number" id="bioAge"></div><div><label>WEIGHT</label><input type="number" id="bioWeight"></div></div>
-                <label>HR MAX (Z5)</label><input type="number" id="hrZ5">
+                <div class="card-header">Data</div>
+                <button class="btn btn-outline" onclick="app.exportData()">Export History</button>
+                <button class="btn btn-danger" onclick="app.resetData()">Reset All Data</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">About</div>
+                <div style="color:#666; font-size:13px; line-height:1.6;">
+                    <strong>Rowing Analyst Pro</strong><br>
+                    Version 1.0<br>
+                    Designed for PM5 monitors via Web Bluetooth
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="logDetailModal">
-        <div class="modal-content">
-            <div class="screen-header"><button class="header-btn" onclick="document.getElementById('logDetailModal').classList.remove('active')">← BACK</button><div class="header-title">DETAILS</div></div>
-            <div class="scroll-area" style="padding:20px;">
-                <div id="logDetailContent"></div>
-            </div>
+    <!-- Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-header">
+            <button class="modal-close" onclick="app.closeModal()">←</button>
+            <div class="modal-title">Workout Details</div>
         </div>
+        <div class="modal-content" id="detailContent"></div>
     </div>
 
-    <div class="nav-bar" role="navigation">
-        <button class="nav-btn active" onclick="nav('screenBuilder')">BUILD</button>
-        <button class="nav-btn" onclick="nav('dashScreen')">ROW</button>
-        <button class="nav-btn" onclick="nav('screenHistory')">LOGS</button>
-        <button class="nav-btn" onclick="nav('screenSettings')">SET</button>
-    </div>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="app.navigate('screenBuild')">
+            <span class="nav-icon">🏗️</span>
+            Build
+        </button>
+        <button class="nav-item" onclick="app.navigate('screenRow')">
+            <span class="nav-icon">🚣</span>
+            Row
+        </button>
+        <button class="nav-item" onclick="app.navigate('screenHistory')">
+            <span class="nav-icon">📊</span>
+            History
+        </button>
+        <button class="nav-item" onclick="app.navigate('screenSettings')">
+            <span class="nav-icon">⚙️</span>
+            Settings
+        </button>
+    </nav>
 
     <script>
-        // --- CONSTANTS ---
-        const PM5_SERVICE = 'ce060030-43e5-11e4-916c-0800200c9a66';
-        const PM5_CHAR_GENERAL = 'ce060031-43e5-11e4-916c-0800200c9a66';
+        // ============================================================================
+        // ROWING ANALYST PRO - CORE APPLICATION
+        // ============================================================================
         
-        // --- GLOBAL STORE ---
-        const Store = {
-            Mission: { intervals: [], active: false, strokeHistory: [] },
-            History: { logs: [] },
-            Settings: { apiKey: "", model: "gemini-1.5-flash", bio: {} },
-            UI: { viewIdx: 0, animationId: null },
-            Live: { watts: 0, rate: 0, dist: 0, pace: 0, hr: 0, time: 0 }
+        const STORAGE_KEYS = {
+            HISTORY: 'rowing_analyst_history_v1',
+            SETTINGS: 'rowing_analyst_settings_v1',
+            PLAN: 'rowing_analyst_current_plan'
         };
 
-        const PRELOAD_HISTORY = [
-            {id:"111095775", date:"2026-01-12T18:38:00", desc:"v3000m/6:00r...3 row", stats:{work_time_fmt:"19:53.1", work_dist:5250, pace:"01:53.6", avg_watts:239, cal_hr:1121, total_cal:370, avg_hr:177, drag:134, comments:"Splits: 3000m @ 1:54.8, 1500m @ 1:53.4, 750m @ 1:49.4. First 3k felt it..."}},
-            {id:"110986164", date:"2026-01-10T09:47:00", desc:"v2000m/4:00r...3 row", stats:{work_time_fmt:"23:04.0", work_dist:6000, pace:"01:55.3", avg_watts:228, cal_hr:1085, total_cal:416, avg_hr:174, drag:135}},
-            {id:"105488743", date:"2025-08-26T21:12:00", desc:"32:00 row", stats:{work_time_fmt:"32:00.0", work_dist:7726, pace:"02:04.2", avg_watts:182, cal_hr:927, total_cal:491, avg_hr:0, drag:117}}
-        ];
-
-        window.onload = () => {
-            loadData();
-            
-            // Swipe
-            const el = document.getElementById('dashScreen');
-            let startX = 0;
-            el.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-            el.addEventListener('touchend', e => {
-                const diff = startX - e.changedTouches[0].clientX;
-                if(Math.abs(diff) > 50) switchView(diff > 0 ? Store.UI.viewIdx + 1 : Store.UI.viewIdx - 1);
-            });
-            
-            // Resize
-            window.onresize = () => { setTimeout(() => { resizeCanvas('curveCanvas'); resizeCanvas('barCanvas'); }, 100); };
+        const PM5_CONFIG = {
+            SERVICE: 'ce060030-43e5-11e4-916c-0800200c9a66',
+            CHARACTERISTIC: 'ce060031-43e5-11e4-916c-0800200c9a66'
         };
 
-        function nav(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            if(id === 'dashScreen') { resizeCanvas('curveCanvas'); resizeCanvas('barCanvas'); }
-        }
+        class RowingApp {
+            constructor() {
+                this.history = [];
+                this.settings = {};
+                this.currentPlan = [];
+                this.currentWorkout = null;
+                this.liveData = { time: 0, dist: 0, pace: 0, watts: 0, rate: 0, hr: 0 };
+                this.bluetoothDevice = null;
+                this.bluetoothCharacteristic = null;
+                this.isConnected = false;
+                this.animationFrame = null;
+                
+                this.init();
+            }
 
-        // --- BLUETOOTH ENGINE ---
-        async function connectBluetooth() {
-            try {
-                const device = await navigator.bluetooth.requestDevice({
-                    filters: [{namePrefix: 'PM5'}],
-                    optionalServices: [PM5_SERVICE]
+            // ========================================================================
+            // INITIALIZATION
+            // ========================================================================
+            
+            init() {
+                this.loadData();
+                this.renderHistory();
+                this.renderPlan();
+                this.loadSettings();
+            }
+
+            loadData() {
+                // Load history - NEVER overwrite existing data
+                try {
+                    const historyData = localStorage.getItem(STORAGE_KEYS.HISTORY);
+                    if (historyData) {
+                        this.history = JSON.parse(historyData);
+                        console.log(`Loaded ${this.history.length} workout(s) from storage`);
+                    } else {
+                        // Only use demo data if no existing data
+                        this.history = this.getDemoHistory();
+                        this.saveHistory();
+                        console.log('Initialized with demo data');
+                    }
+                } catch (error) {
+                    console.error('Error loading history:', error);
+                    this.showToast('Error loading history', 'error');
+                    this.history = [];
+                }
+
+                // Load current plan
+                try {
+                    const planData = localStorage.getItem(STORAGE_KEYS.PLAN);
+                    if (planData) {
+                        this.currentPlan = JSON.parse(planData);
+                    }
+                } catch (error) {
+                    console.error('Error loading plan:', error);
+                    this.currentPlan = [];
+                }
+
+                // Load settings
+                try {
+                    const settingsData = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+                    if (settingsData) {
+                        this.settings = JSON.parse(settingsData);
+                    }
+                } catch (error) {
+                    console.error('Error loading settings:', error);
+                    this.settings = {};
+                }
+            }
+
+            getDemoHistory() {
+                return [
+                    {
+                        id: "111095775",
+                        date: "2026-01-12T18:38:00",
+                        description: "3x Intervals: 3000m, 1500m, 750m",
+                        workTime: "19:53.1",
+                        distance: 5250,
+                        pace: "01:53.6",
+                        watts: 239,
+                        avgHR: 177,
+                        dragFactor: 134,
+                        splits: [
+                            { dist: 3000, pace: "01:54.8" },
+                            { dist: 1500, pace: "01:53.4" },
+                            { dist: 750, pace: "01:49.4" }
+                        ]
+                    },
+                    {
+                        id: "110986164",
+                        date: "2026-01-10T09:47:00",
+                        description: "3x 2000m intervals",
+                        workTime: "23:04.0",
+                        distance: 6000,
+                        pace: "01:55.3",
+                        watts: 228,
+                        avgHR: 174,
+                        dragFactor: 135
+                    },
+                    {
+                        id: "105488743",
+                        date: "2025-08-26T21:12:00",
+                        description: "32:00 steady state",
+                        workTime: "32:00.0",
+                        distance: 7726,
+                        pace: "02:04.2",
+                        watts: 182,
+                        avgHR: 0,
+                        dragFactor: 117
+                    }
+                ];
+            }
+
+            saveHistory() {
+                try {
+                    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(this.history));
+                    console.log('History saved successfully');
+                } catch (error) {
+                    console.error('Error saving history:', error);
+                    this.showToast('Error saving workout', 'error');
+                }
+            }
+
+            savePlan() {
+                try {
+                    localStorage.setItem(STORAGE_KEYS.PLAN, JSON.stringify(this.currentPlan));
+                } catch (error) {
+                    console.error('Error saving plan:', error);
+                }
+            }
+
+            saveSettings() {
+                try {
+                    this.settings = {
+                        age: document.getElementById('settingAge').value,
+                        weight: document.getElementById('settingWeight').value,
+                        maxHR: document.getElementById('settingMaxHR').value
+                    };
+                    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(this.settings));
+                    this.showToast('Settings saved', 'success');
+                } catch (error) {
+                    console.error('Error saving settings:', error);
+                    this.showToast('Error saving settings', 'error');
+                }
+            }
+
+            loadSettings() {
+                if (this.settings.age) document.getElementById('settingAge').value = this.settings.age;
+                if (this.settings.weight) document.getElementById('settingWeight').value = this.settings.weight;
+                if (this.settings.maxHR) document.getElementById('settingMaxHR').value = this.settings.maxHR;
+            }
+
+            // ========================================================================
+            // BLUETOOTH CONNECTION
+            // ========================================================================
+
+            async connectBluetooth() {
+                if (this.isConnected) {
+                    this.showToast('Already connected', 'success');
+                    return;
+                }
+
+                try {
+                    console.log('Requesting Bluetooth device...');
+                    
+                    // Request device
+                    this.bluetoothDevice = await navigator.bluetooth.requestDevice({
+                        filters: [{ namePrefix: 'PM5' }],
+                        optionalServices: [PM5_CONFIG.SERVICE]
+                    });
+
+                    console.log('Device found:', this.bluetoothDevice.name);
+
+                    // Add disconnect handler
+                    this.bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+                        this.handleDisconnect();
+                    });
+
+                    // Connect to GATT server
+                    console.log('Connecting to GATT server...');
+                    const server = await this.bluetoothDevice.gatt.connect();
+                    
+                    // Get service
+                    console.log('Getting PM5 service...');
+                    const service = await server.getPrimaryService(PM5_CONFIG.SERVICE);
+                    
+                    // Get characteristic
+                    console.log('Getting characteristic...');
+                    this.bluetoothCharacteristic = await service.getCharacteristic(PM5_CONFIG.CHARACTERISTIC);
+                    
+                    // Start notifications
+                    console.log('Starting notifications...');
+                    await this.bluetoothCharacteristic.startNotifications();
+                    
+                    // Add event listener
+                    this.bluetoothCharacteristic.addEventListener('characteristicvaluechanged', 
+                        (event) => this.handlePM5Data(event));
+
+                    this.isConnected = true;
+                    this.updateConnectionUI(true);
+                    this.showToast('Connected to PM5', 'success');
+                    console.log('Successfully connected to PM5');
+
+                } catch (error) {
+                    console.error('Bluetooth error:', error);
+                    this.showToast(`Connection failed: ${error.message}`, 'error');
+                    this.isConnected = false;
+                    this.updateConnectionUI(false);
+                }
+            }
+
+            handlePM5Data(event) {
+                try {
+                    const value = event.target.value;
+                    
+                    // Validate packet size
+                    if (value.byteLength < 20) {
+                        console.warn('Packet too small:', value.byteLength);
+                        return;
+                    }
+
+                    // Parse data (Little Endian)
+                    // Time: bytes 0-2 (centiseconds)
+                    const timeCenti = value.getUint8(0) | (value.getUint8(1) << 8) | (value.getUint8(2) << 16);
+                    const time = timeCenti / 100;
+
+                    // Distance: bytes 3-5 (decimeters)
+                    const distDeci = value.getUint8(3) | (value.getUint8(4) << 8) | (value.getUint8(5) << 16);
+                    const dist = distDeci / 10;
+
+                    // Stroke rate: byte 10
+                    const rate = value.getUint8(10);
+
+                    // Watts: bytes 13-14 (Little Endian)
+                    const watts = value.getUint16(13, true);
+
+                    // Calculate pace from watts
+                    const pace = watts > 0 ? (2.8 / Math.pow(watts, 1/3)) : 0;
+
+                    // Heart rate: byte 11 (if available)
+                    const hr = value.getUint8(11) || 0;
+
+                    // Update live data
+                    this.liveData = {
+                        time: time,
+                        dist: Math.floor(dist),
+                        pace: pace * 500, // Convert to per-500m
+                        watts: watts,
+                        rate: rate,
+                        hr: hr
+                    };
+
+                    // Update UI
+                    this.updateDashboard();
+
+                    // Record data if workout is active
+                    if (this.currentWorkout) {
+                        this.currentWorkout.recordDataPoint(this.liveData);
+                    }
+
+                } catch (error) {
+                    console.error('Error parsing PM5 data:', error);
+                }
+            }
+
+            handleDisconnect() {
+                console.log('PM5 disconnected');
+                this.isConnected = false;
+                this.updateConnectionUI(false);
+                this.showToast('PM5 disconnected', 'error');
+            }
+
+            updateConnectionUI(connected) {
+                const btn = document.getElementById('btBtn');
+                const status = document.getElementById('btStatus');
+                
+                if (connected) {
+                    btn.classList.add('connected');
+                    btn.innerHTML = '<span class="status-indicator status-connected"></span>Connected';
+                    status.classList.remove('status-disconnected');
+                    status.classList.add('status-connected');
+                } else {
+                    btn.classList.remove('connected');
+                    btn.innerHTML = '<span class="status-indicator status-disconnected"></span>Connect';
+                    status.classList.remove('status-connected');
+                    status.classList.add('status-disconnected');
+                }
+            }
+
+            updateDashboard() {
+                const formatTime = (seconds) => {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = Math.floor(seconds % 60);
+                    return `${mins}:${secs.toString().padStart(2, '0')}`;
+                };
+
+                const formatPace = (seconds) => {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = Math.floor(seconds % 60);
+                    return `${mins}:${secs.toString().padStart(2, '0')}`;
+                };
+
+                document.getElementById('metricTime').textContent = formatTime(this.liveData.time);
+                document.getElementById('metricDist').textContent = this.liveData.dist;
+                document.getElementById('metricPace').textContent = formatPace(this.liveData.pace);
+                document.getElementById('metricWatts').textContent = this.liveData.watts;
+                document.getElementById('metricRate').textContent = this.liveData.rate;
+                document.getElementById('metricHR').textContent = this.liveData.hr > 0 ? this.liveData.hr : '--';
+            }
+
+            // ========================================================================
+            // WORKOUT PLANNING
+            // ========================================================================
+
+            addInterval() {
+                const dist = parseInt(document.getElementById('quickDist').value);
+                const restMin = parseInt(document.getElementById('quickRestMin').value) || 0;
+                const restSec = parseInt(document.getElementById('quickRestSec').value) || 0;
+
+                if (!dist || dist <= 0) {
+                    this.showToast('Please enter valid distance', 'error');
+                    return;
+                }
+
+                // Add work interval
+                this.currentPlan.push({
+                    type: 'WORK',
+                    distance: dist
                 });
-                
-                const server = await device.gatt.connect();
-                const service = await server.getPrimaryService(PM5_SERVICE);
-                const char = await service.getCharacteristic(PM5_CHAR_GENERAL);
-                
-                await char.startNotifications();
-                char.addEventListener('characteristicvaluechanged', handlePM5Data);
-                
-                document.getElementById('btConnectBtn').innerText = "PM5 LINKED";
-                document.getElementById('btConnectBtn').style.color = "#00FF99";
-                document.getElementById('btConnectBtn').style.borderColor = "#00FF99";
-                showToast("Connected to PM5");
-                
-            } catch(e) { showToast("BT Error: " + e.message, 'error'); }
-        }
 
-        function handlePM5Data(event) {
-            const val = event.target.value;
-            // PM5 General Status (UUID 31) Format
-            // Byte 0-2: Time (0.01s)
-            // Byte 3-5: Dist (0.1m)
-            // Byte 10: Rate
-            // Byte 11-12: Pace (0.001 m/s ? No, Concept2 is typically lsb)
-            // Byte 13-14: Watts
-            
-            // Parsing (Little Endian)
-            const time = (val.getUint8(0) | (val.getUint8(1)<<8) | (val.getUint8(2)<<16)) * 0.01;
-            const dist = (val.getUint8(3) | (val.getUint8(4)<<8) | (val.getUint8(5)<<16)) * 0.1;
-            const rate = val.getUint8(10);
-            const watts = val.getUint16(13, true); 
-            
-            // Calc Pace from Watts (2.80/watts^(1/3))
-            const paceSec = watts > 0 ? (2800 / Math.pow(watts, 1/3)) : 0;
-            
-            Store.Live = { time, dist, rate, watts, pace: paceSec };
-            
-            if (Store.Mission.active && !document.getElementById('simMode').checked) {
-                updateDashUI();
-            }
-        }
+                // Add rest interval if specified
+                const totalRest = (restMin * 60) + restSec;
+                if (totalRest > 0) {
+                    this.currentPlan.push({
+                        type: 'REST',
+                        duration: totalRest
+                    });
+                }
 
-        function updateDashUI() {
-            const d = Store.Live;
-            document.getElementById('ad_watts').innerText = d.watts;
-            document.getElementById('ad_rate').innerText = d.rate;
-            document.getElementById('ad_dist').innerText = Math.floor(d.dist);
-            document.getElementById('ad_pace').innerText = formatTime(d.pace);
-            document.getElementById('ad_time').innerText = formatTime(d.time);
-            
-            document.getElementById('fc_watts').innerText = d.watts;
-            document.getElementById('fc_rate').innerText = d.rate;
-            
-            document.getElementById('lp_pace').innerText = formatTime(d.pace);
-            document.getElementById('lp_rate').innerText = d.rate;
-            document.getElementById('lp_time').innerText = formatTime(d.time);
-            
-            drawCurve(d.watts); // Using watts as proxy for force peak
-            Store.Mission.strokeHistory.push(d.watts);
-            drawBars();
-        }
+                this.savePlan();
+                this.renderPlan();
+                this.showToast('Interval added', 'success');
 
-        // --- DATA ---
-        function loadData() {
-            const h = localStorage.getItem('analyst_history_v17');
-            Store.History.logs = h ? JSON.parse(h) : PRELOAD_HISTORY;
-            renderHistory();
-
-            const s = localStorage.getItem('analyst_settings_v17');
-            if(s) {
-                Store.Settings = JSON.parse(s);
-                document.getElementById('apiKeyInput').value = Store.Settings.apiKey || "";
-                document.getElementById('modelSelect').value = Store.Settings.model || "gemini-1.5-flash";
-                document.getElementById('hrZ5').value = Store.Settings.bio?.hrMax || 180;
-            }
-        }
-
-        function saveSettings() {
-            Store.Settings.apiKey = document.getElementById('apiKeyInput').value.trim();
-            Store.Settings.model = document.getElementById('modelSelect').value;
-            Store.Settings.bio = { hrMax: document.getElementById('hrZ5').value };
-            localStorage.setItem('analyst_settings_v17', JSON.stringify(Store.Settings));
-            showToast("Settings Saved");
-        }
-
-        function saveHistory() {
-            localStorage.setItem('analyst_history_v17', JSON.stringify(Store.History.logs));
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('historyList');
-            list.innerHTML = Store.History.logs.map((h, i) => 
-                `<div class="history-item" onclick="openLogDetail(${i})">
-                    <div><div class="h-date">${h.date.split('T')[0]}</div><div class="h-title">${h.desc}</div></div>
-                    <div class="h-stats">${h.stats.work_dist}m</div>
-                </div>`
-            ).join('');
-        }
-
-        function openLogDetail(idx) {
-            const h = Store.History.logs[idx];
-            const content = document.getElementById('logDetailContent');
-            content.innerHTML = `
-                <div style="color:var(--accent); font-size:12px; margin-bottom:10px;">${h.date}</div>
-                <h2 style="color:white; margin:0 0 20px 0;">${h.desc}</h2>
-                <div class="grid-data" style="height:auto; grid-template-rows:repeat(4, 80px);">
-                    <div class="data-cell"><div class="data-val" style="font-size:24px;">${h.stats.work_time_fmt}</div><div class="data-label" style="font-size:10px;">TIME</div></div>
-                    <div class="data-cell"><div class="data-val" style="font-size:24px;">${h.stats.work_dist}</div><div class="data-label" style="font-size:10px;">DIST</div></div>
-                    <div class="data-cell"><div class="data-val" style="font-size:24px;">${h.stats.pace}</div><div class="data-label" style="font-size:10px;">PACE</div></div>
-                    <div class="data-cell"><div class="data-val" style="font-size:24px;">${h.stats.avg_watts}</div><div class="data-label" style="font-size:10px;">WATTS</div></div>
-                    <div class="data-cell"><div class="data-val" style="font-size:24px;">${h.stats.avg_hr}</div><div class="data-label" style="font-size:10px;">HR</div></div>
-                    <div class="data-cell"><div class="data-val" style="font-size:24px;">${h.stats.drag || '--'}</div><div class="data-label" style="font-size:10px;">DRAG</div></div>
-                </div>
-                <div style="margin-top:20px; color:#888; font-style:italic; line-height:1.5;">${h.stats.comments || "No comments"}</div>
-            `;
-            document.getElementById('logDetailModal').classList.add('active');
-        }
-
-        // --- DASHBOARD (Unchanged) ---
-        function switchView(idx) {
-            const views = document.querySelectorAll('.dash-view');
-            idx = Math.max(0, Math.min(idx, views.length - 1));
-            Store.UI.viewIdx = idx;
-            const vp = document.getElementById('dashViewport');
-            vp.childNodes.forEach(n => { if(n.style) n.style.transform = `translateX(-${idx * 100}%)`; });
-            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-        }
-
-        function resizeCanvas(id) {
-            const cvs = document.getElementById(id);
-            if(cvs && cvs.offsetParent) {
-                cvs.width = cvs.parentElement.clientWidth;
-                cvs.height = cvs.parentElement.clientHeight;
-            }
-        }
-
-        // --- SIMULATION (RAF) ---
-        function startMission(isSim) {
-            if(Store.Mission.intervals.length === 0) return showToast("Plan Empty", "error");
-            nav('dashScreen');
-            Store.Mission.active = true;
-            Store.Mission.strokeHistory = [];
-            
-            function loop() {
-                if(!Store.Mission.active) return;
-                
-                const isSimMode = document.getElementById('simMode').checked;
-                
-                if (isSimMode) {
-                    // Sim Logic
-                    const watts = Math.floor(Math.random() * 40 + 200);
-                    Store.Live = { watts, rate: 26, dist: Store.Live.dist + 5, pace: 115, time: Store.Live.time + 1 };
-                    updateDashUI();
-                } 
-                // If NOT Sim, updateDashUI is called by Event Listener
-                
-                Store.UI.animationId = requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
-        }
-        
-        function drawCurve(watts) {
-            const cvs = document.getElementById('curveCanvas');
-            if(!cvs.offsetParent) return; 
-            const ctx = cvs.getContext('2d');
-            ctx.clearRect(0,0,cvs.width,cvs.height);
-            ctx.strokeStyle = '#00FF99'; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(0, cvs.height);
-            const peak = cvs.height - (Math.min(watts, 600)/600 * cvs.height * 0.9);
-            ctx.quadraticCurveTo(cvs.width/2, peak, cvs.width, cvs.height);
-            ctx.stroke();
-            ctx.fillStyle = 'rgba(0, 255, 153, 0.1)'; ctx.fill();
-        }
-
-        function drawBars() {
-            const cvs = document.getElementById('barCanvas');
-            if(!cvs.offsetParent) return; 
-            const ctx = cvs.getContext('2d');
-            ctx.clearRect(0,0,cvs.width,cvs.height);
-            const barW = cvs.width / 30;
-            ctx.fillStyle = '#00AAFF';
-            Store.Mission.strokeHistory.slice(-30).forEach((watts, i) => {
-                const barH = (watts / 500) * cvs.height;
-                ctx.fillRect(i * barW, cvs.height - barH, barW - 2, barH);
-            });
-        }
-
-        function endMission() {
-            Store.Mission.active = false;
-            cancelAnimationFrame(Store.UI.animationId);
-            // Save current live data
-            const newLog = { 
-                id: Date.now().toString(), 
-                date: new Date().toISOString(), 
-                desc: "Session", 
-                stats: { 
-                    work_dist: Math.floor(Store.Live.dist), 
-                    work_time_fmt: formatTime(Store.Live.time), 
-                    avg_watts: Store.Live.watts 
-                } 
-            };
-            Store.History.logs.unshift(newLog);
-            saveHistory();
-            renderHistory();
-            nav('screenHistory');
-        }
-
-        // --- BUILDER & AI ---
-        function setBuildMode(mode) {
-            ['modeDist','modeTime'].forEach(d => document.getElementById(d).style.display='none');
-            document.getElementById('mode'+mode).style.display='block';
-            document.querySelectorAll('.b-tab').forEach(b=>b.classList.remove('active'));
-            if(event) event.target.classList.add('active');
-        }
-
-        function addToPlan() {
-            const d = document.getElementById('mDist').value;
-            if(!d || d <= 0) return showToast("Invalid", "error");
-            Store.Mission.intervals.push({type:'WORK', dist:parseInt(d)});
-            renderTimeline();
-        }
-
-        function renderTimeline() {
-            const list = document.getElementById('builderList');
-            list.innerHTML = Store.Mission.intervals.map(s => `<div class="step-card type-work"><div class="step-main">${s.type} ${s.dist||0}m</div></div>`).join('');
-        }
-
-        function toggleSimMode() {
-            const isSim = document.getElementById('simMode').checked;
-            document.getElementById('btnGen').innerText = isSim ? "SIMULATE PLAN" : "GENERATE PLAN";
-            document.getElementById('btnGen').classList.toggle('btn-outline', !isSim);
-            document.getElementById('btnGen').classList.toggle('btn-green', isSim);
-        }
-
-        async function generateMission() {
-            const isSim = document.getElementById('simMode').checked;
-            if (isSim) {
-                // FALLBACK: Generate local dummy plan
-                const input = document.getElementById('aiInput').value;
-                let dummy = [{type:"WORK", dist:2000}, {type:"REST", duration:120}, {type:"WORK", dist:2000}];
-                if(input.includes("3000")) dummy = [{type:"WORK", dist:3000}, {type:"REST", duration:240}, {type:"WORK", dist:1500}, {type:"REST", duration:120}, {type:"WORK", dist:750}];
-                
-                Store.Mission.intervals = dummy;
-                renderTimeline();
-                showToast("Simulated Plan Ready");
-                return;
+                // Reset rest inputs
+                document.getElementById('quickRestMin').value = '0';
+                document.getElementById('quickRestSec').value = '0';
             }
 
-            const apiKey = Store.Settings.apiKey;
-            const model = Store.Settings.model || "gemini-1.5-flash";
-            
-            if(!apiKey) return showToast("API Key Required", "error");
-            
-            const btn = document.getElementById('btnGen');
-            btn.innerText = "...";
-            const input = document.getElementById('aiInput').value;
-            const prompt = `Parse workout: "${input}". Return JSON ARRAY: [{ "type": "WORK"|"REST", "dist": 0, "duration": 0, "targets": { "pace": 0, "watts": 0, "rate": 0 } }]. RULES: Pace "1:45"->105s. Fix typos (2000k -> 2000m). STRICT JSON.`;
+            removeInterval(index) {
+                this.currentPlan.splice(index, 1);
+                this.savePlan();
+                this.renderPlan();
+            }
 
-            try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                    method: "POST", headers: {"Content-Type":"application/json"},
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] })
+            clearPlan() {
+                if (confirm('Clear all intervals?')) {
+                    this.currentPlan = [];
+                    this.savePlan();
+                    this.renderPlan();
+                    this.showToast('Plan cleared', 'success');
+                }
+            }
+
+            renderPlan() {
+                const container = document.getElementById('planList');
+                const startBtn = document.getElementById('btnStart');
+
+                if (this.currentPlan.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <div class="empty-state-text">No intervals added yet.<br>Add your first interval above.</div>
+                        </div>
+                    `;
+                    startBtn.disabled = true;
+                    return;
+                }
+
+                startBtn.disabled = false;
+
+                const html = this.currentPlan.map((interval, index) => {
+                    const formatTime = (secs) => {
+                        const mins = Math.floor(secs / 60);
+                        const seconds = secs % 60;
+                        if (mins > 0) {
+                            return `${mins}:${seconds.toString().padStart(2, '0')}`;
+                        }
+                        return `${seconds}s`;
+                    };
+
+                    if (interval.type === 'WORK') {
+                        return `
+                            <div class="interval-item">
+                                <div>
+                                    <div class="interval-type interval-work">Work</div>
+                                    <div class="interval-detail">${interval.distance}m</div>
+                                </div>
+                                <button class="interval-remove" onclick="app.removeInterval(${index})">×</button>
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="interval-item">
+                                <div>
+                                    <div class="interval-type interval-rest">Rest</div>
+                                    <div class="interval-detail">${formatTime(interval.duration)}</div>
+                                </div>
+                                <button class="interval-remove" onclick="app.removeInterval(${index})">×</button>
+                            </div>
+                        `;
+                    }
+                }).join('');
+
+                container.innerHTML = html;
+            }
+
+            // ========================================================================
+            // WORKOUT EXECUTION
+            // ========================================================================
+
+            startWorkout() {
+                if (this.currentPlan.length === 0) {
+                    this.showToast('No workout plan', 'error');
+                    return;
+                }
+
+                this.currentWorkout = new Workout(this.currentPlan);
+                this.navigate('screenRow');
+                this.showToast('Workout started', 'success');
+                
+                // Show current interval info
+                document.getElementById('currentInterval').style.display = 'block';
+                this.updateIntervalInfo();
+            }
+
+            updateIntervalInfo() {
+                if (!this.currentWorkout) return;
+
+                const current = this.currentWorkout.currentInterval;
+                const total = this.currentWorkout.intervals.length;
+                const interval = this.currentWorkout.intervals[current];
+
+                if (interval) {
+                    document.getElementById('intervalInfo').textContent = 
+                        `Interval ${current + 1} of ${total}`;
+                    
+                    if (interval.type === 'WORK') {
+                        document.getElementById('intervalTarget').textContent = 
+                            `Target: ${interval.distance}m`;
+                    } else {
+                        const formatTime = (secs) => {
+                            const mins = Math.floor(secs / 60);
+                            const seconds = secs % 60;
+                            return `${mins}:${seconds.toString().padStart(2, '0')}`;
+                        };
+                        document.getElementById('intervalTarget').textContent = 
+                            `Rest: ${formatTime(interval.duration)}`;
+                    }
+                }
+            }
+
+            endWorkout() {
+                if (!this.currentWorkout) {
+                    this.navigate('screenBuild');
+                    return;
+                }
+
+                if (!confirm('End workout and save?')) return;
+
+                // Create workout summary
+                const workout = {
+                    id: Date.now().toString(),
+                    date: new Date().toISOString(),
+                    description: this.currentWorkout.getDescription(),
+                    workTime: this.formatTime(this.liveData.time),
+                    distance: this.liveData.dist,
+                    pace: this.formatPace(this.liveData.pace),
+                    watts: this.liveData.watts,
+                    avgHR: this.liveData.hr,
+                    dragFactor: 0,
+                    intervals: this.currentPlan
+                };
+
+                // Add to history
+                this.history.unshift(workout);
+                this.saveHistory();
+                this.renderHistory();
+
+                // Clean up
+                this.currentWorkout = null;
+                document.getElementById('currentInterval').style.display = 'none';
+                
+                // Reset live data
+                this.liveData = { time: 0, dist: 0, pace: 0, watts: 0, rate: 0, hr: 0 };
+                this.updateDashboard();
+
+                this.showToast('Workout saved', 'success');
+                this.navigate('screenHistory');
+            }
+
+            // ========================================================================
+            // HISTORY
+            // ========================================================================
+
+            renderHistory() {
+                const container = document.getElementById('historyList');
+
+                if (this.history.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <div class="empty-state-text">No workouts recorded yet.<br>Complete your first workout to see it here.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const html = this.history.map((workout, index) => {
+                    const date = new Date(workout.date);
+                    const dateStr = date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+
+                    return `
+                        <div class="history-item" onclick="app.showWorkoutDetail(${index})">
+                            <div class="history-date">${dateStr}</div>
+                            <div class="history-title">${workout.description}</div>
+                            <div class="history-stats">
+                                <span>${workout.distance}m</span>
+                                <span>${workout.pace}</span>
+                                <span>${workout.watts}W</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = html;
+            }
+
+            showWorkoutDetail(index) {
+                const workout = this.history[index];
+                const date = new Date(workout.date);
+                const dateStr = date.toLocaleDateString('en-US', { 
+                    weekday: 'long',
+                    month: 'long', 
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
-                const d = await r.json();
-                if(d.error) throw new Error(d.error.message);
-                
-                const txt = d.candidates[0].content.parts[0].text;
-                const start = txt.indexOf('['); const end = txt.lastIndexOf(']')+1;
-                const json = JSON.parse(txt.substring(start, end));
-                
-                json.forEach(s => { if(s.dist > 50000) s.dist /= 1000; });
-                
-                Store.Mission.intervals = json;
-                renderTimeline();
-                showToast("Plan Generated");
-            } catch(e) { showToast("AI Error: " + e.message, "error"); }
-            btn.innerText = "GENERATE PLAN";
-        }
 
-        function goToStrategy() {
-            nav('screenStrategy');
-            document.getElementById('stratSummary').innerText = Store.Mission.intervals.length + " Steps";
-        }
-        
-        async function askCoach() { 
-            if(document.getElementById('simMode').checked) {
-                document.getElementById('coachChat').innerHTML += `<div class='chat-msg'>Advice: Pace yourself on the 3k.</div>`;
-            } else {
-                alert("Coach Thinking... (Simulated)"); 
+                let html = `
+                    <div class="card">
+                        <div style="color:#666; font-size:12px; margin-bottom:12px;">${dateStr}</div>
+                        <h2 style="color:var(--text); margin:0 0 24px 0; font-size:20px;">${workout.description}</h2>
+                        
+                        <div class="dash-metrics" style="margin-bottom:0;">
+                            <div class="metric">
+                                <div class="metric-value" style="font-size:28px;">${workout.workTime}</div>
+                                <div class="metric-label">Time</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" style="font-size:28px;">${workout.distance}</div>
+                                <div class="metric-label">Meters</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" style="font-size:28px;">${workout.pace}</div>
+                                <div class="metric-label">Pace</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" style="font-size:28px;">${workout.watts}</div>
+                                <div class="metric-label">Watts</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" style="font-size:28px;">${workout.avgHR || '--'}</div>
+                                <div class="metric-label">Avg HR</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" style="font-size:28px;">${workout.dragFactor || '--'}</div>
+                                <div class="metric-label">Drag</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Add splits if available
+                if (workout.splits && workout.splits.length > 0) {
+                    html += `
+                        <div class="card">
+                            <div class="card-header">Splits</div>
+                            ${workout.splits.map(split => `
+                                <div class="interval-item">
+                                    <div class="interval-detail">${split.dist}m</div>
+                                    <div class="interval-type">${split.pace}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                document.getElementById('detailContent').innerHTML = html;
+                document.getElementById('detailModal').classList.add('active');
+            }
+
+            closeModal() {
+                document.getElementById('detailModal').classList.remove('active');
+            }
+
+            // ========================================================================
+            // DATA MANAGEMENT
+            // ========================================================================
+
+            exportData() {
+                const data = {
+                    history: this.history,
+                    settings: this.settings,
+                    exportDate: new Date().toISOString()
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `rowing-data-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                this.showToast('Data exported', 'success');
+            }
+
+            resetData() {
+                if (!confirm('This will delete ALL workout history and settings. Are you sure?')) {
+                    return;
+                }
+
+                if (!confirm('This cannot be undone. Really delete everything?')) {
+                    return;
+                }
+
+                localStorage.clear();
+                this.history = [];
+                this.settings = {};
+                this.currentPlan = [];
+                
+                this.renderHistory();
+                this.renderPlan();
+                this.loadSettings();
+
+                this.showToast('All data cleared', 'success');
+            }
+
+            // ========================================================================
+            // NAVIGATION & UI
+            // ========================================================================
+
+            navigate(screenId) {
+                // Update screens
+                document.querySelectorAll('.screen').forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                document.getElementById(screenId).classList.add('active');
+
+                // Update nav buttons
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => item.classList.remove('active'));
+                
+                const screenMap = {
+                    'screenBuild': 0,
+                    'screenRow': 1,
+                    'screenHistory': 2,
+                    'screenSettings': 3
+                };
+                
+                const index = screenMap[screenId];
+                if (index !== undefined) {
+                    navItems[index].classList.add('active');
+                }
+
+                // Save settings when leaving settings screen
+                if (screenId !== 'screenSettings' && this.lastScreen === 'screenSettings') {
+                    this.saveSettings();
+                }
+
+                this.lastScreen = screenId;
+            }
+
+            showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = `toast ${type}`;
+                
+                // Trigger reflow
+                void toast.offsetWidth;
+                
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // ========================================================================
+            // UTILITIES
+            // ========================================================================
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            formatPace(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
             }
         }
 
-        function showToast(msg, type='success') {
-            const t = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            t.className = type + ' active';
-            if(type === 'error') t.className += ' error';
-            setTimeout(() => t.className = '', 4000);
+        // ============================================================================
+        // WORKOUT CLASS
+        // ============================================================================
+
+        class Workout {
+            constructor(plan) {
+                this.intervals = plan;
+                this.currentInterval = 0;
+                this.startTime = Date.now();
+                this.dataPoints = [];
+            }
+
+            recordDataPoint(data) {
+                this.dataPoints.push({
+                    timestamp: Date.now() - this.startTime,
+                    ...data
+                });
+            }
+
+            getDescription() {
+                const workIntervals = this.intervals.filter(i => i.type === 'WORK');
+                if (workIntervals.length === 1) {
+                    return `${workIntervals[0].distance}m`;
+                }
+                return `${workIntervals.length}x intervals`;
+            }
         }
-        
-        function clearData() { if(confirm("RESET ALL DATA?")) { localStorage.clear(); location.reload(); } }
+
+        // ============================================================================
+        // INITIALIZE APP
+        // ============================================================================
+
+        const app = new RowingApp();
     </script>
 </body>
 </html>
