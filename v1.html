@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Rowing Coach v1.1</title>
+    <title>AI Rowing Coach v1.2</title>
     <style>
         :root {
             --bg: #000;
             --text: #e0e0e0;
             --accent: #00FF99;
-            --accent-dim: #00AA66;
             --danger: #FF4444;
             --rest: #00AAFF;
             --panel: #111;
             --border: #222;
             --card-bg: #0a0a0a;
             
-            /* Persona Colors */
             --coach-color: #00FF99;
             --admin-color: #00AAFF;
             --support-color: #FFA500;
@@ -125,7 +123,6 @@
         }
         
         .header-btn:active { transform: scale(0.95); }
-        .header-btn.connected { border-color: var(--accent); color: var(--accent); }
         
         .scroll-content {
             flex: 1;
@@ -135,135 +132,33 @@
             padding-bottom: 100px;
         }
         
-        /* ONBOARDING */
-        .onboarding-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            background: linear-gradient(135deg, #000 0%, #0a0a0a 100%);
-        }
-        
-        .onboarding-header {
-            padding: 40px 20px 20px 20px;
-            text-align: center;
-        }
-        
-        .onboarding-logo {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-        
-        .onboarding-title {
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--accent);
-            margin-bottom: 8px;
-        }
-        
-        .onboarding-subtitle {
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .onboarding-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        
-        .onboarding-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-        
-        .onboarding-question {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 16px;
-        }
-        
-        .onboarding-input {
-            width: 100%;
-            background: #000;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: inherit;
-        }
-        
-        .onboarding-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        
-        .onboarding-select {
-            width: 100%;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        
-        .onboarding-option {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        
-        .onboarding-option:active {
-            transform: scale(0.95);
-        }
-        
-        .onboarding-option.selected {
-            background: var(--accent);
-            color: #000;
-            border-color: var(--accent);
-        }
-        
-        .onboarding-footer {
-            padding: 20px;
-            border-top: 1px solid var(--border);
-            background: var(--panel);
-        }
-        
-        .onboarding-progress {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 16px;
-        }
-        
-        .progress-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #333;
-            transition: all 0.3s;
-        }
-        
-        .progress-dot.active {
-            background: var(--accent);
-            transform: scale(1.5);
-        }
-        
         /* CHAT INTERFACE */
         .chat-container {
             display: flex;
             flex-direction: column;
             height: 100%;
+        }
+        
+        /* SKIP TO WORKOUT BUTTON */
+        .skip-to-workout {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,255,153,0.3);
+            transition: all 0.2s;
+        }
+        
+        .skip-to-workout:active {
+            transform: scale(0.95);
         }
         
         .chat-messages {
@@ -332,47 +227,30 @@
         .msg-header.persona-support { color: var(--support-color); }
         .msg-user .msg-header { color: #00AAFF; }
         
-        /* PERSONA SELECTOR */
-        .persona-selector {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
+        /* QUICK REPLY BUTTONS */
+        .quick-replies {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
-            overflow-x: auto;
+            margin-top: 12px;
         }
         
-        .persona-btn {
+        .quick-reply-btn {
             background: transparent;
             border: 1px solid var(--border);
-            color: #666;
+            color: var(--text);
             padding: 8px 16px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
         
-        .persona-btn.active.coach {
-            background: var(--coach-color);
-            color: #000;
-            border-color: var(--coach-color);
-        }
-        
-        .persona-btn.active.admin {
-            background: var(--admin-color);
-            color: #000;
-            border-color: var(--admin-color);
-        }
-        
-        .persona-btn.active.support {
-            background: var(--support-color);
-            color: #000;
-            border-color: var(--support-color);
+        .quick-reply-btn:active {
+            transform: scale(0.95);
+            background: rgba(0,255,153,0.1);
+            border-color: var(--accent);
         }
         
         .chat-input-container {
@@ -521,6 +399,121 @@
             margin-bottom: 16px;
         }
         
+        .card-header {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        /* HISTORY */
+        .history-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .filter-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #666;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+        
+        .history-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .history-item:active {
+            transform: scale(0.98);
+            background: var(--panel);
+        }
+        
+        .history-date {
+            font-size: 11px;
+            color: #666;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .history-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        
+        .history-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--accent);
+            font-family: monospace;
+            flex-wrap: wrap;
+        }
+        
+        .stat-label {
+            font-size: 9px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        .stat-value {
+            color: var(--accent);
+        }
+        
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-item {
+            background: #050505;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-item-value {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .stat-item-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        
         /* NAVIGATION */
         .nav-bar {
             background: var(--panel);
@@ -555,91 +548,41 @@
         
         .nav-icon { font-size: 20px; }
         
-        /* CHART CONTAINER */
-        .chart-container {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 16px 0;
-        }
-        
-        .chart-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 16px;
+        /* EMPTY STATE */
+        .empty-state {
             text-align: center;
+            padding: 40px 20px;
+            color: #666;
         }
         
-        canvas {
-            max-width: 100%;
-            height: auto;
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
     <!-- VERSION BADGE -->
-    <div class="version-badge">v1.1 BETA</div>
+    <div class="version-badge">v1.2 BETA</div>
 
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
-    <!-- ONBOARDING SCREEN -->
-    <div id="screenOnboarding" class="screen">
-        <div class="onboarding-container">
-            <div class="onboarding-header">
-                <div class="onboarding-logo">🚣</div>
-                <div class="onboarding-title">AI Rowing Coach</div>
-                <div class="onboarding-subtitle">Your intelligent training partner</div>
-            </div>
-            
-            <div class="onboarding-content" id="onboardingContent">
-                <!-- Dynamic onboarding steps will be injected here -->
-            </div>
-            
-            <div class="onboarding-footer">
-                <div class="onboarding-progress" id="onboardingProgress">
-                    <div class="progress-dot active"></div>
-                    <div class="progress-dot"></div>
-                    <div class="progress-dot"></div>
-                    <div class="progress-dot"></div>
-                    <div class="progress-dot"></div>
-                </div>
-                <button class="btn btn-primary" id="onboardingNextBtn" onclick="app.nextOnboardingStep()">
-                    Next
-                </button>
-            </div>
-        </div>
-    </div>
+    <!-- SKIP TO WORKOUT (Persistent during onboarding) -->
+    <button id="skipToWorkout" class="skip-to-workout" style="display:none;" onclick="app.skipOnboarding()">
+        🚣 Skip to Workout →
+    </button>
 
-    <!-- AI COACH SCREEN -->
-    <div id="screenCoach" class="screen">
+    <!-- AI CHAT SCREEN (Unified for Onboarding & Coach) -->
+    <div id="screenCoach" class="screen active">
         <div class="screen-header">
             <div class="screen-title">AI Hub</div>
         </div>
         
-        <!-- Persona Selector -->
-        <div class="persona-selector">
-            <button class="persona-btn active coach" onclick="app.switchPersona('coach')">
-                <span>🤖</span> Coach
-            </button>
-            <button class="persona-btn admin" onclick="app.switchPersona('admin')">
-                <span>⚙️</span> Admin
-            </button>
-            <button class="persona-btn support" onclick="app.switchPersona('support')">
-                <span>🛠️</span> Support
-            </button>
-        </div>
-        
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages">
-                <div class="chat-message msg-ai persona-coach">
-                    <div class="msg-header persona-coach">
-                        <span>🤖</span> Coach
-                    </div>
-                    Welcome! I'm your AI Rowing Coach. I can help you plan workouts, analyze your performance, and provide real-time motivation. What would you like to do today?
-                </div>
+                <!-- Messages will be rendered here -->
             </div>
             <div class="typing-indicator" id="typingIndicator">
                 <div class="typing-dot"></div>
@@ -650,7 +593,7 @@
                 <textarea 
                     id="chatInput" 
                     class="chat-input" 
-                    placeholder="Ask anything..."
+                    placeholder="Type your message..."
                     rows="1"
                     onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();app.sendMessage();}"
                 ></textarea>
@@ -742,14 +685,55 @@
         </div>
     </div>
 
-    <!-- DATA SCREEN -->
+    <!-- HISTORY SCREEN (RESTORED) -->
+    <div id="screenHistory" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">Training History (<span id="historyCount">0</span>)</div>
+            <button class="header-btn" onclick="app.navigate('screenData')">⚙️</button>
+        </div>
+        <div class="scroll-content">
+            <div class="history-controls">
+                <button class="filter-btn active" onclick="app.filterHistory('all')">All</button>
+                <button class="filter-btn" onclick="app.filterHistory('intervals')">Intervals</button>
+                <button class="filter-btn" onclick="app.filterHistory('steady')">Steady</button>
+                <button class="filter-btn" onclick="app.filterHistory('recent')">Recent</button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">Database Summary</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-item-value" id="totalWorkouts">0</div>
+                        <div class="stat-item-label">Workouts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-value" id="totalDistance">0</div>
+                        <div class="stat-item-label">Total Meters</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-value" id="totalTime">0</div>
+                        <div class="stat-item-label">Total Hours</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-value" id="avgPace">--</div>
+                        <div class="stat-item-label">Avg Pace</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <!-- DATA/SETTINGS SCREEN -->
     <div id="screenData" class="screen">
         <div class="screen-header">
+            <button class="header-btn" onclick="app.navigate('screenHistory')">←</button>
             <div class="screen-title">Settings</div>
         </div>
         <div class="scroll-content">
             <div class="card">
-                <h3 style="color:var(--accent); margin-bottom:16px; font-size:16px;">User Profile</h3>
+                <div class="card-header">User Profile</div>
                 <div style="margin-bottom:12px;">
                     <div style="font-size:12px; color:#666; margin-bottom:4px;">Name</div>
                     <div style="color:#e0e0e0; font-size:16px;" id="profileName">--</div>
@@ -767,23 +751,26 @@
                     <div style="color:#e0e0e0; font-size:16px;" id="profileMaxHR">--</div>
                 </div>
                 <p style="font-size:12px; color:#666; margin-top:16px; line-height:1.6;">
-                    💡 Tip: You can update these settings by asking the Admin persona in the AI Hub. 
+                    💡 Tip: You can update these by chatting with Admin in the AI Hub. 
                     Try: "Update my weight to 82kg"
                 </p>
             </div>
 
             <div class="card">
-                <h3 style="color:var(--accent); margin-bottom:16px; font-size:16px;">Import Training Data</h3>
+                <div class="card-header">Import Training Data</div>
                 <label for="csvUpload" style="display:block; width:100%; padding:16px; border:2px dashed #222; border-radius:8px; text-align:center; cursor:pointer; color:#888;">
                     📁 Import CSV File
                 </label>
                 <input type="file" id="csvUpload" accept=".csv" style="display:none;" onchange="app.importCSV(event)">
+                <p style="font-size:12px; color:#666; margin-top:12px; line-height:1.6;">
+                    Supports: Concept2 ErgData, Strava exports
+                </p>
             </div>
 
             <div class="card">
-                <h3 style="color:var(--accent); margin-bottom:16px; font-size:16px;">Connections</h3>
-                <button class="btn btn-outline" onclick="app.showToast('HRM connection coming in v1.2', 'success')">
-                    ❤️ Connect Heart Rate Monitor
+                <div class="card-header">Reset</div>
+                <button class="btn btn-outline" onclick="app.resetOnboarding()" style="border-color:var(--danger); color:var(--danger);">
+                    Reset Onboarding (Start Fresh)
                 </button>
             </div>
         </div>
@@ -799,6 +786,10 @@
             <span class="nav-icon">🚣</span>
             Row
         </button>
+        <button class="nav-item" onclick="app.navigate('screenHistory')">
+            <span class="nav-icon">📊</span>
+            History
+        </button>
         <button class="nav-item" onclick="app.navigate('screenData')">
             <span class="nav-icon">⚙️</span>
             Settings
@@ -807,15 +798,15 @@
 
     <script>
         // ============================================================================
-        // AI ROWING COACH PRO v1.1
-        // Features: Live Coaching, Multi-Persona, AI Function Calling, Onboarding
+        // AI ROWING COACH PRO v1.2
+        // Features: Chat-first onboarding, unified multi-persona, restored history
         // ============================================================================
         
         const STORAGE_KEYS = {
             PROFILE: 'rowing_coach_profile_v1',
             WORKOUTS: 'rowing_coach_workouts_v1',
             CHAT: 'rowing_coach_chat_v1',
-            ONBOARDED: 'rowing_coach_onboarded_v1'
+            ONBOARDING_STATE: 'rowing_coach_onboarding_state_v1'
         };
 
         const PERSONAS = {
@@ -823,89 +814,95 @@
                 name: 'Coach',
                 emoji: '🤖',
                 color: '#00FF99',
-                systemPrompt: `You are an aggressive, motivational rowing coach. You focus on performance data, training plans, and pushing athletes to their limits. You reference specific metrics and past workouts. You're encouraging but demanding.
+                systemPrompt: `You are an enthusiastic, motivational rowing coach. You're building rapport with a new athlete. Ask deep, thoughtful questions about their training history, goals, lifestyle, and any injuries. Be conversational and friendly.
 
-When asked to create workouts, ALWAYS return structured data in this format:
+When collecting profile data, extract structured information from natural responses:
+- Name, age, weight, gender
+- Experience level
+- Training goals
+- Lifestyle (job type, stress, sleep)
+- Past injuries or limitations
+- Equipment available
+
+When the user provides information, respond warmly and ask follow-up questions to go deeper. Build a relationship, not just collect data.
+
+When asked to create workouts, return:
 WORKOUT_PLAN:
 [
   {"type": "WORK", "distance": 2000, "targetPace": "1:55", "targetWatts": 228},
   {"type": "REST", "duration": 240}
 ]
-
-When asked about progress or analysis, you can trigger chart rendering:
-CHART:
-{"type": "line", "data": {...}}
 `
             },
             admin: {
                 name: 'Admin',
                 emoji: '⚙️',
                 color: '#00AAFF',
-                systemPrompt: `You are a helpful administrative assistant. You manage user settings, profile updates, and account management. You execute setting changes automatically and confirm them clearly.
+                systemPrompt: `You are a helpful administrative assistant managing user settings. You execute changes automatically and confirm them clearly.
 
-When the user asks to update settings, extract the action and return:
+When the user asks to update settings, extract and execute:
 ACTION:
-{"type": "updateSettings", "params": {"field": "value"}}
+{"type": "updateSettings", "params": {"weight": 82}}
 
-Always confirm changes: "I've updated your [field] to [value]."
+Always confirm: "✓ Updated your weight to 82kg." Then hand back to Coach.
 `
             },
             support: {
                 name: 'Support',
                 emoji: '🛠️',
                 color: '#FFA500',
-                systemPrompt: `You are a patient technical support specialist. You help with Bluetooth connectivity, troubleshooting bugs, and explaining features. You provide step-by-step instructions and never get frustrated.
-
-Focus on:
-- PM5 Bluetooth connection issues
-- Heart rate monitor setup
-- Data import problems
-- App navigation help
+                systemPrompt: `You are patient technical support for rowing equipment and app issues. Help with Bluetooth, data imports, and bugs. Provide step-by-step instructions.
 `
             }
         };
 
-        const ONBOARDING_STEPS = [
+        const ONBOARDING_FLOW = [
             {
-                id: 'welcome',
-                question: "Welcome! What's your name?",
-                type: 'text',
-                field: 'name',
-                placeholder: 'Enter your name'
+                persona: 'coach',
+                message: `Hey there! 🤖 I'm Coach, your AI rowing partner. I'm here to help you train smarter and achieve your goals.\n\nBefore we dive in, let me introduce you to the team:\n\n⚙️ **Admin** handles all your settings and profile updates\n🛠️ **Support** is here for any technical issues\n\nAnd I'll be your main coach - designing workouts, analyzing performance, and keeping you motivated.\n\nLet's start with the basics. What's your name?`,
+                quickReplies: null
             },
             {
-                id: 'biometrics',
-                question: "Let's get your basic stats",
-                type: 'multi',
-                fields: [
-                    { id: 'age', label: 'Age', type: 'number', placeholder: '30' },
-                    { id: 'weight', label: 'Weight (kg)', type: 'number', placeholder: '75' },
-                    { id: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other'] }
-                ]
+                persona: 'coach',
+                trigger: 'has_name',
+                message: (name) => `Great to meet you, ${name}! 💪\n\nNow, tell me a bit about yourself. How old are you, and what's your current weight? (e.g., "30 years old, 75kg")`,
+                quickReplies: null
             },
             {
-                id: 'experience',
-                question: "What's your rowing experience level?",
-                type: 'select',
-                field: 'experience',
-                options: ['Beginner', 'Intermediate', 'Advanced', 'Elite']
+                persona: 'coach',
+                trigger: 'has_biometrics',
+                message: `Perfect! Now, what's your rowing experience level?`,
+                quickReplies: ['Beginner', 'Intermediate', 'Advanced', 'Elite']
             },
             {
-                id: 'goals',
-                question: "What are your primary training goals?",
-                type: 'multiselect',
-                field: 'goals',
-                options: ['Weight Loss', 'Endurance', 'Speed/Power', 'General Fitness', 'Competition']
+                persona: 'coach',
+                trigger: 'has_experience',
+                message: `Awesome! What are your main training goals? Pick as many as you like.`,
+                quickReplies: ['Weight Loss', 'Endurance', 'Speed/Power', 'General Fitness', 'Competition']
             },
             {
-                id: 'lifestyle',
-                question: "Tell us about your lifestyle",
-                type: 'multi',
-                fields: [
-                    { id: 'job', label: 'Job Type', type: 'select', options: ['Sedentary', 'Active', 'Physical'] },
-                    { id: 'stress', label: 'Stress Level', type: 'select', options: ['Low', 'Medium', 'High'] },
-                    { id: 'sleep', label: 'Avg Sleep (hrs)', type: 'number', placeholder: '7' }
-                ]
+                persona: 'coach',
+                trigger: 'has_goals',
+                message: `Great! Last question - tell me about your lifestyle. What's your job like? How are stress and sleep?`,
+                quickReplies: ['Desk job, moderate stress, 7hrs sleep', 'Active job, low stress, 8hrs sleep', 'Physical job, high stress, 6hrs sleep', 'Let me type it out']
+            },
+            {
+                persona: 'admin',
+                trigger: 'complete_profile',
+                message: `✓ Profile created successfully!\n\nI've calculated your Max HR as [CALCULATED] based on your age.`,
+                quickReplies: null
+            },
+            {
+                persona: 'coach',
+                trigger: 'offer_data_upload',
+                message: (name) => `${name}, do you have any past training data you'd like to upload? (CSV from Concept2, Strava, etc.)\n\nThis helps me understand your current fitness level and design better workouts for you.`,
+                quickReplies: ['I have a CSV file', 'I\'ll upload later', 'No past data']
+            },
+            {
+                persona: 'coach',
+                trigger: 'onboarding_complete',
+                message: (name) => `Perfect! We're all set, ${name}. 🎉\n\nI've got a good sense of who you are and what you're working toward. Ready to create your first workout, or do you have any questions for me first?`,
+                quickReplies: ['Create my first workout', 'Tell me more about the app', 'I want to just row now']
             }
         ];
 
@@ -914,9 +911,12 @@ Focus on:
                 this.profile = null;
                 this.workouts = [];
                 this.chatHistory = [];
-                this.currentPersona = 'coach';
-                this.onboardingStep = 0;
-                this.onboardingData = {};
+                this.onboardingState = {
+                    step: 0,
+                    completed: false,
+                    data: {}
+                };
+                this.currentFilter = 'all';
                 this.liveData = { time: 0, dist: 0, pace: 0, watts: 0, rate: 0, hr: 0 };
                 this.liveCoachingInterval = null;
                 this.lastCoachingTime = 0;
@@ -931,16 +931,16 @@ Focus on:
             init() {
                 this.loadData();
                 
-                // Check if onboarded
-                const onboarded = localStorage.getItem(STORAGE_KEYS.ONBOARDED);
-                if (!onboarded) {
+                // Check onboarding state
+                if (!this.onboardingState.completed) {
                     this.startOnboarding();
                 } else {
-                    this.navigate('screenCoach');
                     this.updateProfileDisplay();
                 }
                 
                 this.renderChat();
+                this.renderHistory();
+                this.updateStats();
                 
                 // Auto-resize chat input
                 const input = document.getElementById('chatInput');
@@ -962,11 +962,17 @@ Focus on:
                     const workoutData = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
                     if (workoutData) {
                         this.workouts = JSON.parse(workoutData);
+                        console.log(`✓ Loaded ${this.workouts.length} workouts`);
                     }
 
                     const chatData = localStorage.getItem(STORAGE_KEYS.CHAT);
                     if (chatData) {
                         this.chatHistory = JSON.parse(chatData);
+                    }
+
+                    const onboardingData = localStorage.getItem(STORAGE_KEYS.ONBOARDING_STATE);
+                    if (onboardingData) {
+                        this.onboardingState = JSON.parse(onboardingData);
                     }
                 } catch (error) {
                     console.error('Load error:', error);
@@ -980,189 +986,149 @@ Focus on:
                     }
                     localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(this.workouts));
                     localStorage.setItem(STORAGE_KEYS.CHAT, JSON.stringify(this.chatHistory));
+                    localStorage.setItem(STORAGE_KEYS.ONBOARDING_STATE, JSON.stringify(this.onboardingState));
                 } catch (error) {
                     console.error('Save error:', error);
                 }
             }
 
             // ========================================================================
-            // ONBOARDING
+            // CHAT-FIRST ONBOARDING
             // ========================================================================
 
             startOnboarding() {
-                this.navigate('screenOnboarding');
-                this.renderOnboardingStep();
-            }
-
-            renderOnboardingStep() {
-                const step = ONBOARDING_STEPS[this.onboardingStep];
-                const content = document.getElementById('onboardingContent');
+                // Show skip button
+                const skipBtn = document.getElementById('skipToWorkout');
+                if (skipBtn) skipBtn.style.display = 'block';
                 
-                let html = `<div class="onboarding-card">`;
-                html += `<div class="onboarding-question">${step.question}</div>`;
-
-                if (step.type === 'text') {
-                    html += `<input type="text" class="onboarding-input" id="onboarding_${step.field}" placeholder="${step.placeholder}">`;
-                } else if (step.type === 'number') {
-                    html += `<input type="number" class="onboarding-input" id="onboarding_${step.field}" placeholder="${step.placeholder}">`;
-                } else if (step.type === 'select') {
-                    html += `<div class="onboarding-select">`;
-                    step.options.forEach(opt => {
-                        html += `<button class="onboarding-option" onclick="app.selectOnboardingOption('${step.field}', '${opt}')">${opt}</button>`;
-                    });
-                    html += `</div>`;
-                } else if (step.type === 'multiselect') {
-                    html += `<div class="onboarding-select">`;
-                    step.options.forEach(opt => {
-                        html += `<button class="onboarding-option" onclick="app.toggleOnboardingOption('${step.field}', '${opt}')">${opt}</button>`;
-                    });
-                    html += `</div>`;
-                } else if (step.type === 'multi') {
-                    step.fields.forEach(field => {
-                        html += `<div style="margin-bottom:16px;">`;
-                        html += `<div style="font-size:12px; color:#666; margin-bottom:8px;">${field.label}</div>`;
-                        if (field.type === 'select') {
-                            html += `<div class="onboarding-select" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));">`;
-                            field.options.forEach(opt => {
-                                html += `<button class="onboarding-option" onclick="app.selectOnboardingOption('${field.id}', '${opt}')">${opt}</button>`;
-                            });
-                            html += `</div>`;
-                        } else {
-                            html += `<input type="${field.type}" class="onboarding-input" id="onboarding_${field.id}" placeholder="${field.placeholder}">`;
-                        }
-                        html += `</div>`;
-                    });
-                }
-
-                html += `</div>`;
-                content.innerHTML = html;
-
-                // Update progress dots
-                document.querySelectorAll('.progress-dot').forEach((dot, i) => {
-                    dot.classList.toggle('active', i === this.onboardingStep);
-                });
-
-                // Update button text
-                const btn = document.getElementById('onboardingNextBtn');
-                btn.textContent = this.onboardingStep === ONBOARDING_STEPS.length - 1 ? 'Complete' : 'Next';
-            }
-
-            selectOnboardingOption(field, value) {
-                this.onboardingData[field] = value;
+                // Start with first message
+                const firstStep = ONBOARDING_FLOW[0];
+                this.addMessage('ai', firstStep.message, null, firstStep.persona, firstStep.quickReplies);
                 
-                // Visual feedback
-                const buttons = document.querySelectorAll('.onboarding-option');
-                buttons.forEach(btn => {
-                    if (btn.textContent === value && btn.onclick.toString().includes(field)) {
-                        btn.classList.add('selected');
-                    } else if (btn.onclick.toString().includes(field)) {
-                        btn.classList.remove('selected');
-                    }
-                });
+                this.onboardingState.step = 0;
+                this.saveData();
             }
 
-            toggleOnboardingOption(field, value) {
-                if (!this.onboardingData[field]) {
-                    this.onboardingData[field] = [];
-                }
+            async processOnboardingResponse(userMessage) {
+                const currentStep = this.onboardingState.step;
                 
-                const index = this.onboardingData[field].indexOf(value);
-                if (index > -1) {
-                    this.onboardingData[field].splice(index, 1);
-                } else {
-                    this.onboardingData[field].push(value);
-                }
-
-                // Visual feedback
-                const buttons = document.querySelectorAll('.onboarding-option');
-                buttons.forEach(btn => {
-                    if (btn.textContent === value && btn.onclick.toString().includes(field)) {
-                        btn.classList.toggle('selected');
+                // Extract data based on current step
+                if (currentStep === 0) {
+                    // Getting name
+                    this.onboardingState.data.name = userMessage.trim();
+                    this.onboardingState.step = 1;
+                    
+                    const nextStep = ONBOARDING_FLOW[1];
+                    this.addMessage('ai', nextStep.message(this.onboardingState.data.name), null, nextStep.persona, nextStep.quickReplies);
+                    
+                } else if (currentStep === 1) {
+                    // Getting age and weight
+                    const ageMatch = userMessage.match(/(\d+)\s*(?:years?\s*old)?/i);
+                    const weightMatch = userMessage.match(/(\d+)\s*kg/i);
+                    
+                    if (ageMatch) this.onboardingState.data.age = parseInt(ageMatch[1]);
+                    if (weightMatch) this.onboardingState.data.weight = parseInt(weightMatch[1]);
+                    
+                    this.onboardingState.step = 2;
+                    
+                    const nextStep = ONBOARDING_FLOW[2];
+                    this.addMessage('ai', nextStep.message, null, nextStep.persona, nextStep.quickReplies);
+                    
+                } else if (currentStep === 2) {
+                    // Getting experience
+                    this.onboardingState.data.experience = userMessage;
+                    this.onboardingState.step = 3;
+                    
+                    const nextStep = ONBOARDING_FLOW[3];
+                    this.addMessage('ai', nextStep.message, null, nextStep.persona, nextStep.quickReplies);
+                    
+                } else if (currentStep === 3) {
+                    // Getting goals
+                    if (!this.onboardingState.data.goals) {
+                        this.onboardingState.data.goals = [];
                     }
-                });
+                    this.onboardingState.data.goals.push(userMessage);
+                    
+                    this.onboardingState.step = 4;
+                    
+                    const nextStep = ONBOARDING_FLOW[4];
+                    this.addMessage('ai', nextStep.message, null, nextStep.persona, nextStep.quickReplies);
+                    
+                } else if (currentStep === 4) {
+                    // Getting lifestyle
+                    this.onboardingState.data.lifestyle = userMessage;
+                    this.onboardingState.step = 5;
+                    
+                    // Calculate Max HR
+                    if (this.onboardingState.data.age) {
+                        this.onboardingState.data.maxHR = 220 - this.onboardingState.data.age;
+                    }
+                    
+                    // Create profile
+                    this.profile = this.onboardingState.data;
+                    this.saveData();
+                    
+                    const nextStep = ONBOARDING_FLOW[5];
+                    const msg = nextStep.message.replace('[CALCULATED]', this.profile.maxHR);
+                    this.addMessage('ai', msg, null, nextStep.persona, nextStep.quickReplies);
+                    
+                    // Continue to data upload prompt
+                    setTimeout(() => {
+                        const dataStep = ONBOARDING_FLOW[6];
+                        this.addMessage('ai', dataStep.message(this.profile.name), null, dataStep.persona, dataStep.quickReplies);
+                        this.onboardingState.step = 6;
+                        this.saveData();
+                    }, 1000);
+                    
+                } else if (currentStep === 6) {
+                    // Data upload response
+                    if (userMessage.toLowerCase().includes('csv')) {
+                        // Trigger file upload
+                        const fileInput = document.getElementById('csvUpload');
+                        if (fileInput) fileInput.click();
+                    }
+                    
+                    this.onboardingState.step = 7;
+                    this.onboardingState.completed = true;
+                    
+                    // Hide skip button
+                    const skipBtn = document.getElementById('skipToWorkout');
+                    if (skipBtn) skipBtn.style.display = 'none';
+                    
+                    const finalStep = ONBOARDING_FLOW[7];
+                    this.addMessage('ai', finalStep.message(this.profile.name), null, finalStep.persona, finalStep.quickReplies);
+                    
+                    this.saveData();
+                    this.updateProfileDisplay();
+                }
             }
 
-            nextOnboardingStep() {
-                const step = ONBOARDING_STEPS[this.onboardingStep];
-
-                // Collect data from inputs
-                if (step.type === 'text' || step.type === 'number') {
-                    const input = document.getElementById(`onboarding_${step.field}`);
-                    if (input && input.value) {
-                        this.onboardingData[step.field] = input.value;
-                    }
-                } else if (step.type === 'multi') {
-                    step.fields.forEach(field => {
-                        if (field.type !== 'select') {
-                            const input = document.getElementById(`onboarding_${field.id}`);
-                            if (input && input.value) {
-                                this.onboardingData[field.id] = input.value;
-                            }
-                        }
-                    });
-                }
-
-                // Move to next step or complete
-                if (this.onboardingStep < ONBOARDING_STEPS.length - 1) {
-                    this.onboardingStep++;
-                    this.renderOnboardingStep();
-                } else {
-                    this.completeOnboarding();
-                }
-            }
-
-            completeOnboarding() {
-                // Calculate Max HR if not provided
-                if (!this.onboardingData.maxHR && this.onboardingData.age) {
-                    this.onboardingData.maxHR = 220 - parseInt(this.onboardingData.age);
-                }
-
-                this.profile = this.onboardingData;
-                localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(this.profile));
-                localStorage.setItem(STORAGE_KEYS.ONBOARDED, 'true');
-
-                this.showToast('Profile created successfully!', 'success');
-                this.navigate('screenCoach');
+            skipOnboarding() {
+                // Create minimal profile
+                this.profile = {
+                    name: 'Athlete',
+                    age: 30,
+                    weight: 75,
+                    maxHR: 190,
+                    experience: 'Intermediate',
+                    goals: ['General Fitness']
+                };
+                
+                this.onboardingState.completed = true;
+                this.onboardingState.data = this.profile;
+                
+                this.saveData();
                 this.updateProfileDisplay();
-
-                // Add welcome message
-                this.addMessage('ai', `Welcome ${this.profile.name}! I'm excited to be your rowing coach. Based on your profile, I can see you're ${this.profile.experience?.toLowerCase()} level. Let's create your first workout!`, null, 'coach');
-            }
-
-            updateProfileDisplay() {
-                if (!this.profile) return;
-
-                const nameElem = document.getElementById('profileName');
-                const ageElem = document.getElementById('profileAge');
-                const weightElem = document.getElementById('profileWeight');
-                const maxHRElem = document.getElementById('profileMaxHR');
-
-                if (nameElem) nameElem.textContent = this.profile.name || '--';
-                if (ageElem) ageElem.textContent = this.profile.age || '--';
-                if (weightElem) weightElem.textContent = this.profile.weight ? `${this.profile.weight} kg` : '--';
-                if (maxHRElem) maxHRElem.textContent = this.profile.maxHR || '--';
+                
+                // Hide skip button
+                const skipBtn = document.getElementById('skipToWorkout');
+                if (skipBtn) skipBtn.style.display = 'none';
+                
+                this.addMessage('ai', `No problem! I've set up a basic profile for you. You can always update it later by chatting with Admin.\n\nReady to row?`, null, 'coach', ['Start rowing', 'Create a workout first']);
             }
 
             // ========================================================================
-            // PERSONA MANAGEMENT
-            // ========================================================================
-
-            switchPersona(persona) {
-                this.currentPersona = persona;
-
-                // Update UI
-                document.querySelectorAll('.persona-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                event.target.classList.add('active');
-
-                // Add system message
-                const personaData = PERSONAS[persona];
-                this.addMessage('system', `Switched to ${personaData.name} ${personaData.emoji}`);
-            }
-
-            // ========================================================================
-            // AI CHAT
+            // UNIFIED CHAT (Multi-Persona in Single Thread)
             // ========================================================================
 
             async sendMessage() {
@@ -1175,6 +1141,15 @@ Focus on:
                 input.value = '';
                 input.style.height = 'auto';
 
+                // Check if in onboarding
+                if (!this.onboardingState.completed) {
+                    await this.processOnboardingResponse(message);
+                    return;
+                }
+
+                // Determine which persona should respond
+                const persona = this.detectPersona(message);
+
                 const typingIndicator = document.getElementById('typingIndicator');
                 const sendBtn = document.getElementById('sendBtn');
                 
@@ -1182,49 +1157,78 @@ Focus on:
                 if (sendBtn) sendBtn.disabled = true;
 
                 try {
-                    const response = await this.callAIAPI(message);
+                    const response = await this.callAIAPI(message, persona);
                     if (typingIndicator) typingIndicator.classList.remove('active');
                     
-                    // Check for actions
+                    // Execute actions (Admin)
                     if (response.action) {
                         this.executeAction(response.action);
                     }
                     
-                    // Check for charts
-                    if (response.chart) {
-                        this.renderChart(response.chart);
+                    this.addMessage('ai', response.text, response.workout, persona, response.quickReplies);
+                    
+                    // If Admin responded, have Coach acknowledge
+                    if (persona === 'admin' && response.action) {
+                        setTimeout(() => {
+                            this.addMessage('ai', `Thanks Admin! ${this.profile.name}, your settings are updated. What's next?`, null, 'coach');
+                        }, 500);
                     }
                     
-                    this.addMessage('ai', response.text, response.workout, this.currentPersona);
                 } catch (error) {
                     console.error('AI Error:', error);
+                    console.error('Error details:', error.message);
                     if (typingIndicator) typingIndicator.classList.remove('active');
-                    this.addMessage('ai', 'Sorry, I encountered an error. Please try again.', null, this.currentPersona);
+                    this.addMessage('ai', `Sorry, I encountered an error: ${error.message}. Please try again or contact support if this persists.`, null, 'support');
                     this.showToast('AI request failed', 'error');
                 } finally {
                     if (sendBtn) sendBtn.disabled = false;
                 }
             }
 
-            async callAIAPI(userMessage) {
-                const persona = PERSONAS[this.currentPersona];
+            detectPersona(message) {
+                const lower = message.toLowerCase();
+                
+                // Admin triggers
+                if (lower.includes('update') || lower.includes('change') || lower.includes('set') || lower.includes('weight') || lower.includes('age')) {
+                    if (lower.includes('weight') || lower.includes('age') || lower.includes('name') || lower.includes('email')) {
+                        return 'admin';
+                    }
+                }
+                
+                // Support triggers
+                if (lower.includes('bluetooth') || lower.includes('connect') || lower.includes('bug') || lower.includes('error') || lower.includes('help') || lower.includes('how do i')) {
+                    return 'support';
+                }
+                
+                // Default to coach
+                return 'coach';
+            }
+
+            async callAIAPI(userMessage, persona) {
+                const personaData = PERSONAS[persona];
                 
                 // Build context
                 let context = '';
                 if (this.profile) {
-                    context += `User Profile: ${JSON.stringify(this.profile)}\n`;
+                    context += `User Profile:\n${JSON.stringify(this.profile, null, 2)}\n\n`;
                 }
                 if (this.workouts.length > 0) {
-                    context += `Recent workouts: ${this.workouts.slice(0, 5).map(w => w.description).join(', ')}\n`;
+                    context += `Recent workouts (showing latest 5):\n`;
+                    this.workouts.slice(0, 5).forEach(w => {
+                        const date = new Date(w.date).toLocaleDateString();
+                        context += `- ${date}: ${w.description || 'Workout'} - ${w.distance}m, ${w.pace} pace, ${w.avgWatts}W\n`;
+                    });
                 }
 
-                const systemPrompt = persona.systemPrompt + '\n\n' + context;
+                const systemPrompt = personaData.systemPrompt + '\n\nCurrent Context:\n' + context;
 
                 try {
+                    // IMPORTANT: Anthropic API endpoint
                     const response = await fetch("https://api.anthropic.com/v1/messages", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
+                            "anthropic-version": "2023-06-01"
                         },
                         body: JSON.stringify({
                             model: "claude-sonnet-4-20250514",
@@ -1242,6 +1246,11 @@ Focus on:
                             ]
                         })
                     });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+                    }
 
                     const data = await response.json();
                     
@@ -1274,28 +1283,16 @@ Focus on:
                         }
                     }
 
-                    // Extract chart
-                    let chart = null;
-                    const chartMatch = aiText.match(/CHART:\s*(\{[\s\S]*?\})/);
-                    if (chartMatch) {
-                        try {
-                            chart = JSON.parse(chartMatch[1]);
-                        } catch (e) {
-                            console.error('Failed to parse chart:', e);
-                        }
-                    }
-
                     const displayText = aiText
                         .replace(/WORKOUT_PLAN:[\s\S]*?(\])/m, '')
                         .replace(/ACTION:[\s\S]*?(\})/m, '')
-                        .replace(/CHART:[\s\S]*?(\})/m, '')
                         .trim();
 
                     return {
                         text: displayText,
                         workout: workout,
                         action: action,
-                        chart: chart
+                        quickReplies: null
                     };
 
                 } catch (error) {
@@ -1317,28 +1314,13 @@ Focus on:
                 }
             }
 
-            renderChart(chartData) {
-                // Create chart in chat
-                const chartHtml = `
-                    <div class="chart-container">
-                        <div class="chart-title">${chartData.title || 'Performance Chart'}</div>
-                        <canvas id="chat-chart-${Date.now()}"></canvas>
-                    </div>
-                `;
-                
-                // Insert into last AI message
-                const messages = document.querySelectorAll('.msg-ai');
-                if (messages.length > 0) {
-                    messages[messages.length - 1].innerHTML += chartHtml;
-                }
-            }
-
-            addMessage(sender, text, workout = null, persona = 'coach') {
+            addMessage(sender, text, workout = null, persona = 'coach', quickReplies = null) {
                 const msg = {
                     sender: sender,
                     text: text,
                     workout: workout,
                     persona: persona,
+                    quickReplies: quickReplies,
                     timestamp: new Date().toISOString()
                 };
 
@@ -1363,18 +1345,27 @@ Focus on:
                         `;
                     } else if (msg.sender === 'ai') {
                         const persona = PERSONAS[msg.persona] || PERSONAS.coach;
+                        
+                        let quickRepliesHtml = '';
+                        if (msg.quickReplies && msg.quickReplies.length > 0) {
+                            quickRepliesHtml = `
+                                <div class="quick-replies">
+                                    ${msg.quickReplies.map(reply => `
+                                        <button class="quick-reply-btn" onclick="app.handleQuickReply('${reply.replace(/'/g, "\\'")}')">
+                                            ${reply}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }
+                        
                         return `
                             <div class="chat-message msg-ai persona-${msg.persona}">
                                 <div class="msg-header persona-${msg.persona}">
                                     <span>${persona.emoji}</span> ${persona.name}
                                 </div>
                                 ${this.formatMessageText(msg.text)}
-                            </div>
-                        `;
-                    } else {
-                        return `
-                            <div class="chat-message" style="background:transparent; border:1px solid #222; align-self:center; font-size:13px; color:#666; padding:8px 16px; border-radius:20px;">
-                                ${msg.text}
+                                ${quickRepliesHtml}
                             </div>
                         `;
                     }
@@ -1386,83 +1377,209 @@ Focus on:
                 }, 100);
             }
 
+            handleQuickReply(text) {
+                const input = document.getElementById('chatInput');
+                if (input) {
+                    input.value = text;
+                    this.sendMessage();
+                }
+            }
+
             formatMessageText(text) {
-                return text.replace(/\n/g, '<br>');
+                return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            }
+
+            updateProfileDisplay() {
+                if (!this.profile) return;
+
+                const nameElem = document.getElementById('profileName');
+                const ageElem = document.getElementById('profileAge');
+                const weightElem = document.getElementById('profileWeight');
+                const maxHRElem = document.getElementById('profileMaxHR');
+
+                if (nameElem) nameElem.textContent = this.profile.name || '--';
+                if (ageElem) ageElem.textContent = this.profile.age || '--';
+                if (weightElem) weightElem.textContent = this.profile.weight ? `${this.profile.weight} kg` : '--';
+                if (maxHRElem) maxHRElem.textContent = this.profile.maxHR || '--';
             }
 
             // ========================================================================
-            // LIVE COACHING
+            // HISTORY (RESTORED)
             // ========================================================================
 
-            startLiveCoaching() {
-                if (this.liveCoachingInterval) return;
+            renderHistory() {
+                const container = document.getElementById('historyList');
+                if (!container) return;
 
-                this.liveCoachingInterval = setInterval(() => {
-                    this.updateLiveCoaching();
-                }, 2000); // Check every 2 seconds
-            }
+                let filtered = this.workouts;
 
-            stopLiveCoaching() {
-                if (this.liveCoachingInterval) {
-                    clearInterval(this.liveCoachingInterval);
-                    this.liveCoachingInterval = null;
+                if (this.currentFilter === 'intervals') {
+                    filtered = this.workouts.filter(w => 
+                        w.description && w.description.toLowerCase().includes('interval')
+                    );
+                } else if (this.currentFilter === 'steady') {
+                    filtered = this.workouts.filter(w => 
+                        w.description && (w.description.toLowerCase().includes('steady') || w.description.toLowerCase().includes('endurance'))
+                    );
+                } else if (this.currentFilter === 'recent') {
+                    const oneMonthAgo = new Date();
+                    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                    filtered = this.workouts.filter(w => new Date(w.date) >= oneMonthAgo);
                 }
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <div style="font-size:14px; line-height:1.6;">
+                                No workouts found.<br>
+                                Import your training data to get started.
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const html = filtered.map(workout => {
+                    const date = new Date(workout.date).toLocaleDateString();
+                    return `
+                        <div class="history-item">
+                            <div class="history-date">${date}</div>
+                            <div class="history-title">${workout.description || 'Workout'}</div>
+                            <div class="history-stats">
+                                <div class="history-stat">
+                                    <div class="stat-label">Distance</div>
+                                    <div class="stat-value">${workout.distance}m</div>
+                                </div>
+                                <div class="history-stat">
+                                    <div class="stat-label">Pace</div>
+                                    <div class="stat-value">${workout.pace || '--'}</div>
+                                </div>
+                                <div class="history-stat">
+                                    <div class="stat-label">Watts</div>
+                                    <div class="stat-value">${workout.avgWatts || '--'}W</div>
+                                </div>
+                                <div class="history-stat">
+                                    <div class="stat-label">HR</div>
+                                    <div class="stat-value">${workout.avgHR || '--'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = html;
             }
 
-            updateLiveCoaching() {
-                const now = Date.now();
+            filterHistory(filter) {
+                this.currentFilter = filter;
                 
-                // Don't spam - minimum 5 seconds between messages
-                if (now - this.lastCoachingTime < 5000) return;
+                // Update button states
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                this.renderHistory();
+            }
 
-                const d = this.liveData;
-                const statusElem = document.getElementById('liveCoachStatus');
-                const messageElem = document.getElementById('liveCoachMessage');
+            updateStats() {
+                const totalWorkoutsElem = document.getElementById('totalWorkouts');
+                const historyCountElem = document.getElementById('historyCount');
+                const totalDistanceElem = document.getElementById('totalDistance');
+                const totalTimeElem = document.getElementById('totalTime');
+                const avgPaceElem = document.getElementById('avgPace');
+                
+                if (totalWorkoutsElem) totalWorkoutsElem.textContent = this.workouts.length;
+                if (historyCountElem) historyCountElem.textContent = this.workouts.length;
+                
+                const totalDist = this.workouts.reduce((sum, w) => sum + (w.distance || 0), 0);
+                if (totalDistanceElem) totalDistanceElem.textContent = Math.floor(totalDist / 1000) + 'k';
+                
+                const totalSec = this.workouts.reduce((sum, w) => sum + (w.workTimeSeconds || 0), 0);
+                const totalHours = Math.floor(totalSec / 3600);
+                if (totalTimeElem) totalTimeElem.textContent = totalHours + 'h';
+                
+                const avgWatts = this.workouts.reduce((sum, w) => sum + (w.avgWatts || 0), 0) / (this.workouts.length || 1);
+                const avgPace = avgWatts > 0 ? (2.8 / Math.pow(avgWatts, 1/3)) * 500 : 0;
+                if (avgPaceElem) avgPaceElem.textContent = avgPace > 0 ? this.formatPace(avgPace) : '--';
+            }
 
-                if (!statusElem || !messageElem) return;
+            // ========================================================================
+            // CSV IMPORT
+            // ========================================================================
 
-                // Determine coaching based on performance
-                let status = 'Monitoring';
-                let message = '';
+            importCSV(event) {
+                const file = event.target.files[0];
+                if (!file) return;
 
-                // Pace dropping
-                if (d.pace > 0 && d.pace > 125) { // Slower than 2:05
-                    status = 'Push Harder!';
-                    message = '⚠️ Power dropping! Focus on the leg drive. Push back through your heels!';
-                    this.lastCoachingTime = now;
-                }
-                // Pace too fast early
-                else if (d.time < 60 && d.pace > 0 && d.pace < 110) { // Faster than 1:50 in first minute
-                    status = 'Ease Off';
-                    message = '⚠️ You\'re flying! Too fast too soon. Settle into rhythm, save energy for later.';
-                    this.lastCoachingTime = now;
-                }
-                // Good pace
-                else if (d.pace > 110 && d.pace < 120) { // 1:50-2:00
-                    status = 'Perfect!';
-                    message = '💪 Excellent pace control! Keep this rhythm. You\'re locked in.';
-                    this.lastCoachingTime = now;
-                }
-                // HR too high (if available and maxHR known)
-                else if (d.hr > 0 && this.profile && this.profile.maxHR) {
-                    const hrPercent = (d.hr / this.profile.maxHR) * 100;
-                    if (hrPercent > 95 && d.time < 300) { // >95% in first 5 minutes
-                        status = 'Red Zone!';
-                        message = '❤️ Heart rate too high too soon! Ease back to 22 s/m for 30 seconds.';
-                        this.lastCoachingTime = now;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const csv = e.target.result;
+                        const lines = csv.split('\n');
+                        const headers = lines[0].split(',').map(h => h.trim());
+                        
+                        let imported = 0;
+                        const existingIds = new Set(this.workouts.map(w => w.id));
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            if (!lines[i].trim()) continue;
+                            
+                            const values = lines[i].split(',');
+                            if (values.length < headers.length) continue;
+                            
+                            const row = {};
+                            headers.forEach((header, idx) => {
+                                row[header] = values[idx]?.trim();
+                            });
+                            
+                            const id = row['Log ID'] || String(Date.now() + Math.random());
+                            
+                            if (!existingIds.has(id)) {
+                                this.workouts.push({
+                                    id: id,
+                                    date: row['Date'] || new Date().toISOString(),
+                                    description: row['Description'] || '',
+                                    workTime: row['Work Time (Formatted)'] || '',
+                                    workTimeSeconds: parseFloat(row['Work Time (Seconds)']) || 0,
+                                    distance: parseInt(row['Work Distance']) || 0,
+                                    pace: row['Pace'] || '',
+                                    avgWatts: parseInt(row['Avg Watts']) || 0,
+                                    strokeRate: parseInt(row['Stroke Rate/Cadence']) || 0,
+                                    avgHR: parseInt(row['Avg Heart Rate']) || 0,
+                                    calories: parseInt(row['Total Cal']) || 0,
+                                    comments: row['Comments'] || ''
+                                });
+                                imported++;
+                                existingIds.add(id);
+                            }
+                        }
+                        
+                        // Sort by date (newest first)
+                        this.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        
+                        this.saveData();
+                        this.renderHistory();
+                        this.updateStats();
+                        
+                        this.showToast(`Imported ${imported} new workouts!`, 'success');
+                        
+                        // If in onboarding, acknowledge
+                        if (!this.onboardingState.completed) {
+                            this.addMessage('ai', `Great! I've imported ${imported} workouts. This gives me a much better understanding of your current fitness level. Let's continue!`, null, 'coach');
+                        } else {
+                            this.addMessage('ai', `✓ Imported ${imported} new workouts! I can now provide better insights based on your training history.`, null, 'coach');
+                        }
+                        
+                        event.target.value = '';
+                    } catch (error) {
+                        console.error('CSV Import Error:', error);
+                        this.showToast('Import failed: ' + error.message, 'error');
                     }
-                }
-                // Stroke rate
-                else if (d.rate > 32) {
-                    status = 'Too Fast';
-                    message = '⚠️ Stroke rate too high. Slow down, longer strokes. Aim for 24-28 s/m.';
-                    this.lastCoachingTime = now;
-                }
-
-                if (message) {
-                    statusElem.textContent = status;
-                    messageElem.textContent = message;
-                }
+                };
+                
+                reader.readAsText(file);
             }
 
             // ========================================================================
@@ -1472,20 +1589,18 @@ Focus on:
             startWorkout() {
                 this.navigate('screenRow');
                 this.startLiveCoaching();
-                this.showToast('Workout started! Watch for live coaching.', 'success');
+                this.showToast('Workout started!', 'success');
 
-                // Show HR zone bar if maxHR available
                 if (this.profile && this.profile.maxHR) {
                     const hrZoneBar = document.getElementById('hrZoneBar');
                     if (hrZoneBar) hrZoneBar.style.display = 'block';
                 }
 
-                // Simulate data for demo
+                // Demo data
                 this.startDemoData();
             }
 
             startDemoData() {
-                // Simulated rowing data for testing
                 let time = 0;
                 const demoInterval = setInterval(() => {
                     time++;
@@ -1500,10 +1615,74 @@ Focus on:
 
                     this.updateDashboard();
 
-                    if (time >= 120) { // Stop after 2 minutes for demo
+                    if (time >= 120) {
                         clearInterval(demoInterval);
                     }
                 }, 1000);
+            }
+
+            startLiveCoaching() {
+                if (this.liveCoachingInterval) return;
+
+                this.liveCoachingInterval = setInterval(() => {
+                    this.updateLiveCoaching();
+                }, 2000);
+            }
+
+            stopLiveCoaching() {
+                if (this.liveCoachingInterval) {
+                    clearInterval(this.liveCoachingInterval);
+                    this.liveCoachingInterval = null;
+                }
+            }
+
+            updateLiveCoaching() {
+                const now = Date.now();
+                
+                if (now - this.lastCoachingTime < 5000) return;
+
+                const d = this.liveData;
+                const statusElem = document.getElementById('liveCoachStatus');
+                const messageElem = document.getElementById('liveCoachMessage');
+
+                if (!statusElem || !messageElem) return;
+
+                let status = 'Monitoring';
+                let message = '';
+
+                if (d.pace > 0 && d.pace > 125) {
+                    status = 'Push Harder!';
+                    message = '⚠️ Power dropping! Focus on the leg drive. Push back through your heels!';
+                    this.lastCoachingTime = now;
+                }
+                else if (d.time < 60 && d.pace > 0 && d.pace < 110) {
+                    status = 'Ease Off';
+                    message = '⚠️ You\'re flying! Too fast too soon. Settle into rhythm, save energy for later.';
+                    this.lastCoachingTime = now;
+                }
+                else if (d.pace > 110 && d.pace < 120) {
+                    status = 'Perfect!';
+                    message = '💪 Excellent pace control! Keep this rhythm. You\'re locked in.';
+                    this.lastCoachingTime = now;
+                }
+                else if (d.hr > 0 && this.profile && this.profile.maxHR) {
+                    const hrPercent = (d.hr / this.profile.maxHR) * 100;
+                    if (hrPercent > 95 && d.time < 300) {
+                        status = 'Red Zone!';
+                        message = '❤️ Heart rate too high too soon! Ease back to 22 s/m for 30 seconds.';
+                        this.lastCoachingTime = now;
+                    }
+                }
+                else if (d.rate > 32) {
+                    status = 'Too Fast';
+                    message = '⚠️ Stroke rate too high. Slow down, longer strokes. Aim for 24-28 s/m.';
+                    this.lastCoachingTime = now;
+                }
+
+                if (message) {
+                    statusElem.textContent = status;
+                    messageElem.textContent = message;
+                }
             }
 
             endWorkout() {
@@ -1531,7 +1710,6 @@ Focus on:
                 if (hrElem) hrElem.textContent = d.hr > 0 ? d.hr : '--';
                 if (calElem) calElem.textContent = Math.floor((d.watts * d.time) / 4186);
 
-                // Update HR zone
                 this.updateHRZone();
             }
 
@@ -1565,62 +1743,12 @@ Focus on:
                     hrZoneElem.style.color = zoneColor;
                 }
 
-                // Move indicator
                 const indicator = document.getElementById('hrZoneIndicator');
                 if (indicator) {
-                    const position = ((hrPercent - 50) / 50) * 100; // 50-100% HR = 0-100% position
+                    const position = ((hrPercent - 50) / 50) * 100;
                     indicator.style.marginLeft = Math.max(0, Math.min(100, position)) + '%';
                     indicator.style.background = zoneColor;
                 }
-            }
-
-            // ========================================================================
-            // BLUETOOTH (PM5)
-            // ========================================================================
-
-            async connectBluetooth() {
-                this.showToast('PM5 Bluetooth connection - Coming soon!', 'success');
-            }
-
-            // ========================================================================
-            // CSV IMPORT
-            // ========================================================================
-
-            importCSV(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const csv = e.target.result;
-                        const lines = csv.split('\n');
-                        let imported = 0;
-                        
-                        for (let i = 1; i < lines.length; i++) {
-                            if (!lines[i].trim()) continue;
-                            const parts = lines[i].split(',');
-                            if (parts.length > 7) {
-                                this.workouts.push({
-                                    id: parts[0],
-                                    date: parts[1],
-                                    description: parts[2],
-                                    distance: parseInt(parts[7]) || 0,
-                                    pace: parts[11] || '',
-                                    watts: parseInt(parts[12]) || 0
-                                });
-                                imported++;
-                            }
-                        }
-                        
-                        this.saveData();
-                        this.showToast(`Imported ${imported} workouts!`, 'success');
-                        event.target.value = '';
-                    } catch (error) {
-                        this.showToast('Import failed: ' + error.message, 'error');
-                    }
-                };
-                reader.readAsText(file);
             }
 
             // ========================================================================
@@ -1639,13 +1767,39 @@ Focus on:
                 const screenMap = {
                     'screenCoach': 0,
                     'screenRow': 1,
-                    'screenData': 2
+                    'screenHistory': 2,
+                    'screenData': 3
                 };
                 
                 const index = screenMap[screenId];
                 if (index !== undefined && navItems[index]) {
                     navItems[index].classList.add('active');
                 }
+            }
+
+            resetOnboarding() {
+                if (!confirm('This will reset your profile and start onboarding fresh. Continue?')) {
+                    return;
+                }
+                
+                this.onboardingState = {
+                    step: 0,
+                    completed: false,
+                    data: {}
+                };
+                this.profile = null;
+                this.chatHistory = [];
+                
+                this.saveData();
+                
+                this.navigate('screenCoach');
+                this.startOnboarding();
+                
+                this.showToast('Onboarding reset', 'success');
+            }
+
+            connectBluetooth() {
+                this.showToast('PM5 Bluetooth - Coming soon!', 'success');
             }
 
             showToast(message, type = 'success') {
