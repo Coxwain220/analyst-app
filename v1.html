@@ -85,23 +85,40 @@
             z-index: 10000;
         }
         
-        .settings-cog {
-            position: fixed;
-            top: 16px;
-            left: 16px;
+        /* TOP NAVIGATION */
+        .top-nav-bar {
             background: var(--panel);
-            border: 1px solid var(--border);
-            color: var(--text);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            border-bottom: 1px solid var(--border);
             display: flex;
+            height: 70px;
+            flex-shrink: 0;
+        }
+        
+        .top-nav-item {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            cursor: pointer;
-            z-index: 9999;
+            gap: 4px;
+            transition: all 0.2s;
         }
+        
+        .top-nav-item.active {
+            color: var(--accent);
+            background: rgba(0,255,153,0.05);
+        }
+        
+        .top-nav-icon { font-size: 20px; }
+        
+        .top-nav-label { font-size: 10px; letter-spacing: 0.5px; }
         
         .toast {
             position: fixed;
@@ -718,6 +735,74 @@
             opacity: 0.5;
         }
         
+        /* TRAINING PLAN */
+        .plan-week {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .plan-week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .plan-week-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .plan-week-focus {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        .plan-day {
+            background: #050505;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .plan-day-info {
+            flex: 1;
+        }
+        
+        .plan-day-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        
+        .plan-day-desc {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .plan-day-status {
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: #222;
+            color: #666;
+        }
+        
+        .plan-day-status.completed {
+            background: rgba(0,255,153,0.1);
+            color: var(--accent);
+        }
+        
         /* CHAT MESSAGES */
         .chat-message {
             max-width: 85%;
@@ -824,9 +909,27 @@
 </head>
 <body>
     <div class="version-badge">v1.6 PRODUCTION</div>
-    <div class="settings-cog" onclick="app.navigate('screenSettings')">⚙️</div>
-    <div class="settings-cog" onclick="app.navigate('screenHRM')" style="left:60px;">❤️</div>
     <div id="toast" class="toast"></div>
+    
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="top-nav-bar">
+        <button class="top-nav-item active" onclick="app.navigate('screenSettings')">
+            <span class="top-nav-icon">⚙️</span>
+            <span class="top-nav-label">Settings</span>
+        </button>
+        <button class="top-nav-item" onclick="app.navigate('screenHRM')">
+            <span class="top-nav-icon">❤️</span>
+            <span class="top-nav-label">HR Mon</span>
+        </button>
+        <button class="top-nav-item" style="opacity:0.3; cursor:not-allowed;">
+            <span class="top-nav-icon">📍</span>
+            <span class="top-nav-label">TBD</span>
+        </button>
+        <button class="top-nav-item" style="opacity:0.3; cursor:not-allowed;">
+            <span class="top-nav-icon">📍</span>
+            <span class="top-nav-label">TBD</span>
+        </button>
+    </nav>
 
     <!-- DASHBOARD SCREEN (SWIPEABLE) -->
     <div id="screenDashboard" class="screen active">
@@ -1108,6 +1211,23 @@
         </div>
     </div>
 
+    <!-- TRAINING PLAN SCREEN -->
+    <div id="screenPlan" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">Training Plan</div>
+            <button class="header-btn" onclick="app.generateNewPlan()">+ New Plan</button>
+        </div>
+        <div class="scroll-content" id="planContent">
+            <div class="empty-state">
+                <div class="empty-state-icon">📅</div>
+                <div style="font-size:14px; line-height:1.6;">
+                    No training plan yet.<br>
+                    Chat with AI to create a 4-week plan.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- HISTORY SCREEN -->
     <div id="screenHistory" class="screen">
         <div class="screen-header">
@@ -1202,6 +1322,10 @@
         <button class="nav-item" onclick="app.navigate('screenBuilder')">
             <span class="nav-icon">🔧</span>
             Builder
+        </button>
+        <button class="nav-item" onclick="app.navigate('screenPlan')">
+            <span class="nav-icon">📅</span>
+            Plan
         </button>
         <button class="nav-item" onclick="app.navigate('screenHistory')">
             <span class="nav-icon">📊</span>
@@ -1435,6 +1559,7 @@
                 this.profile = null;
                 this.workouts = [];
                 this.chatHistory = [];
+                this.trainingPlan = null;
                 this.currentView = 0;
                 this.builderMode = 'single-distance';
                 this.builderTargets = { splitPace: false, pacer: false, strokeRate: false, heartRate: false };
@@ -1548,7 +1673,8 @@
                 
                 // Training plan
                 if (lower.includes('plan') || lower.includes('4-week') || lower.includes('training')) {
-                    this.addChatMessage('ai', 'Perfect! I can create a personalized 4-week training plan.\n\nWhat\'s your main goal?\n• Build endurance\n• Increase speed\n• Prepare for competition\n• Weight loss', ['Endurance', 'Speed', 'Competition']);
+                    this.generateTrainingPlan();
+                    this.addChatMessage('ai', 'Perfect! I\'ve created a personalized 4-week training plan tailored to your goals.\n\nCheck the **Plan** tab to see your full schedule.\n\nThis is a progressive program:\n• Week 1: Base building\n• Week 2: Intensity increase\n• Week 3: Peak volume\n• Week 4: Taper & test', ['View Plan']);
                     return;
                 }
                 
@@ -1651,6 +1777,25 @@
             handleQuickReply(text) {
                 const input = document.getElementById('chatInput');
                 if (input) {
+                    // Special navigation handlers
+                    if (text === 'View Plan') {
+                        this.navigate('screenPlan');
+                        return;
+                    }
+                    if (text === 'Use Manual Builder') {
+                        this.navigate('screenBuilder');
+                        return;
+                    }
+                    if (text === 'Import CSV') {
+                        this.navigate('screenSettings');
+                        return;
+                    }
+                    if (text === 'View History') {
+                        this.navigate('screenHistory');
+                        return;
+                    }
+                    
+                    // Default: type and send
                     input.value = text;
                     this.sendMessage();
                 }
@@ -2736,6 +2881,104 @@
             }
 
             // ========================================================================
+            // TRAINING PLAN GENERATION
+            // ========================================================================
+
+            generateTrainingPlan() {
+                this.trainingPlan = {
+                    weeks: [
+                        {
+                            number: 1,
+                            focus: 'Base Building',
+                            days: [
+                                { day: 'Monday', title: '30min Steady State', desc: 'Easy pace, build aerobic base', status: 'pending' },
+                                { day: 'Tuesday', title: 'Rest', desc: 'Recovery day', status: 'pending' },
+                                { day: 'Wednesday', title: '4x1500m', desc: 'Intervals @ 2:00 pace, 3min rest', status: 'pending' },
+                                { day: 'Thursday', title: 'Rest', desc: 'Recovery day', status: 'pending' },
+                                { day: 'Friday', title: '40min Steady State', desc: 'Zone 2 training', status: 'pending' },
+                                { day: 'Saturday', title: '6x500m', desc: 'Speed work @ 1:50, 2min rest', status: 'pending' },
+                                { day: 'Sunday', title: 'Rest or light 20min', desc: 'Active recovery', status: 'pending' }
+                            ]
+                        },
+                        {
+                            number: 2,
+                            focus: 'Intensity Increase',
+                            days: [
+                                { day: 'Monday', title: '35min Steady State', desc: 'Controlled pace', status: 'pending' },
+                                { day: 'Tuesday', title: 'Rest', desc: 'Recovery day', status: 'pending' },
+                                { day: 'Wednesday', title: '5x1500m', desc: 'Intervals @ 1:58, 2:30 rest', status: 'pending' },
+                                { day: 'Thursday', title: 'Rest', desc: 'Recovery day', status: 'pending' },
+                                { day: 'Friday', title: '45min Steady State', desc: 'Build endurance', status: 'pending' },
+                                { day: 'Saturday', title: '8x500m', desc: 'Speed @ 1:48, 90s rest', status: 'pending' },
+                                { day: 'Sunday', title: '25min Easy', desc: 'Active recovery', status: 'pending' }
+                            ]
+                        },
+                        {
+                            number: 3,
+                            focus: 'Peak Volume',
+                            days: [
+                                { day: 'Monday', title: '40min Progressive', desc: 'Start easy, finish strong', status: 'pending' },
+                                { day: 'Tuesday', title: 'Rest', desc: 'Recovery day', status: 'pending' },
+                                { day: 'Wednesday', title: '6x1500m', desc: 'Intervals @ 1:56, 2min rest', status: 'pending' },
+                                { day: 'Thursday', title: 'Rest', desc: 'Recovery day', status: 'pending' },
+                                { day: 'Friday', title: '50min Steady State', desc: 'Peak aerobic volume', status: 'pending' },
+                                { day: 'Saturday', title: '3x2000m', desc: 'Race pace @ 1:52, 4min rest', status: 'pending' },
+                                { day: 'Sunday', title: '30min Easy', desc: 'Recovery', status: 'pending' }
+                            ]
+                        },
+                        {
+                            number: 4,
+                            focus: 'Taper & Test',
+                            days: [
+                                { day: 'Monday', title: '30min Easy', desc: 'Reduce volume', status: 'pending' },
+                                { day: 'Tuesday', title: 'Rest', desc: 'Recovery', status: 'pending' },
+                                { day: 'Wednesday', title: '3x1000m', desc: 'Sharpening @ 1:50, full rest', status: 'pending' },
+                                { day: 'Thursday', title: 'Rest', desc: 'Pre-test recovery', status: 'pending' },
+                                { day: 'Friday', title: 'Rest', desc: 'Final prep', status: 'pending' },
+                                { day: 'Saturday', title: '2000m TIME TRIAL', desc: 'Test day - all out!', status: 'pending' },
+                                { day: 'Sunday', title: 'Celebrate!', desc: 'Recovery & reflection', status: 'pending' }
+                            ]
+                        }
+                    ],
+                    created: new Date().toISOString()
+                };
+                
+                this.renderTrainingPlan();
+            }
+
+            renderTrainingPlan() {
+                const container = document.getElementById('planContent');
+                if (!container || !this.trainingPlan) return;
+                
+                const html = this.trainingPlan.weeks.map(week => `
+                    <div class="plan-week">
+                        <div class="plan-week-header">
+                            <div class="plan-week-title">Week ${week.number}</div>
+                            <div class="plan-week-focus">${week.focus}</div>
+                        </div>
+                        ${week.days.map(day => `
+                            <div class="plan-day">
+                                <div class="plan-day-info">
+                                    <div class="plan-day-title">${day.day}: ${day.title}</div>
+                                    <div class="plan-day-desc">${day.desc}</div>
+                                </div>
+                                <div class="plan-day-status ${day.status}">${day.status === 'completed' ? '✓' : '○'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('');
+                
+                container.innerHTML = html;
+            }
+
+            generateNewPlan() {
+                if (!confirm('Create a new 4-week training plan? This will replace your current plan.')) return;
+                
+                this.generateTrainingPlan();
+                this.showToast('New training plan created!', 'success');
+            }
+
+            // ========================================================================
             // NAVIGATION
             // ========================================================================
 
@@ -2750,7 +2993,8 @@
                     'screenChat': 0,
                     'screenDashboard': 1,
                     'screenBuilder': 2,
-                    'screenHistory': 3
+                    'screenPlan': 3,
+                    'screenHistory': 4
                 };
                 
                 const index = screenMap[screenId];
