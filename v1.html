@@ -5,10 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Rowing Coach v1.6</title>
     
-    <!-- Firebase SDK (only loads if FIREBASE_ENABLED = true) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK v9+ (Modular) -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, getDocs, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdwuu17GMfX_jiVyx5SOL_jmvrybq0uuo",
+            authDomain: "ai-fitness-app-c5307.firebaseapp.com",
+            projectId: "ai-fitness-app-c5307",
+            storageBucket: "ai-fitness-app-c5307.firebasestorage.app",
+            messagingSenderId: "462148834440",
+            appId: "1:462148834440:web:32be31f4ae6f76e144bb3d"
+        };
+        
+        // Initialize Firebase and make available globally
+        const app = initializeApp(firebaseConfig);
+        window.firebaseApp = app;
+        window.firebaseAuth = getAuth(app);
+        window.firebaseDb = getFirestore(app);
+        window.firebaseModules = {
+            signInAnonymously,
+            onAuthStateChanged,
+            doc,
+            setDoc,
+            getDoc,
+            collection,
+            query,
+            orderBy,
+            getDocs,
+            deleteDoc,
+            serverTimestamp
+        };
+        
+        console.log('✓ Firebase modules loaded');
+    </script>
     
     <style>
         :root {
@@ -1140,19 +1173,8 @@
         // FIREBASE CONFIGURATION
         // ========================================================================
         
-        // NOTE: These are PUBLIC Firebase config values - safe to expose
-        // They are rate-limited and domain-restricted in Firebase Console
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY_HERE", // Replace with your Firebase API key
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_ID",
-            appId: "YOUR_APP_ID"
-        };
-        
-        // Set this to true once you've added your Firebase credentials above
-        const FIREBASE_ENABLED = false;
+        // Set to true to enable Firebase cloud storage
+        const FIREBASE_ENABLED = true;
         
         // ========================================================================
         // STORAGE ABSTRACTION LAYER
@@ -1166,19 +1188,29 @@
             
             async init() {
                 if (this.isFirebase) {
+                    // Wait for Firebase modules to load
+                    await new Promise(resolve => {
+                        const checkInterval = setInterval(() => {
+                            if (window.firebaseAuth && window.firebaseDb && window.firebaseModules) {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                    
                     // Initialize Firebase
                     try {
-                        firebase.initializeApp(firebaseConfig);
+                        const { signInAnonymously, onAuthStateChanged } = window.firebaseModules;
+                        const auth = window.firebaseAuth;
                         
-                        // Anonymous Auth
-                        const auth = firebase.auth();
-                        const result = await auth.signInAnonymously();
+                        // Sign in anonymously
+                        const result = await signInAnonymously(auth);
                         this.userId = result.user.uid;
                         
                         console.log('✓ Firebase initialized. User ID:', this.userId);
                         
-                        // Listen for auth state
-                        auth.onAuthStateChanged((user) => {
+                        // Listen for auth state changes
+                        onAuthStateChanged(auth, (user) => {
                             if (user) {
                                 this.userId = user.uid;
                                 console.log('✓ User authenticated:', this.userId);
@@ -1201,11 +1233,15 @@
             
             async saveProfile(profile) {
                 if (this.isFirebase) {
-                    const db = firebase.firestore();
-                    await db.collection('users').doc(this.userId).set({
+                    const { doc, setDoc, serverTimestamp } = window.firebaseModules;
+                    const db = window.firebaseDb;
+                    
+                    await setDoc(doc(db, 'users', this.userId), {
                         profile: profile,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        updatedAt: serverTimestamp()
                     }, { merge: true });
+                    
+                    console.log('✓ Profile saved to Firebase');
                 } else {
                     localStorage.setItem('rowing_coach_profile_v1', JSON.stringify(profile));
                 }
@@ -1213,9 +1249,11 @@
             
             async loadProfile() {
                 if (this.isFirebase) {
-                    const db = firebase.firestore();
-                    const doc = await db.collection('users').doc(this.userId).get();
-                    return doc.exists ? doc.data().profile : null;
+                    const { doc, getDoc } = window.firebaseModules;
+                    const db = window.firebaseDb;
+                    
+                    const docSnap = await getDoc(doc(db, 'users', this.userId));
+                    return docSnap.exists() ? docSnap.data().profile : null;
                 } else {
                     const data = localStorage.getItem('rowing_coach_profile_v1');
                     return data ? JSON.parse(data) : null;
@@ -1224,9 +1262,11 @@
             
             async saveWorkout(workout) {
                 if (this.isFirebase) {
-                    const db = firebase.firestore();
-                    await db.collection('users').doc(this.userId)
-                        .collection('workouts').doc(workout.id).set(workout);
+                    const { doc, setDoc } = window.firebaseModules;
+                    const db = window.firebaseDb;
+                    
+                    await setDoc(doc(db, 'users', this.userId, 'workouts', workout.id), workout);
+                    console.log('✓ Workout saved to Firebase:', workout.id);
                 } else {
                     const workouts = await this.loadWorkouts();
                     const existing = workouts.findIndex(w => w.id === workout.id);
@@ -1241,10 +1281,19 @@
             
             async loadWorkouts() {
                 if (this.isFirebase) {
-                    const db = firebase.firestore();
-                    const snapshot = await db.collection('users').doc(this.userId)
-                        .collection('workouts').orderBy('date', 'desc').get();
-                    return snapshot.docs.map(doc => doc.data());
+                    const { collection, query, orderBy, getDocs } = window.firebaseModules;
+                    const db = window.firebaseDb;
+                    
+                    const q = query(
+                        collection(db, 'users', this.userId, 'workouts'),
+                        orderBy('date', 'desc')
+                    );
+                    
+                    const snapshot = await getDocs(q);
+                    const workouts = snapshot.docs.map(doc => doc.data());
+                    
+                    console.log(`✓ Loaded ${workouts.length} workouts from Firebase`);
+                    return workouts;
                 } else {
                     const data = localStorage.getItem('rowing_coach_workouts_v1');
                     return data ? JSON.parse(data) : [];
@@ -1253,9 +1302,11 @@
             
             async deleteWorkout(workoutId) {
                 if (this.isFirebase) {
-                    const db = firebase.firestore();
-                    await db.collection('users').doc(this.userId)
-                        .collection('workouts').doc(workoutId).delete();
+                    const { doc, deleteDoc } = window.firebaseModules;
+                    const db = window.firebaseDb;
+                    
+                    await deleteDoc(doc(db, 'users', this.userId, 'workouts', workoutId));
+                    console.log('✓ Workout deleted from Firebase:', workoutId);
                 } else {
                     const workouts = await this.loadWorkouts();
                     const filtered = workouts.filter(w => w.id !== workoutId);
@@ -1265,10 +1316,12 @@
             
             async saveChat(messages) {
                 if (this.isFirebase) {
-                    const db = firebase.firestore();
-                    await db.collection('users').doc(this.userId).set({
+                    const { doc, setDoc, serverTimestamp } = window.firebaseModules;
+                    const db = window.firebaseDb;
+                    
+                    await setDoc(doc(db, 'users', this.userId), {
                         chatHistory: messages,
-                        chatUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        chatUpdatedAt: serverTimestamp()
                     }, { merge: true });
                 } else {
                     localStorage.setItem('rowing_coach_chat_v1', JSON.stringify(messages));
@@ -1277,9 +1330,11 @@
             
             async loadChat() {
                 if (this.isFirebase) {
-                    const db = firebase.firestore();
-                    const doc = await db.collection('users').doc(this.userId).get();
-                    return doc.exists ? (doc.data().chatHistory || []) : [];
+                    const { doc, getDoc } = window.firebaseModules;
+                    const db = window.firebaseDb;
+                    
+                    const docSnap = await getDoc(doc(db, 'users', this.userId));
+                    return docSnap.exists() ? (docSnap.data().chatHistory || []) : [];
                 } else {
                     const data = localStorage.getItem('rowing_coach_chat_v1');
                     return data ? JSON.parse(data) : [];
