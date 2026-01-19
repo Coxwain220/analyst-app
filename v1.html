@@ -679,6 +679,72 @@
             opacity: 0.5;
         }
         
+        /* CHAT MESSAGES */
+        .chat-message {
+            max-width: 85%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            line-height: 1.5;
+            font-size: 15px;
+            margin-bottom: 12px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .chat-message.user {
+            background: #0d3a2e;
+            border: 1px solid #1a4a3e;
+            margin-left: auto;
+            border-radius: 16px 16px 4px 16px;
+        }
+        
+        .chat-message.ai {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 16px 16px 16px 4px;
+        }
+        
+        .chat-header {
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+        }
+        
+        .chat-message.user .chat-header {
+            color: #00AAFF;
+        }
+        
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .quick-reply-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+        
         /* MOBILE RESPONSIVE */
         @media (max-width: 768px) {
             .metrics-grid {
@@ -830,6 +896,34 @@
         </div>
     </div>
 
+    <!-- AI CHAT SCREEN -->
+    <div id="screenChat" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">AI Coach</div>
+        </div>
+        <div style="display:flex; flex-direction:column; height:100%;">
+            <div class="scroll-content" id="chatMessages" style="flex:1; padding-bottom:20px;">
+                <!-- Chat messages will appear here -->
+            </div>
+            <div class="typing-indicator" id="typingIndicator" style="display:none; padding:16px;">
+                <div style="display:flex; gap:4px;">
+                    <div style="width:8px; height:8px; background:var(--accent); border-radius:50%; animation:typing 1.4s infinite;"></div>
+                    <div style="width:8px; height:8px; background:var(--accent); border-radius:50%; animation:typing 1.4s infinite 0.2s;"></div>
+                    <div style="width:8px; height:8px; background:var(--accent); border-radius:50%; animation:typing 1.4s infinite 0.4s;"></div>
+                </div>
+            </div>
+            <div style="position:sticky; bottom:0; border-top:1px solid var(--border); background:var(--panel); padding:12px; display:flex; gap:12px; align-items:flex-end;">
+                <textarea 
+                    id="chatInput" 
+                    placeholder="Type your message..."
+                    style="flex:1; background:#0a0a0a; border:1px solid var(--border); color:var(--text); padding:12px; border-radius:20px; font-size:15px; font-family:inherit; resize:none; max-height:120px; min-height:44px;"
+                    onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();app.sendMessage();}"
+                ></textarea>
+                <button onclick="app.sendMessage()" style="background:var(--accent); color:#000; border:none; width:44px; height:44px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">↑</button>
+            </div>
+        </div>
+    </div>
+
     <!-- BUILDER SCREEN -->
     <div id="screenBuilder" class="screen">
         <div class="screen-header">
@@ -955,6 +1049,10 @@
 
     <!-- Navigation -->
     <nav class="nav-bar">
+        <button class="nav-item" onclick="app.navigate('screenChat')">
+            <span class="nav-icon">🤖</span>
+            AI Chat
+        </button>
         <button class="nav-item active" onclick="app.navigate('screenDashboard')">
             <span class="nav-icon">🚣</span>
             Row
@@ -982,6 +1080,7 @@
             constructor() {
                 this.profile = null;
                 this.workouts = [];
+                this.chatHistory = [];
                 this.currentView = 0;
                 this.builderMode = 'single-distance';
                 this.builderTargets = { pacer: false, strokeRate: false };
@@ -1007,9 +1106,24 @@
                 this.renderBuilderMode();
                 this.renderHistory();
                 this.updateStats();
+                this.renderChat();
+                
+                // Chat input auto-resize
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput) {
+                    chatInput.addEventListener('input', () => {
+                        chatInput.style.height = 'auto';
+                        chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+                    });
+                }
                 
                 // Demo data
                 this.startDemoData();
+                
+                // Welcome message if no chat history
+                if (this.chatHistory.length === 0) {
+                    this.addChatMessage('ai', 'Hey! 🤖 I\'m Coach, your AI rowing assistant.\n\nI can help you:\n• Create custom workouts\n• Build training plans\n• Analyze your performance\n• Answer rowing questions\n\nWhat would you like to do?', ['Create workout', 'Build 4-week plan', 'Analyze my data']);
+                }
             }
 
             loadData() {
@@ -1022,6 +1136,11 @@
                         this.workouts = JSON.parse(workoutData);
                         console.log(`✓ Loaded ${this.workouts.length} workouts`);
                     }
+                    
+                    const chatData = localStorage.getItem('rowing_coach_chat_v1');
+                    if (chatData) {
+                        this.chatHistory = JSON.parse(chatData);
+                    }
                 } catch (error) {
                     console.error('Load error:', error);
                 }
@@ -1033,9 +1152,161 @@
                         localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(this.profile));
                     }
                     localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(this.workouts));
+                    localStorage.setItem('rowing_coach_chat_v1', JSON.stringify(this.chatHistory));
                 } catch (error) {
                     console.error('Save error:', error);
                 }
+            }
+
+            // ========================================================================
+            // CHAT FUNCTIONALITY
+            // ========================================================================
+
+            async sendMessage() {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                
+                if (!message) return;
+
+                this.addChatMessage('user', message);
+                input.value = '';
+                input.style.height = 'auto';
+
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.style.display = 'flex';
+                }
+
+                await this.sleep(800);
+
+                if (typingIndicator) {
+                    typingIndicator.style.display = 'none';
+                }
+
+                this.processMessage(message);
+            }
+
+            processMessage(message) {
+                const lower = message.toLowerCase();
+                
+                // Workout creation
+                if (lower.includes('workout') || lower.includes('interval') || lower.includes('create')) {
+                    this.addChatMessage('ai', 'I can help you create a workout! You have two options:\n\n1. **Tell me what you want** (e.g., "6x500m with 2min rest")\n2. **Use the Manual Builder** for precise control\n\nWhat would you like?', ['Use Manual Builder', '6x500m intervals', '30min steady']);
+                    return;
+                }
+                
+                // Training plan
+                if (lower.includes('plan') || lower.includes('4-week') || lower.includes('training')) {
+                    this.addChatMessage('ai', 'Perfect! I can create a personalized 4-week training plan.\n\nWhat\'s your main goal?\n• Build endurance\n• Increase speed\n• Prepare for competition\n• Weight loss', ['Endurance', 'Speed', 'Competition']);
+                    return;
+                }
+                
+                // Data analysis
+                if (lower.includes('analyze') || lower.includes('performance') || lower.includes('progress')) {
+                    const totalWorkouts = this.workouts.length;
+                    const totalDist = this.workouts.reduce((sum, w) => sum + (w.distance || 0), 0);
+                    
+                    this.addChatMessage('ai', `Here's your training summary:\n\n📊 **Total Workouts:** ${totalWorkouts}\n📏 **Total Distance:** ${Math.floor(totalDist/1000)}km\n\n${totalWorkouts > 0 ? 'You\'re making great progress! Keep it up! 💪' : 'Import your CSV to see detailed analysis.'}`, ['Import CSV', 'View History']);
+                    return;
+                }
+                
+                // Builder redirect
+                if (lower.includes('builder') || lower.includes('manual')) {
+                    this.addChatMessage('ai', 'Taking you to the Manual Builder...', null);
+                    setTimeout(() => this.navigate('screenBuilder'), 500);
+                    return;
+                }
+                
+                // Profile updates
+                if (lower.includes('weight') && (lower.includes('change') || lower.includes('update'))) {
+                    const match = message.match(/(\d+)\s*kg/i);
+                    if (match) {
+                        const newWeight = parseInt(match[1]);
+                        if (this.profile) {
+                            this.profile.weight = newWeight;
+                            this.saveData();
+                            this.loadProfile();
+                            this.addChatMessage('ai', `✓ Updated your weight to ${newWeight}kg!`, null);
+                            return;
+                        }
+                    }
+                }
+                
+                // Default helpful response
+                this.addChatMessage('ai', 'I can help with:\n\n🏋️ **Create Workouts** - Custom intervals or steady state\n📅 **Training Plans** - 4-week periodized programs\n📊 **Performance Analysis** - Track your progress\n⚙️ **Settings** - Update your profile\n\nWhat would you like to do?', ['Create workout', 'Build plan', 'View history']);
+            }
+
+            addChatMessage(sender, text, quickReplies = null) {
+                const msg = {
+                    sender: sender,
+                    text: text,
+                    quickReplies: quickReplies,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.chatHistory.push(msg);
+                this.saveData();
+                this.renderChat();
+            }
+
+            renderChat() {
+                const container = document.getElementById('chatMessages');
+                if (!container) return;
+                
+                const html = this.chatHistory.map((msg) => {
+                    const isUser = msg.sender === 'user';
+                    
+                    let quickRepliesHtml = '';
+                    if (msg.quickReplies && msg.quickReplies.length > 0) {
+                        quickRepliesHtml = `
+                            <div class="quick-replies">
+                                ${msg.quickReplies.map(reply => {
+                                    let onclick = `app.handleQuickReply('${reply.replace(/'/g, "\\'")}')`;
+                                    
+                                    if (reply === 'Use Manual Builder') onclick = `app.navigate('screenBuilder')`;
+                                    if (reply === 'Import CSV') onclick = `app.navigate('screenSettings')`;
+                                    if (reply === 'View History') onclick = `app.navigate('screenHistory')`;
+                                    
+                                    return `<button class="quick-reply-btn" onclick="${onclick}">${reply}</button>`;
+                                }).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    const formattedText = msg.text
+                        .replace(/\n/g, '<br>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/• /g, '• ');
+                    
+                    return `
+                        <div class="chat-message ${isUser ? 'user' : 'ai'}">
+                            <div class="chat-header">
+                                ${isUser ? '👤 You' : '🤖 Coach'}
+                            </div>
+                            ${formattedText}
+                            ${quickRepliesHtml}
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = html;
+                
+                // Scroll to bottom
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 100);
+            }
+
+            handleQuickReply(text) {
+                const input = document.getElementById('chatInput');
+                if (input) {
+                    input.value = text;
+                    this.sendMessage();
+                }
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
             }
 
             // ========================================================================
@@ -1697,9 +1968,10 @@
                 navItems.forEach(item => item.classList.remove('active'));
                 
                 const screenMap = {
-                    'screenDashboard': 0,
-                    'screenBuilder': 1,
-                    'screenHistory': 2
+                    'screenChat': 0,
+                    'screenDashboard': 1,
+                    'screenBuilder': 2,
+                    'screenHistory': 3
                 };
                 
                 const index = screenMap[screenId];
