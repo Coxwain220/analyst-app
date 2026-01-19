@@ -3,27 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Rowing Coach v1.5</title>
+    <title>AI Rowing Coach v1.6</title>
     <style>
         :root {
             --bg: #000;
             --text: #e0e0e0;
             --accent: #00FF99;
             --danger: #FF4444;
-            --rest: #00AAFF;
             --panel: #111;
             --border: #222;
             --card-bg: #0a0a0a;
-            
-            --coach-color: #00FF99;
-            --admin-color: #00AAFF;
-            --support-color: #FFA500;
-            
-            --zone1: #4a90e2;
-            --zone2: #50c878;
-            --zone3: #ffa500;
-            --zone4: #ff6347;
-            --zone5: #dc143c;
         }
         
         * {
@@ -43,7 +32,6 @@
             flex-direction: column;
         }
         
-        /* VERSION BADGE */
         .version-badge {
             position: fixed;
             top: 10px;
@@ -56,10 +44,8 @@
             font-size: 10px;
             font-weight: 700;
             z-index: 10000;
-            letter-spacing: 0.5px;
         }
         
-        /* SETTINGS COG */
         .settings-cog {
             position: fixed;
             top: 16px;
@@ -76,14 +62,8 @@
             font-size: 18px;
             cursor: pointer;
             z-index: 9999;
-            transition: all 0.2s;
         }
         
-        .settings-cog:active {
-            transform: scale(0.9);
-        }
-        
-        /* TOAST */
         .toast {
             position: fixed;
             top: 70px;
@@ -96,10 +76,9 @@
             border: 1px solid var(--border);
             z-index: 9999;
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             font-size: 14px;
             font-weight: 600;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             max-width: 90%;
         }
         
@@ -108,10 +87,9 @@
             opacity: 1;
         }
         
-        .toast.error { border-color: var(--danger); background: rgba(255,68,68,0.1); color: var(--danger); }
-        .toast.success { border-color: var(--accent); background: rgba(0,255,153,0.1); color: var(--accent); }
+        .toast.success { border-color: var(--accent); color: var(--accent); }
+        .toast.error { border-color: var(--danger); color: var(--danger); }
         
-        /* SCREENS */
         .screen {
             display: none;
             flex-direction: column;
@@ -127,7 +105,7 @@
             padding: 16px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             flex-shrink: 0;
         }
         
@@ -137,7 +115,19 @@
             letter-spacing: 1.5px;
             color: #666;
             text-transform: uppercase;
+            flex: 1;
             text-align: center;
+        }
+        
+        .header-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
         }
         
         .scroll-content {
@@ -148,200 +138,164 @@
             padding-bottom: 100px;
         }
         
-        /* SKIP BUTTON - FIXED TOP */
-        .skip-to-workout {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            background: var(--panel);
-            border: 2px solid var(--accent);
-            color: var(--accent);
-            padding: 10px 18px;
-            border-radius: 24px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            z-index: 5000;
-            box-shadow: 0 4px 20px rgba(0,255,153,0.3);
-            transition: all 0.2s;
-            display: none;
-        }
-        
-        .skip-to-workout.visible {
-            display: block;
-        }
-        
-        .skip-to-workout:active {
-            transform: scale(0.95);
-        }
-        
-        /* CHAT */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        .chat-messages {
+        /* DASHBOARD - SWIPEABLE VIEWS */
+        .dashboard-container {
             flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .dashboard-carousel {
+            display: flex;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+        
+        .dashboard-view {
+            min-width: 100%;
+            height: 100%;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 16px;
-            padding-bottom: 80px;
+        }
+        
+        .dashboard-dots {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .chat-message {
-            max-width: 85%;
-            padding: 14px 18px;
-            border-radius: 16px;
-            line-height: 1.5;
-            font-size: 15px;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .msg-ai {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            align-self: flex-start;
-            border-radius: 16px 16px 16px 4px;
-        }
-        
-        .msg-ai.persona-coach { border-left: 3px solid var(--coach-color); }
-        .msg-ai.persona-admin { border-left: 3px solid var(--admin-color); }
-        .msg-ai.persona-support { border-left: 3px solid var(--support-color); }
-        
-        .msg-user {
-            background: #0d3a2e;
-            border: 1px solid #1a4a3e;
-            align-self: flex-end;
-            border-radius: 16px 16px 4px 16px;
-        }
-        
-        .msg-header {
-            font-size: 11px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .msg-header.persona-coach { color: var(--coach-color); }
-        .msg-header.persona-admin { color: var(--admin-color); }
-        .msg-header.persona-support { color: var(--support-color); }
-        .msg-user .msg-header { color: #00AAFF; }
-        
-        .quick-replies {
-            display: flex;
-            flex-wrap: wrap;
             gap: 8px;
-            margin-top: 12px;
-        }
-        
-        .quick-reply-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .quick-reply-btn:active {
-            transform: scale(0.95);
-            background: rgba(0,255,153,0.1);
-        }
-        
-        .chat-input-container {
-            position: sticky;
-            bottom: 0;
-            border-top: 1px solid var(--border);
-            background: var(--panel);
-            padding: 12px 16px;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            display: flex;
-            gap: 12px;
-            align-items: flex-end;
             z-index: 100;
         }
         
-        .chat-input {
-            flex: 1;
-            background: #0a0a0a;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 12px 16px;
-            border-radius: 20px;
-            font-size: 15px;
-            font-family: inherit;
-            resize: none;
-            max-height: 120px;
-            min-height: 44px;
-        }
-        
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        
-        .send-btn {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            width: 44px;
-            height: 44px;
+        .dashboard-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
+            background: #333;
+            transition: all 0.3s;
+        }
+        
+        .dashboard-dot.active {
+            background: var(--accent);
+            width: 24px;
+            border-radius: 4px;
+        }
+        
+        /* AI COACH WIDGET */
+        .ai-coach-widget {
+            background: linear-gradient(135deg, #0a1a0a, #0a0a0a);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px;
+            box-shadow: 0 4px 20px rgba(0,255,153,0.1);
+        }
+        
+        .ai-coach-message {
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--text);
+            font-weight: 600;
+        }
+        
+        /* HR ZONE BAR */
+        .hr-zone-sidebar {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 300px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px 0 0 12px;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            z-index: 50;
+        }
+        
+        .hr-zone-segment {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.2s;
+            font-size: 10px;
+            font-weight: 700;
+            opacity: 0.3;
+            transition: all 0.3s;
+            border-radius: 6px;
+            margin: 2px 0;
         }
         
-        .send-btn:active { transform: scale(0.9); }
+        .hr-zone-segment.active {
+            opacity: 1;
+            transform: scale(1.1);
+        }
         
-        .typing-indicator {
-            display: none;
+        /* METRICS GRID */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: #222;
+            margin: 16px;
+        }
+        
+        .metric-item {
+            background: #0a0a0a;
+            padding: 20px 16px;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 10px;
+            color: #666;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .metric-value.accent {
+            color: var(--accent);
+        }
+        
+        /* LARGE PRINT VIEW */
+        .large-print-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 4px;
-            padding: 16px;
-            max-width: 85%;
+            height: 100%;
+            padding: 20px;
         }
         
-        .typing-indicator.active { display: flex; }
-        
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: typing 1.4s infinite;
+        .large-print-metric {
+            text-align: center;
+            margin-bottom: 32px;
         }
         
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-10px); opacity: 1; }
+        .large-print-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
         }
         
-        /* MANUAL WORKOUT BUILDER */
+        .large-print-value {
+            font-size: 72px;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--accent);
+        }
+        
+        /* BUILDER */
         .builder-mode-selector {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -359,17 +313,11 @@
             font-weight: 700;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s;
         }
         
         .builder-mode-btn.active {
             background: var(--accent);
             color: #000;
-            border-color: var(--accent);
-        }
-        
-        .builder-mode-btn:active {
-            transform: scale(0.98);
         }
         
         .builder-section {
@@ -409,9 +357,22 @@
             font-size: 15px;
         }
         
-        .builder-input:focus {
-            outline: none;
-            border-color: var(--accent);
+        .builder-time-picker {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .builder-time-input {
+            flex: 1;
+            background: #000;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: 700;
         }
         
         .builder-toggle {
@@ -442,12 +403,6 @@
             color: #000;
         }
         
-        .builder-toggle-label {
-            flex: 1;
-            font-size: 13px;
-            font-weight: 700;
-        }
-        
         .builder-interval-list {
             margin-top: 16px;
         }
@@ -458,24 +413,22 @@
             border-radius: 6px;
             padding: 12px;
             margin-bottom: 8px;
+        }
+        
+        .builder-interval-item.editable {
+            border-color: var(--accent);
+            background: #0a0a0a;
+        }
+        
+        .builder-interval-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .builder-interval-info {
-            flex: 1;
-        }
-        
         .builder-interval-title {
             font-size: 13px;
             font-weight: 700;
-            margin-bottom: 4px;
-        }
-        
-        .builder-interval-desc {
-            font-size: 11px;
-            color: #666;
         }
         
         .builder-interval-actions {
@@ -497,11 +450,58 @@
             justify-content: center;
         }
         
-        .builder-icon-btn:active {
-            transform: scale(0.9);
+        .builder-interval-edit {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
         }
         
-        /* BUTTONS */
+        .builder-interval-item.editable .builder-interval-edit {
+            display: block;
+        }
+        
+        /* REVIEW SCREEN */
+        .review-workout-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 16px;
+            text-align: center;
+        }
+        
+        .review-interval {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .review-interval-info {
+            flex: 1;
+        }
+        
+        .review-interval-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .review-interval-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .review-actions {
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+        }
+        
         .btn {
             width: 100%;
             padding: 16px;
@@ -511,14 +511,10 @@
             font-weight: 700;
             text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 0.5px;
         }
         
-        .btn:active { transform: scale(0.98); }
         .btn-primary { background: var(--accent); color: #000; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-        .btn + .btn { margin-top: 12px; }
         
         /* CARDS */
         .card {
@@ -532,7 +528,6 @@
         .card-header {
             font-size: 11px;
             font-weight: 700;
-            letter-spacing: 1px;
             color: var(--accent);
             text-transform: uppercase;
             margin-bottom: 16px;
@@ -540,67 +535,27 @@
             border-bottom: 1px solid var(--border);
         }
         
-        /* PLAN */
-        .plan-overview {
-            background: linear-gradient(135deg, #0a1a0a 0%, #0a0a0a 100%);
-            border: 2px solid var(--accent);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .plan-overview-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--accent);
-            text-transform: uppercase;
+        .editable-field {
+            display: flex;
+            gap: 12px;
+            align-items: center;
             margin-bottom: 12px;
         }
         
-        .plan-overview-text {
-            font-size: 14px;
-            line-height: 1.7;
-            color: #ccc;
+        .editable-label {
+            font-size: 12px;
+            color: #666;
+            width: 80px;
         }
         
-        .plan-week {
-            background: var(--card-bg);
+        .editable-input {
+            flex: 1;
+            background: #000;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .plan-day {
-            background: #050505;
-            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
             border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-        }
-        
-        .plan-day.expanded {
-            background: #0a0a0a;
-            border-color: var(--accent);
-        }
-        
-        .plan-day-strategy {
-            display: none;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-        }
-        
-        .plan-day.expanded .plan-day-strategy {
-            display: block;
-        }
-        
-        .plan-day-strategy-text {
-            font-size: 13px;
-            line-height: 1.6;
-            color: #ccc;
-            margin-bottom: 12px;
+            font-size: 15px;
         }
         
         /* HISTORY */
@@ -610,6 +565,21 @@
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 12px;
+            position: relative;
+        }
+        
+        .history-delete {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--danger);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
         }
         
         .history-date {
@@ -624,6 +594,7 @@
             font-weight: 700;
             color: var(--text);
             margin-bottom: 8px;
+            padding-right: 60px;
         }
         
         .history-stats {
@@ -664,54 +635,6 @@
             text-transform: uppercase;
         }
         
-        /* HR ZONES */
-        .hr-zones-config {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-        
-        .hr-zone-input-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: #050505;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-        
-        .hr-zone-label {
-            font-size: 13px;
-            font-weight: 700;
-        }
-        
-        .hr-zone-label.z1 { color: var(--zone1); }
-        .hr-zone-label.z2 { color: var(--zone2); }
-        .hr-zone-label.z3 { color: var(--zone3); }
-        .hr-zone-label.z4 { color: var(--zone4); }
-        .hr-zone-label.z5 { color: var(--zone5); }
-        
-        .hr-zone-range {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        .hr-zone-input {
-            width: 60px;
-            background: #000;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 14px;
-            text-align: center;
-            font-weight: 700;
-        }
-        
         /* NAVIGATION */
         .nav-bar {
             background: var(--panel);
@@ -719,7 +642,6 @@
             display: flex;
             height: 70px;
             flex-shrink: 0;
-            padding-bottom: env(safe-area-inset-bottom);
         }
         
         .nav-item {
@@ -736,7 +658,6 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s;
         }
         
         .nav-item.active {
@@ -757,74 +678,177 @@
             margin-bottom: 16px;
             opacity: 0.5;
         }
+        
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                gap: 2px;
+                margin: 8px;
+            }
+            
+            .metric-item {
+                padding: 16px 12px;
+            }
+            
+            .metric-value {
+                font-size: 24px;
+            }
+            
+            .large-print-value {
+                font-size: 56px;
+            }
+            
+            .ai-coach-widget {
+                margin: 8px;
+                padding: 12px;
+            }
+            
+            .ai-coach-message {
+                font-size: 14px;
+            }
+            
+            .scroll-content {
+                padding: 8px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.5 BUILDER</div>
+    <div class="version-badge">v1.6 PRODUCTION</div>
     <div class="settings-cog" onclick="app.navigate('screenSettings')">⚙️</div>
     <div id="toast" class="toast"></div>
-    <button id="skipToWorkout" class="skip-to-workout" onclick="app.skipOnboarding()">
-        🚣 Skip to Workout →
-    </button>
 
-    <!-- AI CHAT SCREEN -->
-    <div id="screenCoach" class="screen active">
+    <!-- DASHBOARD SCREEN (SWIPEABLE) -->
+    <div id="screenDashboard" class="screen active">
         <div class="screen-header">
-            <div class="screen-title">AI Hub</div>
+            <button class="header-btn" onclick="app.endWorkout()">End</button>
+            <div class="screen-title">Rowing</div>
+            <button class="header-btn" onclick="app.connectPM5()">Connect PM5</button>
         </div>
-        <div class="chat-container">
-            <div class="chat-messages" id="chatMessages"></div>
-            <div class="typing-indicator" id="typingIndicator">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
+        
+        <div class="dashboard-container" id="dashboardContainer">
+            <div class="dashboard-carousel" id="dashboardCarousel">
+                
+                <!-- View 1: All Data -->
+                <div class="dashboard-view">
+                    <div class="ai-coach-widget">
+                        <div class="ai-coach-message" id="coachMessage">Start rowing to receive coaching!</div>
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-item" style="grid-column:1/-1;">
+                            <div class="metric-label">CURRENT PACE</div>
+                            <div class="metric-value" id="pace1" style="font-size:48px;">0:00</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">TIME</div>
+                            <div class="metric-value" id="time1">0:00</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">DISTANCE</div>
+                            <div class="metric-value" id="dist1">0</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">WATTS</div>
+                            <div class="metric-value accent" id="watts1">0</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">S/M</div>
+                            <div class="metric-value accent" id="rate1">0</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">HEART RATE</div>
+                            <div class="metric-value" style="color:#ff6b6b;" id="hr1">--</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">AVG PACE</div>
+                            <div class="metric-value" id="avgPace1">0:00</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- View 2: Force Curve -->
+                <div class="dashboard-view">
+                    <div style="padding:20px;">
+                        <div style="font-size:12px; color:#666; text-align:center; margin-bottom:16px;">FORCE CURVE</div>
+                        <canvas id="forceCanvas" style="width:100%; height:300px; background:#000; border-radius:8px;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- View 3: Paceboat -->
+                <div class="dashboard-view">
+                    <div style="padding:20px;">
+                        <div style="font-size:12px; color:#666; text-align:center; margin-bottom:16px;">PACEBOAT</div>
+                        <canvas id="paceboatCanvas" style="width:100%; height:400px; background:#000; border-radius:8px;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- View 4: Bar Chart -->
+                <div class="dashboard-view">
+                    <div style="padding:20px;">
+                        <div style="font-size:12px; color:#666; text-align:center; margin-bottom:16px;">PACE OVER TIME</div>
+                        <canvas id="barCanvas" style="width:100%; height:300px; background:#000; border-radius:8px;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- View 5: Large Print -->
+                <div class="dashboard-view">
+                    <div class="large-print-container">
+                        <div class="large-print-metric">
+                            <div class="large-print-label">PACE</div>
+                            <div class="large-print-value" id="paceLP">0:00</div>
+                        </div>
+                        <div class="large-print-metric">
+                            <div class="large-print-label">DISTANCE</div>
+                            <div class="large-print-value" id="distLP">0m</div>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
-            <div class="chat-input-container">
-                <textarea 
-                    id="chatInput" 
-                    class="chat-input" 
-                    placeholder="Type your message..."
-                    rows="1"
-                    onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();app.sendMessage();}"
-                ></textarea>
-                <button class="send-btn" id="sendBtn" onclick="app.sendMessage()">↑</button>
-            </div>
+        </div>
+        
+        <!-- HR Zone Sidebar -->
+        <div class="hr-zone-sidebar" id="hrSidebar" style="display:none;">
+            <div class="hr-zone-segment" id="hrZ5" style="background:#dc143c;">Z5</div>
+            <div class="hr-zone-segment" id="hrZ4" style="background:#ff6347;">Z4</div>
+            <div class="hr-zone-segment" id="hrZ3" style="background:#ffa500;">Z3</div>
+            <div class="hr-zone-segment" id="hrZ2" style="background:#50c878;">Z2</div>
+            <div class="hr-zone-segment" id="hrZ1" style="background:#4a90e2;">Z1</div>
+        </div>
+        
+        <div class="dashboard-dots">
+            <div class="dashboard-dot active"></div>
+            <div class="dashboard-dot"></div>
+            <div class="dashboard-dot"></div>
+            <div class="dashboard-dot"></div>
+            <div class="dashboard-dot"></div>
         </div>
     </div>
 
-    <!-- MANUAL WORKOUT BUILDER SCREEN -->
+    <!-- BUILDER SCREEN -->
     <div id="screenBuilder" class="screen">
         <div class="screen-header">
-            <div class="screen-title">Manual Workout Builder</div>
+            <div class="screen-title">Manual Builder</div>
         </div>
         <div class="scroll-content">
-            
-            <!-- Mode Selector -->
             <div class="builder-mode-selector">
-                <div class="builder-mode-btn active" onclick="app.selectBuilderMode('single-distance')">
-                    Single Distance
-                </div>
-                <div class="builder-mode-btn" onclick="app.selectBuilderMode('single-time')">
-                    Single Time
-                </div>
-                <div class="builder-mode-btn" onclick="app.selectBuilderMode('single-calorie')">
-                    Single Calorie
-                </div>
-                <div class="builder-mode-btn" onclick="app.selectBuilderMode('fixed-intervals')">
-                    Fixed Intervals
-                </div>
-                <div class="builder-mode-btn" onclick="app.selectBuilderMode('variable-intervals')">
-                    Variable Intervals
-                </div>
+                <div class="builder-mode-btn active" onclick="app.selectBuilderMode('single-distance')">Single Distance</div>
+                <div class="builder-mode-btn" onclick="app.selectBuilderMode('single-time')">Single Time</div>
+                <div class="builder-mode-btn" onclick="app.selectBuilderMode('single-calorie')">Single Calorie</div>
+                <div class="builder-mode-btn" onclick="app.selectBuilderMode('fixed-intervals')">Fixed Intervals</div>
+                <div class="builder-mode-btn" onclick="app.selectBuilderMode('variable-intervals')">Variable Intervals</div>
             </div>
-
-            <!-- Global Targets -->
+            
             <div class="builder-section">
                 <div class="builder-section-title">Global Targets (Optional)</div>
-                
                 <div class="builder-toggle" onclick="app.toggleBuilderTarget('pacer')">
                     <div class="builder-checkbox" id="pacerCheckbox"></div>
-                    <div class="builder-toggle-label">Show Pacer</div>
+                    <div style="flex:1; font-size:13px; font-weight:700;">Show Pacer</div>
                 </div>
                 <div id="pacerInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
                     <select class="builder-input" style="margin-bottom:8px;" id="pacerMetric">
@@ -837,58 +861,31 @@
                 
                 <div class="builder-toggle" onclick="app.toggleBuilderTarget('strokeRate')">
                     <div class="builder-checkbox" id="strokeRateCheckbox"></div>
-                    <div class="builder-toggle-label">Target Stroke Rate</div>
+                    <div style="flex:1; font-size:13px; font-weight:700;">Target Stroke Rate</div>
                 </div>
                 <div id="strokeRateInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
                     <input type="number" class="builder-input" placeholder="s/m (e.g., 26)" id="strokeRateValue">
                 </div>
-                
-                <div class="builder-toggle" onclick="app.toggleBuilderTarget('heartRate')">
-                    <div class="builder-checkbox" id="heartRateCheckbox"></div>
-                    <div class="builder-toggle-label">Target Heart Rate Zone</div>
-                </div>
-                <div id="heartRateInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
-                    <select class="builder-input" id="heartRateZone">
-                        <option value="1">Zone 1 (Recovery)</option>
-                        <option value="2">Zone 2 (Endurance)</option>
-                        <option value="3">Zone 3 (Tempo)</option>
-                        <option value="4">Zone 4 (Threshold)</option>
-                        <option value="5">Zone 5 (Max)</option>
-                    </select>
-                </div>
             </div>
-
-            <!-- Mode-Specific Inputs -->
+            
             <div id="builderModeContent"></div>
-
-            <button class="btn btn-primary" onclick="app.saveManualWorkout()">Save & Start Workout</button>
+            
+            <button class="btn btn-primary" onclick="app.saveManualWorkout()">Review Workout</button>
         </div>
     </div>
 
-    <!-- TRAINING PLAN SCREEN -->
-    <div id="screenPlan" class="screen">
+    <!-- REVIEW SCREEN -->
+    <div id="screenReview" class="screen">
         <div class="screen-header">
-            <div class="screen-title">Training Plan</div>
-        </div>
-        <div class="scroll-content" id="planContent">
-            <div class="empty-state">
-                <div class="empty-state-icon">📅</div>
-                <div style="font-size:14px;">No plan yet. Chat with Coach to create one.</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- HEART RATE MONITOR SCREEN -->
-    <div id="screenHRM" class="screen">
-        <div class="screen-header">
-            <div class="screen-title">Heart Rate Monitor</div>
+            <button class="header-btn" onclick="app.navigate('screenBuilder')">← Back</button>
+            <div class="screen-title">Review Workout</div>
         </div>
         <div class="scroll-content">
-            <div class="card">
-                <div class="card-header">HRM Integration</div>
-                <p style="font-size:14px; line-height:1.6; color:#ccc;">
-                    Heart Rate Monitor integration coming soon. Connect your Polar/Garmin/Wahoo device via Bluetooth.
-                </p>
+            <div class="review-workout-title" id="reviewTitle">Your Workout</div>
+            <div id="reviewIntervals"></div>
+            <div class="review-actions">
+                <button class="btn btn-outline" onclick="app.restrategize()" style="flex:1;">🔄 Restrategize</button>
+                <button class="btn btn-primary" onclick="app.startWorkout()" style="flex:2;">🚣 Start Row</button>
             </div>
         </div>
     </div>
@@ -896,7 +893,7 @@
     <!-- HISTORY SCREEN -->
     <div id="screenHistory" class="screen">
         <div class="screen-header">
-            <div class="screen-title">Training History (<span id="historyCount">0</span>)</div>
+            <div class="screen-title">History (<span id="historyCount">0</span>)</div>
         </div>
         <div class="scroll-content">
             <div class="card">
@@ -924,97 +921,47 @@
         <div class="scroll-content">
             <div class="card">
                 <div class="card-header">User Profile</div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:12px; color:#666; margin-bottom:4px;">Name</div>
-                    <div style="color:#e0e0e0; font-size:16px;" id="profileName">--</div>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:12px; color:#666; margin-bottom:4px;">Age</div>
-                    <div style="color:#e0e0e0; font-size:16px;" id="profileAge">--</div>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:12px; color:#666; margin-bottom:4px;">Weight</div>
-                    <div style="color:#e0e0e0; font-size:16px;" id="profileWeight">--</div>
-                </div>
-            </div>
-
-            <div class="hr-zones-config">
-                <div style="font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; margin-bottom:16px;">Heart Rate Zones</div>
                 
-                <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z1">Zone 1</div>
-                    <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z1Min" value="100">
-                        <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z1Max" value="120">
-                    </div>
+                <div class="editable-field">
+                    <div class="editable-label">Name</div>
+                    <input type="text" class="editable-input" id="editName" placeholder="Your name">
                 </div>
                 
-                <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z2">Zone 2</div>
-                    <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z2Min" value="120">
-                        <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z2Max" value="140">
-                    </div>
+                <div class="editable-field">
+                    <div class="editable-label">Age</div>
+                    <input type="number" class="editable-input" id="editAge" placeholder="30">
                 </div>
                 
-                <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z3">Zone 3</div>
-                    <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z3Min" value="140">
-                        <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z3Max" value="160">
-                    </div>
+                <div class="editable-field">
+                    <div class="editable-label">Weight (kg)</div>
+                    <input type="number" class="editable-input" id="editWeight" placeholder="75">
                 </div>
                 
-                <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z4">Zone 4</div>
-                    <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z4Min" value="160">
-                        <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z4Max" value="180">
-                    </div>
-                </div>
-                
-                <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z5">Zone 5</div>
-                    <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z5Min" value="180">
-                        <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z5Max" value="200">
-                    </div>
+                <div style="display:flex; gap:12px; margin-top:16px;">
+                    <button class="btn btn-primary" onclick="app.saveProfile()">Save Profile</button>
+                    <button class="btn btn-outline" onclick="app.loadProfile()">Cancel</button>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-header">Import Training Data</div>
+                <div class="card-header">Import Data</div>
                 <label for="csvUpload" style="display:block; width:100%; padding:16px; border:2px dashed #222; border-radius:8px; text-align:center; cursor:pointer; color:#888;">
-                    📁 Import CSV File
+                    📁 Import CSV
                 </label>
                 <input type="file" id="csvUpload" accept=".csv" style="display:none;" onchange="app.importCSV(event)">
-            </div>
-
-            <div class="card">
-                <div class="card-header">Reset</div>
-                <button class="btn btn-outline" onclick="app.resetOnboarding()">Reset Onboarding</button>
             </div>
         </div>
     </div>
 
     <!-- Navigation -->
     <nav class="nav-bar">
-        <button class="nav-item active" onclick="app.navigate('screenCoach')">
-            <span class="nav-icon">🤖</span>
-            AI Hub
+        <button class="nav-item active" onclick="app.navigate('screenDashboard')">
+            <span class="nav-icon">🚣</span>
+            Row
         </button>
         <button class="nav-item" onclick="app.navigate('screenBuilder')">
             <span class="nav-icon">🔧</span>
             Builder
-        </button>
-        <button class="nav-item" onclick="app.navigate('screenPlan')">
-            <span class="nav-icon">📅</span>
-            Plan
         </button>
         <button class="nav-item" onclick="app.navigate('screenHistory')">
             <span class="nav-icon">📊</span>
@@ -1025,60 +972,44 @@
     <script>
         const STORAGE_KEYS = {
             PROFILE: 'rowing_coach_profile_v1',
-            WORKOUTS: 'rowing_coach_workouts_v1',
-            CHAT: 'rowing_coach_chat_v1',
-            PLAN: 'rowing_coach_plan_v1',
-            ONBOARDING_STATE: 'rowing_coach_onboarding_v1'
+            WORKOUTS: 'rowing_coach_workouts_v1'
         };
+
+        const PM5_SERVICE_UUID = '00001826-0000-1000-8000-00805f9b34fb';
+        const PM5_CHARACTERISTIC_UUID = '00002ad2-0000-1000-8000-00805f9b34fb';
 
         class AIRowingCoach {
             constructor() {
                 this.profile = null;
                 this.workouts = [];
-                this.chatHistory = [];
-                this.trainingPlan = null;
-                this.onboardingState = {
-                    step: 'welcome',
-                    completed: false,
-                    data: {}
-                };
-                
-                // Builder state
+                this.currentView = 0;
                 this.builderMode = 'single-distance';
-                this.builderTargets = {
-                    pacer: false,
-                    strokeRate: false,
-                    heartRate: false
-                };
+                this.builderTargets = { pacer: false, strokeRate: false };
                 this.builderIntervals = [];
+                this.editingInterval = -1;
+                this.reviewWorkout = null;
+                
+                // Rowing data
+                this.liveData = { time: 0, dist: 0, pace: 0, watts: 0, rate: 0, hr: 0 };
+                this.paceHistory = [];
+                
+                // PM5
+                this.pm5Device = null;
+                this.pm5Characteristic = null;
                 
                 this.init();
             }
 
             init() {
                 this.loadData();
-                
-                if (!this.onboardingState.completed) {
-                    this.startOnboarding();
-                } else {
-                    this.updateProfileDisplay();
-                    if (this.trainingPlan) {
-                        this.renderTrainingPlan();
-                    }
-                }
-                
-                this.renderChat();
+                this.loadProfile();
+                this.setupDashboardSwipe();
+                this.renderBuilderMode();
                 this.renderHistory();
                 this.updateStats();
-                this.renderBuilderMode();
                 
-                const input = document.getElementById('chatInput');
-                if (input) {
-                    input.addEventListener('input', () => {
-                        input.style.height = 'auto';
-                        input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-                    });
-                }
+                // Demo data
+                this.startDemoData();
             }
 
             loadData() {
@@ -1091,15 +1022,6 @@
                         this.workouts = JSON.parse(workoutData);
                         console.log(`✓ Loaded ${this.workouts.length} workouts`);
                     }
-
-                    const chatData = localStorage.getItem(STORAGE_KEYS.CHAT);
-                    if (chatData) this.chatHistory = JSON.parse(chatData);
-
-                    const planData = localStorage.getItem(STORAGE_KEYS.PLAN);
-                    if (planData) this.trainingPlan = JSON.parse(planData);
-
-                    const onboardingData = localStorage.getItem(STORAGE_KEYS.ONBOARDING_STATE);
-                    if (onboardingData) this.onboardingState = JSON.parse(onboardingData);
                 } catch (error) {
                     console.error('Load error:', error);
                 }
@@ -1111,145 +1033,253 @@
                         localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(this.profile));
                     }
                     localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(this.workouts));
-                    localStorage.setItem(STORAGE_KEYS.CHAT, JSON.stringify(this.chatHistory));
-                    if (this.trainingPlan) {
-                        localStorage.setItem(STORAGE_KEYS.PLAN, JSON.stringify(this.trainingPlan));
-                    }
-                    localStorage.setItem(STORAGE_KEYS.ONBOARDING_STATE, JSON.stringify(this.onboardingState));
                 } catch (error) {
                     console.error('Save error:', error);
                 }
             }
 
             // ========================================================================
-            // ONBOARDING
+            // DASHBOARD - SWIPEABLE
             // ========================================================================
 
-            startOnboarding() {
-                const skipBtn = document.getElementById('skipToWorkout');
-                if (skipBtn) skipBtn.classList.add('visible');
+            setupDashboardSwipe() {
+                const container = document.getElementById('dashboardContainer');
+                const carousel = document.getElementById('dashboardCarousel');
                 
-                this.addMessage('ai', `Hey! 🤖 I'm Coach. Let's get started.\n\n**What's your name?**`, null, 'coach');
-            }
-
-            async sendMessage() {
-                const input = document.getElementById('chatInput');
-                const message = input.value.trim();
+                let startX = 0;
+                let currentX = 0;
+                let isDragging = false;
                 
-                if (!message) return;
-
-                this.addMessage('user', message);
-                input.value = '';
-                input.style.height = 'auto';
-
-                const typingIndicator = document.getElementById('typingIndicator');
-                typingIndicator.classList.add('active');
-
-                await this.sleep(800);
-                typingIndicator.classList.remove('active');
-
-                if (!this.onboardingState.completed) {
-                    this.processOnboardingMessage(message);
-                } else {
-                    this.processRegularMessage(message);
-                }
-            }
-
-            processOnboardingMessage(message) {
-                const step = this.onboardingState.step;
+                container.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    isDragging = true;
+                });
                 
-                if (step === 'welcome') {
-                    const name = this.extractName(message);
-                    this.onboardingState.data.name = name;
-                    this.onboardingState.step = 'biometrics';
+                container.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    currentX = e.touches[0].clientX;
+                    const diff = currentX - startX;
+                    const offset = -this.currentView * 100;
+                    carousel.style.transform = `translateX(calc(${offset}% + ${diff}px))`;
+                });
+                
+                container.addEventListener('touchend', (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
                     
-                    this.addMessage('ai', `${name}! How old are you and what's your weight?\n\n(e.g., "30, 75kg")`, null, 'coach');
-                    
-                } else if (step === 'biometrics') {
-                    const age = this.extractAge(message);
-                    const weight = this.extractWeight(message);
-                    
-                    if (age) this.onboardingState.data.age = age;
-                    if (weight) this.onboardingState.data.weight = weight;
-                    
-                    this.onboardingState.step = 'complete';
-                    
-                    if (this.onboardingState.data.age) {
-                        this.onboardingState.data.maxHR = 220 - this.onboardingState.data.age;
+                    const diff = currentX - startX;
+                    if (Math.abs(diff) > 50) {
+                        if (diff > 0 && this.currentView > 0) {
+                            this.currentView--;
+                        } else if (diff < 0 && this.currentView < 4) {
+                            this.currentView++;
+                        }
                     }
                     
-                    this.profile = this.onboardingState.data;
-                    this.onboardingState.completed = true;
-                    this.saveData();
+                    this.updateDashboardView();
+                });
+            }
+
+            updateDashboardView() {
+                const carousel = document.getElementById('dashboardCarousel');
+                carousel.style.transform = `translateX(-${this.currentView * 100}%)`;
+                
+                document.querySelectorAll('.dashboard-dot').forEach((dot, i) => {
+                    if (i === this.currentView) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+            }
+
+            startDemoData() {
+                setInterval(() => {
+                    this.liveData.time++;
+                    this.liveData.dist += 4;
+                    this.liveData.pace = 115 + Math.random() * 10;
+                    this.liveData.watts = 220 + Math.random() * 30;
+                    this.liveData.rate = 24 + Math.floor(Math.random() * 4);
+                    this.liveData.hr = 150 + Math.floor(Math.random() * 20);
                     
-                    const skipBtn = document.getElementById('skipToWorkout');
-                    if (skipBtn) skipBtn.classList.remove('visible');
+                    this.paceHistory.push(this.liveData.pace);
+                    if (this.paceHistory.length > 20) this.paceHistory.shift();
                     
-                    this.addMessage('ai', `Perfect!\n\n✓ ${this.profile.name}\n✓ ${age} years, ${weight}kg\n✓ Max HR: ${this.profile.maxHR}`, null, 'admin');
-                    
-                    setTimeout(() => {
-                        const quickReplies = ['Create workout', 'Create 4-week plan', 'Manual builder'];
-                        this.addMessage('ai', `Ready to start?`, null, 'coach', quickReplies);
-                    }, 1000);
-                    
-                    this.updateProfileDisplay();
+                    this.updateDashboardMetrics();
+                    this.updateCoachMessage();
+                    this.updateHRZone();
+                    this.drawForceC();
+                    this.drawPaceboat();
+                    this.drawBarChart();
+                }, 1000);
+            }
+
+            updateDashboardMetrics() {
+                const mins = Math.floor(this.liveData.pace / 60);
+                const secs = Math.floor(this.liveData.pace % 60);
+                const paceStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                const timeMins = Math.floor(this.liveData.time / 60);
+                const timeSecs = Math.floor(this.liveData.time % 60);
+                const timeStr = `${timeMins}:${timeSecs.toString().padStart(2, '0')}`;
+                
+                // All Data view
+                document.getElementById('pace1').textContent = paceStr;
+                document.getElementById('time1').textContent = timeStr;
+                document.getElementById('dist1').textContent = this.liveData.dist + 'm';
+                document.getElementById('watts1').textContent = Math.floor(this.liveData.watts);
+                document.getElementById('rate1').textContent = this.liveData.rate;
+                document.getElementById('hr1').textContent = this.liveData.hr || '--';
+                document.getElementById('avgPace1').textContent = paceStr;
+                
+                // Large Print view
+                document.getElementById('paceLP').textContent = paceStr;
+                document.getElementById('distLP').textContent = this.liveData.dist + 'm';
+            }
+
+            updateCoachMessage() {
+                const msg = document.getElementById('coachMessage');
+                if (this.liveData.pace > 125) {
+                    msg.textContent = '⚠️ Power dropping! Focus on leg drive!';
+                } else if (this.liveData.pace < 110 && this.liveData.time < 60) {
+                    msg.textContent = '⚠️ Too fast! Settle into rhythm.';
+                } else if (this.liveData.pace > 110 && this.liveData.pace < 120) {
+                    msg.textContent = '💪 Perfect pace! Keep this rhythm.';
+                } else {
+                    msg.textContent = 'Looking good. Stay focused.';
                 }
-                
-                this.saveData();
             }
 
-            processRegularMessage(message) {
-                const lower = message.toLowerCase();
+            updateHRZone() {
+                if (!this.liveData.hr || !this.profile) return;
                 
-                if (lower.includes('manual') || lower.includes('builder')) {
-                    this.navigate('screenBuilder');
-                    return;
+                const sidebar = document.getElementById('hrSidebar');
+                sidebar.style.display = 'flex';
+                
+                let zone = 1;
+                if (this.liveData.hr > 180) zone = 5;
+                else if (this.liveData.hr > 160) zone = 4;
+                else if (this.liveData.hr > 140) zone = 3;
+                else if (this.liveData.hr > 120) zone = 2;
+                
+                for (let i = 1; i <= 5; i++) {
+                    const elem = document.getElementById(`hrZ${i}`);
+                    if (i === zone) {
+                        elem.classList.add('active');
+                    } else {
+                        elem.classList.remove('active');
+                    }
                 }
+            }
+
+            drawForceC() {
+                const canvas = document.getElementById('forceCanvas');
+                if (!canvas) return;
+                canvas.width = canvas.offsetWidth;
+                canvas.height = 300;
+                const ctx = canvas.getContext('2d');
                 
-                if (lower.includes('plan') || lower.includes('4-week')) {
-                    this.generateTrainingPlan();
-                    const quickReplies = ['View Plan', 'Start Week 1'];
-                    this.addMessage('ai', `Created 4-week plan! Check Plan tab.`, null, 'coach', quickReplies);
-                    return;
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.strokeStyle = '#00FF99';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                for (let i = 0; i < 50; i++) {
+                    const x = (canvas.width / 50) * i;
+                    const y = canvas.height - Math.sin(i * 0.2) * (this.liveData.watts / 2) - 50;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
                 }
+                ctx.stroke();
+            }
+
+            drawPaceboat() {
+                const canvas = document.getElementById('paceboatCanvas');
+                if (!canvas) return;
+                canvas.width = canvas.offsetWidth;
+                canvas.height = 400;
+                const ctx = canvas.getContext('2d');
                 
-                this.addMessage('ai', `Options:\n• Create workout\n• 4-week plan\n• Manual builder`, null, 'coach');
-            }
-
-            extractName(text) {
-                let clean = text.toLowerCase()
-                    .replace(/^(hi|hey|hello),?\s*/i, '')
-                    .replace(/my name is\s*/i, '')
-                    .replace(/i'm\s*/i, '');
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                return clean.split(' ')
-                    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-                    .join(' ')
-                    .trim();
+                // User boat
+                ctx.fillStyle = '#00FF99';
+                ctx.fillRect(50, 150, 60, 30);
+                ctx.fillText('YOU', 60, 140);
+                
+                // Target boat
+                ctx.fillStyle = '#FF6B6B';
+                ctx.fillRect(150, 150, 60, 30);
+                ctx.fillText('TARGET', 160, 140);
             }
 
-            extractAge(text) {
-                const match = text.match(/(\d{1,2})/);
-                return match ? parseInt(match[1]) : null;
-            }
-
-            extractWeight(text) {
-                const match = text.match(/(\d{2,3})\s*kg/i);
-                return match ? parseInt(match[1]) : null;
+            drawBarChart() {
+                const canvas = document.getElementById('barCanvas');
+                if (!canvas) return;
+                canvas.width = canvas.offsetWidth;
+                canvas.height = 300;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const barWidth = canvas.width / 20;
+                this.paceHistory.forEach((pace, i) => {
+                    const height = (pace / 150) * canvas.height;
+                    ctx.fillStyle = '#00FF99';
+                    ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 2, height);
+                });
             }
 
             // ========================================================================
-            // MANUAL WORKOUT BUILDER
+            // PM5 CONNECTION
+            // ========================================================================
+
+            async connectPM5() {
+                try {
+                    console.log('🔍 Requesting PM5...');
+                    
+                    this.pm5Device = await navigator.bluetooth.requestDevice({
+                        filters: [{ services: [PM5_SERVICE_UUID] }]
+                    });
+                    
+                    console.log(`✓ Device: ${this.pm5Device.name}`);
+                    
+                    const server = await this.pm5Device.gatt.connect();
+                    const service = await server.getPrimaryService(PM5_SERVICE_UUID);
+                    this.pm5Characteristic = await service.getCharacteristic(PM5_CHARACTERISTIC_UUID);
+                    
+                    await this.pm5Characteristic.startNotifications();
+                    this.pm5Characteristic.addEventListener('characteristicvaluechanged', (e) => {
+                        this.handlePM5Data(e.target.value);
+                    });
+                    
+                    console.log('✓ PM5 connected');
+                    this.showToast('PM5 connected!', 'success');
+                } catch (error) {
+                    console.error('❌ PM5 error:', error);
+                    this.showToast('PM5 connection failed', 'error');
+                }
+            }
+
+            handlePM5Data(value) {
+                // Parse PM5 data
+                console.log('PM5 data:', value);
+            }
+
+            // ========================================================================
+            // BUILDER
             // ========================================================================
 
             selectBuilderMode(mode) {
                 this.builderMode = mode;
-                
                 document.querySelectorAll('.builder-mode-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
                 event.target.classList.add('active');
-                
                 this.renderBuilderMode();
             }
 
@@ -1273,23 +1303,20 @@
                 } else if (this.builderMode === 'single-time') {
                     html += `
                         <div class="builder-input-group">
-                            <div class="builder-label">Total Time (minutes)</div>
-                            <input type="number" class="builder-input" id="totalTime" placeholder="30">
+                            <div class="builder-label">Total Time</div>
+                            <div class="builder-time-picker">
+                                <input type="number" class="builder-time-input" id="totalMins" placeholder="30" min="0">
+                                <span style="color:#666;">:</span>
+                                <input type="number" class="builder-time-input" id="totalSecs" placeholder="00" min="0" max="59">
+                            </div>
                         </div>
                         <div class="builder-input-group">
-                            <div class="builder-label">Split Time (minutes)</div>
-                            <input type="number" class="builder-input" id="splitTime" placeholder="5">
-                        </div>
-                    `;
-                } else if (this.builderMode === 'single-calorie') {
-                    html += `
-                        <div class="builder-input-group">
-                            <div class="builder-label">Total Calories</div>
-                            <input type="number" class="builder-input" id="totalCalories" placeholder="300">
-                        </div>
-                        <div class="builder-input-group">
-                            <div class="builder-label">Split Calories</div>
-                            <input type="number" class="builder-input" id="splitCalories" placeholder="50">
+                            <div class="builder-label">Split Time</div>
+                            <div class="builder-time-picker">
+                                <input type="number" class="builder-time-input" id="splitMins" placeholder="5" min="0">
+                                <span style="color:#666;">:</span>
+                                <input type="number" class="builder-time-input" id="splitSecs" placeholder="00" min="0" max="59">
+                            </div>
                         </div>
                     `;
                 } else if (this.builderMode === 'fixed-intervals') {
@@ -1299,7 +1326,6 @@
                             <select class="builder-input" id="workType">
                                 <option value="distance">Distance</option>
                                 <option value="time">Time</option>
-                                <option value="calories">Calories</option>
                             </select>
                         </div>
                         <div class="builder-input-group">
@@ -1307,45 +1333,53 @@
                             <input type="number" class="builder-input" id="workValue" placeholder="500">
                         </div>
                         <div class="builder-input-group">
-                            <div class="builder-label">Number of Sets</div>
+                            <div class="builder-label">Number of Intervals</div>
                             <input type="number" class="builder-input" id="numSets" placeholder="6">
                         </div>
                         <div class="builder-input-group">
-                            <div class="builder-label">Rest Time (seconds)</div>
-                            <input type="number" class="builder-input" id="restTime" placeholder="60">
-                            <div style="font-size:11px; color:#666; margin-top:4px;">Leave empty for undefined rest</div>
+                            <div class="builder-label">Rest Time</div>
+                            <div class="builder-time-picker">
+                                <input type="number" class="builder-time-input" id="restMins" placeholder="1" min="0">
+                                <span style="color:#666;">:</span>
+                                <input type="number" class="builder-time-input" id="restSecs" placeholder="00" min="0" max="59">
+                            </div>
                         </div>
                     `;
                 } else if (this.builderMode === 'variable-intervals') {
                     html += `
                         <div class="builder-input-group">
-                            <div class="builder-label">Work Type</div>
-                            <select class="builder-input" id="varWorkType">
-                                <option value="distance">Distance (m)</option>
-                                <option value="time">Time (sec)</option>
-                                <option value="calories">Calories</option>
-                            </select>
-                        </div>
-                        <div class="builder-input-group">
-                            <div class="builder-label">Work Value</div>
+                            <div class="builder-label">Work Value (meters)</div>
                             <input type="number" class="builder-input" id="varWorkValue" placeholder="500">
                         </div>
                         <div class="builder-input-group">
-                            <div class="builder-label">Rest Time (seconds)</div>
-                            <input type="number" class="builder-input" id="varRestTime" placeholder="60">
+                            <div class="builder-label">Rest Time</div>
+                            <div class="builder-time-picker">
+                                <input type="number" class="builder-time-input" id="varRestMins" placeholder="1" min="0">
+                                <span style="color:#666;">:</span>
+                                <input type="number" class="builder-time-input" id="varRestSecs" placeholder="00" min="0" max="59">
+                            </div>
                         </div>
-                        <button class="btn btn-outline" style="margin-top:8px;" onclick="app.addVariableInterval()">Add Interval</button>
+                        <button class="btn btn-outline" onclick="app.addVariableInterval()">Add Interval</button>
                         
-                        <div class="builder-interval-list" id="variableIntervalsList">
+                        <div class="builder-interval-list">
                             ${this.builderIntervals.map((interval, i) => `
-                                <div class="builder-interval-item">
-                                    <div class="builder-interval-info">
-                                        <div class="builder-interval-title">${i + 1}. ${interval.workValue} ${interval.workType}</div>
-                                        <div class="builder-interval-desc">Rest: ${interval.restTime}s</div>
+                                <div class="builder-interval-item ${i === this.editingInterval ? 'editable' : ''}" onclick="app.editInterval(${i})">
+                                    <div class="builder-interval-header">
+                                        <div class="builder-interval-title">${i + 1}. ${interval.workValue}m / ${interval.restTime}s rest</div>
+                                        <div class="builder-interval-actions">
+                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.copyInterval(${i})">📋</button>
+                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.deleteInterval(${i})">🗑️</button>
+                                        </div>
                                     </div>
-                                    <div class="builder-interval-actions">
-                                        <button class="builder-icon-btn" onclick="app.copyVariableInterval(${i})">📋</button>
-                                        <button class="builder-icon-btn" onclick="app.deleteVariableInterval(${i})">🗑️</button>
+                                    <div class="builder-interval-edit">
+                                        <div class="builder-input-group">
+                                            <div class="builder-label">Work Value (meters)</div>
+                                            <input type="number" class="builder-input" value="${interval.workValue}" onchange="app.updateInterval(${i}, 'workValue', this.value)">
+                                        </div>
+                                        <div class="builder-input-group">
+                                            <div class="builder-label">Rest Time (seconds)</div>
+                                            <input type="number" class="builder-input" value="${interval.restTime}" onchange="app.updateInterval(${i}, 'restTime', this.value)">
+                                        </div>
                                     </div>
                                 </div>
                             `).join('')}
@@ -1375,9 +1409,9 @@
             }
 
             addVariableInterval() {
-                const workType = document.getElementById('varWorkType').value;
                 const workValue = document.getElementById('varWorkValue').value;
-                const restTime = document.getElementById('varRestTime').value;
+                const restMins = parseInt(document.getElementById('varRestMins').value) || 0;
+                const restSecs = parseInt(document.getElementById('varRestSecs').value) || 0;
                 
                 if (!workValue) {
                     this.showToast('Enter work value', 'error');
@@ -1385,95 +1419,96 @@
                 }
                 
                 this.builderIntervals.push({
-                    workType: workType,
                     workValue: parseInt(workValue),
-                    restTime: parseInt(restTime) || 0
+                    restTime: restMins * 60 + restSecs
                 });
                 
                 this.renderBuilderMode();
             }
 
-            copyVariableInterval(index) {
+            editInterval(index) {
+                this.editingInterval = this.editingInterval === index ? -1 : index;
+                this.renderBuilderMode();
+            }
+
+            updateInterval(index, field, value) {
+                this.builderIntervals[index][field] = parseInt(value);
+            }
+
+            copyInterval(index) {
                 const interval = {...this.builderIntervals[index]};
                 this.builderIntervals.push(interval);
                 this.renderBuilderMode();
             }
 
-            deleteVariableInterval(index) {
+            deleteInterval(index) {
                 this.builderIntervals.splice(index, 1);
                 this.renderBuilderMode();
             }
 
             saveManualWorkout() {
-                this.showToast('Workout saved! Starting...', 'success');
-                // In production, this would actually save and start
-            }
-
-            // ========================================================================
-            // TRAINING PLAN
-            // ========================================================================
-
-            generateTrainingPlan() {
-                this.trainingPlan = {
-                    overview: {
-                        title: 'Macro-Cycle Strategy',
-                        text: `4-week progressive block. Week 1-2: volume, Week 3: peak, Week 4: taper.`
-                    },
-                    weeks: [{
-                        number: 1,
-                        focus: 'Base',
-                        days: [{
-                            day: 'Monday',
-                            title: '30min Steady',
-                            desc: 'Z2',
-                            strategy: {
-                                title: 'Approach',
-                                text: `Easy pace, low Z2. Focus on form.`
-                            }
-                        }]
-                    }]
+                this.reviewWorkout = {
+                    mode: this.builderMode,
+                    intervals: []
                 };
                 
-                this.saveData();
-                this.renderTrainingPlan();
+                if (this.builderMode === 'single-distance') {
+                    const total = parseInt(document.getElementById('totalDistance').value);
+                    const split = parseInt(document.getElementById('splitDistance').value);
+                    this.reviewWorkout.intervals = [{ type: 'distance', value: total, split: split }];
+                } else if (this.builderMode === 'variable-intervals') {
+                    this.reviewWorkout.intervals = this.builderIntervals;
+                }
+                
+                this.renderReview();
+                this.navigate('screenReview');
             }
 
-            renderTrainingPlan() {
-                const container = document.getElementById('planContent');
-                if (!container || !this.trainingPlan) return;
+            renderReview() {
+                const titleElem = document.getElementById('reviewTitle');
+                const intervalsElem = document.getElementById('reviewIntervals');
                 
-                let html = `
-                    <div class="plan-overview">
-                        <div class="plan-overview-title">${this.trainingPlan.overview.title}</div>
-                        <div class="plan-overview-text">${this.trainingPlan.overview.text}</div>
-                    </div>
-                `;
+                titleElem.textContent = 'Review Your Workout';
                 
-                html += this.trainingPlan.weeks.map(week => `
-                    <div class="plan-week">
-                        ${week.days.map((day, idx) => `
-                            <div class="plan-day" id="planDay_${week.number}_${idx}" onclick="app.togglePlanDay(${week.number}, ${idx})">
-                                <div><strong>${day.day}:</strong> ${day.title}</div>
-                                <div class="plan-day-strategy">
-                                    <div class="plan-day-strategy-text">${day.strategy.text}</div>
+                let html = '';
+                if (this.reviewWorkout && this.reviewWorkout.intervals) {
+                    this.reviewWorkout.intervals.forEach((interval, i) => {
+                        html += `
+                            <div class="review-interval">
+                                <div class="review-interval-info">
+                                    <div class="review-interval-title">${i + 1}. ${interval.workValue || interval.value}m</div>
+                                    <div class="review-interval-desc">Rest: ${interval.restTime || 0}s</div>
                                 </div>
                             </div>
-                        `).join('')}
-                    </div>
-                `).join('');
+                        `;
+                    });
+                }
                 
-                container.innerHTML = html;
+                intervalsElem.innerHTML = html;
             }
 
-            togglePlanDay(weekNum, dayIdx) {
-                const elem = document.getElementById(`planDay_${weekNum}_${dayIdx}`);
-                if (elem) {
-                    elem.classList.toggle('expanded');
+            restrategize() {
+                this.showToast('AI restrategizing...', 'success');
+                setTimeout(() => {
+                    this.navigate('screenBuilder');
+                }, 1000);
+            }
+
+            startWorkout() {
+                this.showToast('Starting workout...', 'success');
+                setTimeout(() => {
+                    this.navigate('screenDashboard');
+                }, 500);
+            }
+
+            endWorkout() {
+                if (confirm('End workout?')) {
+                    this.showToast('Workout saved!', 'success');
                 }
             }
 
             // ========================================================================
-            // CSV IMPORT - FIXED DATE PARSING
+            // CSV IMPORT - FIXED
             // ========================================================================
 
             importCSV(event) {
@@ -1486,8 +1521,11 @@
                         const csv = e.target.result;
                         const lines = csv.split('\n');
                         
-                        // SKIP HEADER
+                        console.log(`📄 Lines: ${lines.length}`);
+                        
+                        // SKIP HEADER (line 0)
                         const headers = lines[0].split(',').map(h => h.trim());
+                        console.log(`📋 Headers: ${headers.join(', ')}`);
                         
                         let imported = 0;
                         const existingIds = new Set(this.workouts.map(w => w.id));
@@ -1505,26 +1543,22 @@
                                 row[header] = values[idx]?.trim();
                             });
                             
-                            // PARSE DD/M/YYYY HH:MM format
+                            // Parse DD/M/YYYY HH:MM
                             const dateStr = row['Date'];
                             if (!dateStr || dateStr === 'Date') continue;
                             
                             let parsedDate = new Date().toISOString();
                             try {
-                                // Parse: "15/1/2026 21:25"
                                 const parts = dateStr.split(' ');
-                                if (parts.length === 2) {
-                                    const [datePart, timePart] = parts;
-                                    const [day, month, year] = datePart.split('/');
-                                    const [hour, minute] = timePart.split(':');
-                                    
-                                    const d = new Date(year, month - 1, day, hour, minute);
+                                if (parts.length >= 1) {
+                                    const [day, month, year] = parts[0].split('/');
+                                    const d = new Date(year, month - 1, day);
                                     if (!isNaN(d.getTime())) {
                                         parsedDate = d.toISOString();
                                     }
                                 }
                             } catch (e) {
-                                console.warn('Date parse error:', dateStr);
+                                console.warn('Date parse:', dateStr);
                             }
                             
                             const id = row['Log ID'] || String(Date.now() + Math.random());
@@ -1545,6 +1579,7 @@
                         }
                         
                         console.log(`✅ Imported ${imported} workouts`);
+                        console.log(`📊 Total: ${this.workouts.length}`);
                         
                         this.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
                         
@@ -1552,7 +1587,7 @@
                         this.renderHistory();
                         this.updateStats();
                         
-                        this.showToast(`✓ Imported ${imported} workouts! (${this.workouts.length} total)`, 'success');
+                        this.showToast(`✓ Imported ${imported} workouts!`, 'success');
                         
                         event.target.value = '';
                     } catch (error) {
@@ -1573,11 +1608,11 @@
                 if (!container) return;
 
                 if (this.workouts.length === 0) {
-                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div>No workouts yet.</div></div>';
+                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div>No workouts yet</div></div>';
                     return;
                 }
 
-                const html = this.workouts.map(workout => {
+                const html = this.workouts.map((workout, idx) => {
                     let dateStr = 'Invalid Date';
                     try {
                         const d = new Date(workout.date);
@@ -1585,11 +1620,12 @@
                             dateStr = d.toLocaleDateString();
                         }
                     } catch (e) {
-                        console.warn('Date render error:', workout.date);
+                        console.warn('Date error:', workout.date);
                     }
                     
                     return `
                         <div class="history-item">
+                            <button class="history-delete" onclick="app.deleteWorkout(${idx})">Delete</button>
                             <div class="history-date">${dateStr}</div>
                             <div class="history-title">${workout.description || 'Workout'}</div>
                             <div class="history-stats">
@@ -1604,6 +1640,16 @@
                 container.innerHTML = html;
             }
 
+            deleteWorkout(index) {
+                if (confirm('Delete this workout?')) {
+                    this.workouts.splice(index, 1);
+                    this.saveData();
+                    this.renderHistory();
+                    this.updateStats();
+                    this.showToast('Workout deleted', 'success');
+                }
+            }
+
             updateStats() {
                 document.getElementById('totalWorkouts').textContent = this.workouts.length;
                 document.getElementById('historyCount').textContent = this.workouts.length;
@@ -1613,127 +1659,51 @@
             }
 
             // ========================================================================
-            // CHAT
+            // SETTINGS
             // ========================================================================
 
-            addMessage(sender, text, workout = null, persona = 'coach', quickReplies = null) {
-                const msg = {
-                    sender: sender,
-                    text: text,
-                    workout: workout,
-                    persona: persona,
-                    quickReplies: quickReplies,
-                    timestamp: new Date().toISOString()
-                };
-
-                this.chatHistory.push(msg);
-                this.saveData();
-                this.renderChat();
-            }
-
-            renderChat() {
-                const container = document.getElementById('chatMessages');
-                if (!container) return;
-                
-                const html = this.chatHistory.map((msg) => {
-                    if (msg.sender === 'user') {
-                        return `<div class="chat-message msg-user"><div class="msg-header"><span>👤</span> You</div>${msg.text.replace(/\n/g, '<br>')}</div>`;
-                    } else {
-                        const p = msg.persona === 'admin' ? { emoji: '⚙️', color: 'admin' } : { emoji: '🤖', color: 'coach' };
-                        
-                        let quickRepliesHtml = '';
-                        if (msg.quickReplies && msg.quickReplies.length > 0) {
-                            quickRepliesHtml = `
-                                <div class="quick-replies">
-                                    ${msg.quickReplies.map(reply => {
-                                        let onclick = `app.handleQuickReply('${reply}')`;
-                                        if (reply === 'View Plan') onclick = `app.navigate('screenPlan')`;
-                                        if (reply === 'Manual builder') onclick = `app.navigate('screenBuilder')`;
-                                        
-                                        return `<button class="quick-reply-btn" onclick="${onclick}">${reply}</button>`;
-                                    }).join('')}
-                                </div>
-                            `;
-                        }
-                        
-                        return `
-                            <div class="chat-message msg-ai persona-${msg.persona}">
-                                <div class="msg-header persona-${p.color}">
-                                    <span>${p.emoji}</span> ${msg.persona.charAt(0).toUpperCase() + msg.persona.slice(1)}
-                                </div>
-                                ${msg.text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                                ${quickRepliesHtml}
-                            </div>
-                        `;
-                    }
-                }).join('');
-
-                container.innerHTML = html;
-                setTimeout(() => {
-                    container.scrollTop = container.scrollHeight;
-                }, 100);
-            }
-
-            handleQuickReply(text) {
-                document.getElementById('chatInput').value = text;
-                this.sendMessage();
-            }
-
-            updateProfileDisplay() {
+            loadProfile() {
                 if (!this.profile) return;
-                document.getElementById('profileName').textContent = this.profile.name || '--';
-                document.getElementById('profileAge').textContent = this.profile.age || '--';
-                document.getElementById('profileWeight').textContent = this.profile.weight ? `${this.profile.weight} kg` : '--';
+                document.getElementById('editName').value = this.profile.name || '';
+                document.getElementById('editAge').value = this.profile.age || '';
+                document.getElementById('editWeight').value = this.profile.weight || '';
+            }
+
+            saveProfile() {
+                const name = document.getElementById('editName').value;
+                const age = parseInt(document.getElementById('editAge').value);
+                const weight = parseInt(document.getElementById('editWeight').value);
+                
+                if (!name || !age || !weight) {
+                    this.showToast('Fill all fields', 'error');
+                    return;
+                }
+                
+                this.profile = { name, age, weight, maxHR: 220 - age };
+                this.saveData();
+                
+                this.showToast('Profile saved!', 'success');
             }
 
             // ========================================================================
-            // UTILITIES
+            // NAVIGATION
             // ========================================================================
-
-            skipOnboarding() {
-                this.profile = { name: 'Athlete', age: 30, weight: 75, maxHR: 190 };
-                this.onboardingState.completed = true;
-                this.saveData();
-                
-                const skipBtn = document.getElementById('skipToWorkout');
-                if (skipBtn) skipBtn.classList.remove('visible');
-                
-                // GO STRAIGHT TO BUILDER
-                this.navigate('screenBuilder');
-                this.showToast('Ready to build workout!', 'success');
-            }
-
-            resetOnboarding() {
-                if (!confirm('Reset onboarding?')) return;
-                
-                this.onboardingState = { step: 'welcome', completed: false, data: {} };
-                this.profile = null;
-                this.chatHistory = [];
-                
-                this.saveData();
-                this.navigate('screenCoach');
-                this.startOnboarding();
-            }
 
             navigate(screenId) {
-                document.querySelectorAll('.screen').forEach(screen => {
-                    screen.classList.remove('active');
-                });
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
                 document.getElementById(screenId).classList.add('active');
 
                 const navItems = document.querySelectorAll('.nav-item');
                 navItems.forEach(item => item.classList.remove('active'));
                 
                 const screenMap = {
-                    'screenCoach': 0,
+                    'screenDashboard': 0,
                     'screenBuilder': 1,
-                    'screenPlan': 2,
-                    'screenHistory': 3,
-                    'screenSettings': -1
+                    'screenHistory': 2
                 };
                 
                 const index = screenMap[screenId];
-                if (index >= 0 && navItems[index]) {
+                if (index !== undefined && navItems[index]) {
                     navItems[index].classList.add('active');
                 }
             }
@@ -1744,10 +1714,6 @@
                 toast.className = `toast ${type}`;
                 toast.classList.add('show');
                 setTimeout(() => toast.classList.remove('show'), 3000);
-            }
-
-            sleep(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
             }
         }
 
