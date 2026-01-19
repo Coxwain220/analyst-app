@@ -825,6 +825,7 @@
 <body>
     <div class="version-badge">v1.6 PRODUCTION</div>
     <div class="settings-cog" onclick="app.navigate('screenSettings')">⚙️</div>
+    <div class="settings-cog" onclick="app.navigate('screenHRM')" style="left:60px;">❤️</div>
     <div id="toast" class="toast"></div>
 
     <!-- DASHBOARD SCREEN (SWIPEABLE) -->
@@ -1047,6 +1048,66 @@
         </div>
     </div>
 
+    <!-- HEART RATE MONITOR SCREEN -->
+    <div id="screenHRM" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">Heart Rate Monitor</div>
+        </div>
+        <div class="scroll-content">
+            <!-- Connection Card -->
+            <div style="background:linear-gradient(135deg, #1a0a0a 0%, #0a0a0a 100%); border:2px solid #ff6b6b; border-radius:12px; padding:20px; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                    <div style="font-size:32px;">❤️</div>
+                    <div style="flex:1;">
+                        <div style="font-size:14px; font-weight:700; color:#ff6b6b;" id="hrmStatusText">Not Connected</div>
+                        <div style="font-size:12px; color:#666; margin-top:4px;" id="hrmStatusDesc">Connect your Polar/Garmin/Wahoo HRM</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" style="background:#ff6b6b;" id="hrmConnectButton" onclick="app.connectHRMDirect()">
+                    Connect Heart Rate Monitor
+                </button>
+            </div>
+
+            <!-- Live Display (Hidden until connected) -->
+            <div id="hrmLiveDisplay" style="display:none; background:var(--card-bg); border:2px solid #ff6b6b; border-radius:12px; padding:20px; text-align:center; margin-bottom:20px;">
+                <div style="font-size:72px; font-weight:900; color:#ff6b6b; line-height:1; margin-bottom:8px; font-variant-numeric:tabular-nums;" id="hrmCurrentBPM">--</div>
+                <div style="font-size:11px; color:#666; text-transform:uppercase; letter-spacing:1px;">BEATS PER MINUTE</div>
+                
+                <div style="margin-top:16px; padding:12px; background:#050505; border-radius:8px;">
+                    <div style="font-size:10px; color:#666; text-transform:uppercase; margin-bottom:6px;">TRAINING ZONE</div>
+                    <div style="display:flex; height:40px; border-radius:8px; overflow:hidden;">
+                        <div id="hrZone1Display" style="flex:1; background:#4a90e2; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z1</div>
+                        <div id="hrZone2Display" style="flex:1; background:#50c878; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z2</div>
+                        <div id="hrZone3Display" style="flex:1; background:#ffa500; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z3</div>
+                        <div id="hrZone4Display" style="flex:1; background:#ff6347; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z4</div>
+                        <div id="hrZone5Display" style="flex:1; background:#dc143c; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z5</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graph -->
+            <div id="hrmGraphContainer" style="display:none; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:20px;">
+                <div style="font-size:11px; color:#666; text-transform:uppercase; margin-bottom:12px; text-align:center;">Heart Rate Over Time</div>
+                <canvas id="hrmCanvas" style="width:100%; height:200px; background:#000; border-radius:8px;"></canvas>
+                
+                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:16px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:20px; font-weight:900; color:#ff6b6b;" id="hrmAvg">--</div>
+                        <div style="font-size:9px; color:#666; text-transform:uppercase; margin-top:4px;">Average</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:20px; font-weight:900; color:#ff6b6b;" id="hrmMax">--</div>
+                        <div style="font-size:9px; color:#666; text-transform:uppercase; margin-top:4px;">Max</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:20px; font-weight:900; color:#ff6b6b;" id="hrmMin">--</div>
+                        <div style="font-size:9px; color:#666; text-transform:uppercase; margin-top:4px;">Min</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- HISTORY SCREEN -->
     <div id="screenHistory" class="screen">
         <div class="screen-header">
@@ -1097,6 +1158,24 @@
                 <div style="display:flex; gap:12px; margin-top:16px;">
                     <button class="btn btn-primary" onclick="app.saveProfile()">Save Profile</button>
                     <button class="btn btn-outline" onclick="app.loadProfile()">Cancel</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Firebase Cloud Storage</div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:12px; color:#666; margin-bottom:4px;">User ID</div>
+                    <div style="color:#e0e0e0; font-size:14px; font-family:monospace; word-break:break-all;" id="firebaseUserId">Loading...</div>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:12px; color:#666; margin-bottom:4px;">Status</div>
+                    <div style="color:#e0e0e0; font-size:14px;" id="firebaseStatus">Checking...</div>
+                </div>
+                <button class="btn btn-outline" onclick="app.testFirebaseSync()">
+                    Test Cloud Sync
+                </button>
+                <div style="margin-top:12px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#ccc;">
+                    💡 <strong>Test without clearing cache:</strong> Click "Test Cloud Sync" to verify your data is saving to Firebase. Check console (F12) for detailed logs.
                 </div>
             </div>
 
@@ -1752,6 +1831,211 @@
             }
 
             // ========================================================================
+            // HRM CONNECTION (DIRECT - FROM HRM SCREEN)
+            // ========================================================================
+
+            async connectHRMDirect() {
+                const HRM_SERVICE = 0x180D;
+                const HRM_CHARACTERISTIC = 0x2A37;
+                
+                const btn = document.getElementById('hrmConnectButton');
+                const statusText = document.getElementById('hrmStatusText');
+                const statusDesc = document.getElementById('hrmStatusDesc');
+                
+                btn.disabled = true;
+                btn.textContent = 'Connecting...';
+                statusText.textContent = 'Connecting...';
+                
+                try {
+                    console.log('🔍 Requesting HRM...');
+                    
+                    this.hrmDevice = await navigator.bluetooth.requestDevice({
+                        filters: [{ services: [HRM_SERVICE] }]
+                    });
+                    
+                    console.log(`✓ Device: ${this.hrmDevice.name}`);
+                    statusDesc.textContent = `Connecting to ${this.hrmDevice.name}...`;
+                    
+                    const server = await this.hrmDevice.gatt.connect();
+                    const service = await server.getPrimaryService(HRM_SERVICE);
+                    this.hrmCharacteristic = await service.getCharacteristic(HRM_CHARACTERISTIC);
+                    
+                    await this.hrmCharacteristic.startNotifications();
+                    this.hrmCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
+                        this.handleHRMDataDirect(e.target.value);
+                    });
+                    
+                    console.log('✓ HRM connected');
+                    
+                    statusText.textContent = `Connected: ${this.hrmDevice.name}`;
+                    statusDesc.textContent = 'Receiving heart rate data';
+                    btn.textContent = 'Disconnect';
+                    btn.disabled = false;
+                    btn.onclick = () => this.disconnectHRMDirect();
+                    
+                    // Show live display and graph
+                    document.getElementById('hrmLiveDisplay').style.display = 'block';
+                    document.getElementById('hrmGraphContainer').style.display = 'block';
+                    
+                    // Initialize canvas
+                    this.initHRMCanvas();
+                    
+                    this.showToast('HRM connected!', 'success');
+                } catch (error) {
+                    console.error('❌ HRM error:', error);
+                    statusText.textContent = 'Connection Failed';
+                    statusDesc.textContent = error.message;
+                    btn.textContent = 'Retry';
+                    btn.disabled = false;
+                    
+                    this.showToast('HRM connection failed: ' + error.message, 'error');
+                }
+            }
+
+            disconnectHRMDirect() {
+                if (this.hrmDevice && this.hrmDevice.gatt.connected) {
+                    this.hrmDevice.gatt.disconnect();
+                }
+                
+                this.hrmDevice = null;
+                this.hrmCharacteristic = null;
+                this.hrHistory = [];
+                this.currentHR = 0;
+                
+                document.getElementById('hrmStatusText').textContent = 'Not Connected';
+                document.getElementById('hrmStatusDesc').textContent = 'Connect your Polar/Garmin/Wahoo HRM';
+                document.getElementById('hrmLiveDisplay').style.display = 'none';
+                document.getElementById('hrmGraphContainer').style.display = 'none';
+                
+                const btn = document.getElementById('hrmConnectButton');
+                btn.textContent = 'Connect Heart Rate Monitor';
+                btn.onclick = () => this.connectHRMDirect();
+                
+                this.showToast('HRM disconnected', 'success');
+            }
+
+            initHRMCanvas() {
+                this.hrCanvas = document.getElementById('hrmCanvas');
+                if (this.hrCanvas) {
+                    this.hrCtx = this.hrCanvas.getContext('2d');
+                    this.hrCanvas.width = this.hrCanvas.offsetWidth;
+                    this.hrCanvas.height = 200;
+                }
+                this.hrHistory = [];
+                this.currentHR = 0;
+            }
+
+            handleHRMDataDirect(value) {
+                const flags = value.getUint8(0);
+                const hrValueFormat = flags & 0x01;
+                
+                let hr;
+                if (hrValueFormat === 0) {
+                    hr = value.getUint8(1);
+                } else {
+                    hr = value.getUint16(1, true);
+                }
+                
+                this.currentHR = hr;
+                this.hrHistory.push(hr);
+                
+                // Keep last 60 readings
+                if (this.hrHistory.length > 60) {
+                    this.hrHistory.shift();
+                }
+                
+                this.updateHRMDisplay();
+                this.updateHRMGraph();
+            }
+
+            updateHRMDisplay() {
+                const bpmElem = document.getElementById('hrmCurrentBPM');
+                if (bpmElem) {
+                    bpmElem.textContent = this.currentHR;
+                }
+                
+                // Update zone visualization
+                const zone = this.calculateHRZone(this.currentHR);
+                for (let i = 1; i <= 5; i++) {
+                    const zoneElem = document.getElementById(`hrZone${i}Display`);
+                    if (zoneElem) {
+                        if (i === zone) {
+                            zoneElem.style.opacity = '1';
+                            zoneElem.style.transform = 'scale(1.1)';
+                        } else {
+                            zoneElem.style.opacity = '0.3';
+                            zoneElem.style.transform = 'scale(1)';
+                        }
+                    }
+                }
+            }
+
+            calculateHRZone(hr) {
+                // Default zones (can be customized in settings)
+                if (hr < 120) return 1;
+                if (hr < 140) return 2;
+                if (hr < 160) return 3;
+                if (hr < 180) return 4;
+                return 5;
+            }
+
+            updateHRMGraph() {
+                if (!this.hrCtx || this.hrHistory.length < 2) return;
+                
+                const ctx = this.hrCtx;
+                const canvas = this.hrCanvas;
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                // Clear
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, width, height);
+                
+                // Calculate stats
+                const avg = Math.round(this.hrHistory.reduce((a, b) => a + b, 0) / this.hrHistory.length);
+                const max = Math.max(...this.hrHistory);
+                const min = Math.min(...this.hrHistory);
+                
+                // Update stats display
+                document.getElementById('hrmAvg').textContent = avg;
+                document.getElementById('hrmMax').textContent = max;
+                document.getElementById('hrmMin').textContent = min;
+                
+                // Draw grid
+                ctx.strokeStyle = '#222';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 5; i++) {
+                    const y = (height / 5) * i;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                }
+                
+                // Draw HR line
+                const minHR = Math.max(min - 10, 0);
+                const maxHR = max + 10;
+                const hrRange = maxHR - minHR;
+                
+                ctx.strokeStyle = '#ff6b6b';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                this.hrHistory.forEach((hr, i) => {
+                    const x = (width / 60) * i;
+                    const y = height - ((hr - minHR) / hrRange) * height;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.stroke();
+            }
+
+            // ========================================================================
             // DASHBOARD - SWIPEABLE
             // ========================================================================
 
@@ -2384,7 +2668,7 @@
                 document.getElementById('editWeight').value = this.profile.weight || '';
             }
 
-            saveProfile() {
+            async saveProfile() {
                 const name = document.getElementById('editName').value;
                 const age = parseInt(document.getElementById('editAge').value);
                 const weight = parseInt(document.getElementById('editWeight').value);
@@ -2395,9 +2679,60 @@
                 }
                 
                 this.profile = { name, age, weight, maxHR: 220 - age };
-                this.saveData();
+                await this.dataStore.saveProfile(this.profile);
                 
                 this.showToast('Profile saved!', 'success');
+            }
+
+            async testFirebaseSync() {
+                console.log('🔍 Testing Firebase sync...');
+                
+                try {
+                    // Save a test value
+                    const testData = {
+                        testTimestamp: new Date().toISOString(),
+                        testMessage: 'Firebase sync working!'
+                    };
+                    
+                    await this.dataStore.saveProfile({ ...this.profile, ...testData });
+                    console.log('✓ Test data saved to Firebase');
+                    
+                    // Read it back
+                    const retrieved = await this.dataStore.loadProfile();
+                    console.log('✓ Test data retrieved:', retrieved);
+                    
+                    if (retrieved && retrieved.testTimestamp === testData.testTimestamp) {
+                        this.showToast('✓ Firebase sync working! Check console for details.', 'success');
+                        document.getElementById('firebaseStatus').textContent = '✓ Connected & Syncing';
+                        document.getElementById('firebaseStatus').style.color = '#00FF99';
+                    } else {
+                        throw new Error('Data mismatch');
+                    }
+                } catch (error) {
+                    console.error('❌ Firebase sync test failed:', error);
+                    this.showToast('Firebase sync failed. Check console.', 'error');
+                    document.getElementById('firebaseStatus').textContent = '✗ Sync Failed';
+                    document.getElementById('firebaseStatus').style.color = '#FF4444';
+                }
+            }
+
+            updateFirebaseStatus() {
+                const userIdElem = document.getElementById('firebaseUserId');
+                const statusElem = document.getElementById('firebaseStatus');
+                
+                if (userIdElem && this.dataStore) {
+                    userIdElem.textContent = this.dataStore.userId || 'Not initialized';
+                }
+                
+                if (statusElem && this.dataStore) {
+                    if (this.dataStore.isFirebase) {
+                        statusElem.textContent = '✓ Firebase Enabled';
+                        statusElem.style.color = '#00FF99';
+                    } else {
+                        statusElem.textContent = 'localStorage (offline)';
+                        statusElem.style.color = '#FFA500';
+                    }
+                }
             }
 
             // ========================================================================
@@ -2421,6 +2756,11 @@
                 const index = screenMap[screenId];
                 if (index !== undefined && navItems[index]) {
                     navItems[index].classList.add('active');
+                }
+                
+                // Update Firebase status when opening settings
+                if (screenId === 'screenSettings') {
+                    this.updateFirebaseStatus();
                 }
             }
 
