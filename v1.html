@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Rowing Coach v1.4</title>
+    <title>AI Rowing Coach v1.5</title>
     <style>
         :root {
             --bg: #000;
@@ -81,7 +81,6 @@
         
         .settings-cog:active {
             transform: scale(0.9);
-            background: var(--border);
         }
         
         /* TOAST */
@@ -141,20 +140,6 @@
             text-align: center;
         }
         
-        .header-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .header-btn:active { transform: scale(0.95); }
-        
         .scroll-content {
             flex: 1;
             overflow-y: auto;
@@ -163,25 +148,17 @@
             padding-bottom: 100px;
         }
         
-        /* CHAT INTERFACE */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            position: relative;
-        }
-        
-        /* SKIP TO WORKOUT BUTTON - ALWAYS VISIBLE */
+        /* SKIP BUTTON - FIXED TOP */
         .skip-to-workout {
             position: fixed;
-            bottom: 90px;
+            top: 70px;
             right: 20px;
             background: var(--panel);
             border: 2px solid var(--accent);
             color: var(--accent);
-            padding: 12px 20px;
+            padding: 10px 18px;
             border-radius: 24px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
             z-index: 5000;
@@ -196,6 +173,13 @@
         
         .skip-to-workout:active {
             transform: scale(0.95);
+        }
+        
+        /* CHAT */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         
         .chat-messages {
@@ -257,75 +241,6 @@
         .msg-header.persona-support { color: var(--support-color); }
         .msg-user .msg-header { color: #00AAFF; }
         
-        /* WORKOUT PREVIEW IN CHAT */
-        .workout-preview {
-            background: #0a0a0a;
-            border: 2px solid var(--accent);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-        }
-        
-        .workout-preview-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-        
-        .interval-preview {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            background: #050505;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            font-family: monospace;
-            font-size: 13px;
-            border-left: 3px solid var(--accent);
-        }
-        
-        .interval-preview.rest {
-            border-left-color: var(--rest);
-        }
-        
-        .workout-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        
-        .workout-action-btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .workout-action-btn.primary {
-            background: var(--accent);
-            color: #000;
-        }
-        
-        .workout-action-btn.secondary {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-        }
-        
-        .workout-action-btn:active {
-            transform: scale(0.95);
-        }
-        
-        /* QUICK REPLY BUTTONS */
         .quick-replies {
             display: flex;
             flex-wrap: wrap;
@@ -348,15 +263,11 @@
         .quick-reply-btn:active {
             transform: scale(0.95);
             background: rgba(0,255,153,0.1);
-            border-color: var(--accent);
         }
         
-        /* CHAT INPUT - STICKY */
         .chat-input-container {
             position: sticky;
             bottom: 0;
-            left: 0;
-            right: 0;
             border-top: 1px solid var(--border);
             background: var(--panel);
             padding: 12px 16px;
@@ -403,9 +314,7 @@
         }
         
         .send-btn:active { transform: scale(0.9); }
-        .send-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
         
-        /* TYPING INDICATOR */
         .typing-indicator {
             display: none;
             align-items: center;
@@ -432,7 +341,206 @@
             30% { transform: translateY(-10px); opacity: 1; }
         }
         
-        /* TRAINING PLAN - ENHANCED */
+        /* MANUAL WORKOUT BUILDER */
+        .builder-mode-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .builder-mode-btn {
+            padding: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .builder-mode-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+        
+        .builder-mode-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .builder-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .builder-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        
+        .builder-input-group {
+            margin-bottom: 16px;
+        }
+        
+        .builder-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+        
+        .builder-input {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        
+        .builder-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .builder-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #050505;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        
+        .builder-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+        
+        .builder-checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+        
+        .builder-toggle-label {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        
+        .builder-interval-list {
+            margin-top: 16px;
+        }
+        
+        .builder-interval-item {
+            background: #050505;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .builder-interval-info {
+            flex: 1;
+        }
+        
+        .builder-interval-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .builder-interval-desc {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .builder-interval-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .builder-icon-btn {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .builder-icon-btn:active {
+            transform: scale(0.9);
+        }
+        
+        /* BUTTONS */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn + .btn { margin-top: 12px; }
+        
+        /* CARDS */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .card-header {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        /* PLAN */
         .plan-overview {
             background: linear-gradient(135deg, #0a1a0a 0%, #0a0a0a 100%);
             border: 2px solid var(--accent);
@@ -463,25 +571,6 @@
             margin-bottom: 16px;
         }
         
-        .plan-week-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        
-        .plan-week-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--accent);
-        }
-        
-        .plan-week-focus {
-            font-size: 11px;
-            color: #666;
-            text-transform: uppercase;
-        }
-        
         .plan-day {
             background: #050505;
             border: 1px solid var(--border);
@@ -489,51 +578,11 @@
             padding: 12px;
             margin-bottom: 8px;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .plan-day:active {
-            transform: scale(0.98);
         }
         
         .plan-day.expanded {
             background: #0a0a0a;
             border-color: var(--accent);
-        }
-        
-        .plan-day-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .plan-day-info {
-            flex: 1;
-        }
-        
-        .plan-day-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 4px;
-        }
-        
-        .plan-day-desc {
-            font-size: 11px;
-            color: #666;
-        }
-        
-        .plan-day-status {
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            background: #222;
-            color: #666;
-        }
-        
-        .plan-day-status.completed {
-            background: rgba(0,255,153,0.1);
-            color: var(--accent);
         }
         
         .plan-day-strategy {
@@ -547,14 +596,6 @@
             display: block;
         }
         
-        .plan-day-strategy-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-        
         .plan-day-strategy-text {
             font-size: 13px;
             line-height: 1.6;
@@ -562,192 +603,68 @@
             margin-bottom: 12px;
         }
         
-        .plan-day-action {
-            width: 100%;
-            padding: 10px;
-            background: var(--accent);
-            color: #000;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
+        /* HISTORY */
+        .history-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .history-date {
+            font-size: 11px;
+            color: #666;
             font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
+            margin-bottom: 4px;
         }
         
-        .plan-day-action:active {
-            transform: scale(0.95);
+        .history-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
         }
         
-        /* HEART RATE MONITOR */
-        .hrm-connect-card {
-            background: linear-gradient(135deg, #1a0a0a 0%, #0a0a0a 100%);
-            border: 2px solid #ff6b6b;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .hrm-status {
+        .history-stats {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--accent);
+            font-family: monospace;
+            flex-wrap: wrap;
+        }
+        
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
             margin-bottom: 16px;
         }
         
-        .hrm-icon {
-            font-size: 32px;
-        }
-        
-        .hrm-status-text {
-            flex: 1;
-        }
-        
-        .hrm-status-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #ff6b6b;
-        }
-        
-        .hrm-status-desc {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
-        }
-        
-        .hrm-connect-btn {
-            width: 100%;
-            padding: 14px;
-            background: #ff6b6b;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .hrm-connect-btn:active {
-            transform: scale(0.98);
-        }
-        
-        .hrm-connect-btn:disabled {
-            background: #333;
-            color: #666;
-            cursor: not-allowed;
-        }
-        
-        .hrm-live-display {
-            background: var(--card-bg);
-            border: 2px solid #ff6b6b;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .hrm-current-bpm {
-            font-size: 72px;
-            font-weight: 900;
-            color: #ff6b6b;
-            line-height: 1;
-            margin-bottom: 8px;
-            font-variant-numeric: tabular-nums;
-        }
-        
-        .hrm-current-label {
-            font-size: 11px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .hrm-zone-display {
-            margin-top: 16px;
-            padding: 12px;
+        .stat-item {
             background: #050505;
-            border-radius: 8px;
-        }
-        
-        .hrm-zone-label {
-            font-size: 10px;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-        
-        .hrm-zone-bar {
-            display: flex;
-            height: 40px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .hrm-zone-segment {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 700;
-            transition: all 0.3s;
-            opacity: 0.3;
-        }
-        
-        .hrm-zone-segment.active {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-        
-        .hrm-graph-container {
-            background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .hrm-graph-title {
-            font-size: 11px;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 12px;
+            border-radius: 6px;
+            padding: 12px;
             text-align: center;
         }
         
-        .hrm-canvas {
-            width: 100%;
-            height: 200px;
-            background: #000;
-            border-radius: 8px;
-        }
-        
-        .hrm-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 16px;
-        }
-        
-        .hrm-stat {
-            text-align: center;
-        }
-        
-        .hrm-stat-value {
+        .stat-item-value {
             font-size: 20px;
             font-weight: 900;
-            color: #ff6b6b;
+            color: var(--accent);
         }
         
-        .hrm-stat-label {
-            font-size: 9px;
+        .stat-item-label {
+            font-size: 10px;
             color: #666;
-            text-transform: uppercase;
             margin-top: 4px;
+            text-transform: uppercase;
         }
         
-        /* HR ZONES SETTINGS */
+        /* HR ZONES */
         .hr-zones-config {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -795,113 +712,7 @@
             font-weight: 700;
         }
         
-        .hr-zone-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        
-        /* BUTTONS */
-        .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 0.5px;
-        }
-        
-        .btn:active { transform: scale(0.98); }
-        .btn-primary { background: var(--accent); color: #000; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-        .btn + .btn { margin-top: 12px; }
-        
-        /* CARDS */
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-        
-        .card-header {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: var(--accent);
-            text-transform: uppercase;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        /* HISTORY - SIMPLIFIED */
-        .history-item {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-        
-        .history-date {
-            font-size: 11px;
-            color: #666;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        
-        .history-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 8px;
-        }
-        
-        .history-stats {
-            display: flex;
-            gap: 16px;
-            font-size: 12px;
-            color: var(--accent);
-            font-family: monospace;
-            flex-wrap: wrap;
-        }
-        
-        /* STATS GRID */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .stat-item {
-            background: #050505;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 12px;
-            text-align: center;
-        }
-        
-        .stat-item-value {
-            font-size: 20px;
-            font-weight: 900;
-            color: var(--accent);
-            font-variant-numeric: tabular-nums;
-        }
-        
-        .stat-item-label {
-            font-size: 10px;
-            color: #666;
-            margin-top: 4px;
-            text-transform: uppercase;
-        }
-        
-        /* NAVIGATION - 4 TABS */
+        /* NAVIGATION */
         .nav-bar {
             background: var(--panel);
             border-top: 1px solid var(--border);
@@ -935,7 +746,6 @@
         
         .nav-icon { font-size: 20px; }
         
-        /* EMPTY STATE */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -950,16 +760,9 @@
     </style>
 </head>
 <body>
-    <!-- VERSION BADGE -->
-    <div class="version-badge">v1.4 HRM</div>
-
-    <!-- SETTINGS COG -->
+    <div class="version-badge">v1.5 BUILDER</div>
     <div class="settings-cog" onclick="app.navigate('screenSettings')">⚙️</div>
-
-    <!-- Toast -->
     <div id="toast" class="toast"></div>
-
-    <!-- SKIP TO WORKOUT (Persistent during onboarding) -->
     <button id="skipToWorkout" class="skip-to-workout" onclick="app.skipOnboarding()">
         🚣 Skip to Workout →
     </button>
@@ -969,7 +772,6 @@
         <div class="screen-header">
             <div class="screen-title">AI Hub</div>
         </div>
-        
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages"></div>
             <div class="typing-indicator" id="typingIndicator">
@@ -990,6 +792,79 @@
         </div>
     </div>
 
+    <!-- MANUAL WORKOUT BUILDER SCREEN -->
+    <div id="screenBuilder" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">Manual Workout Builder</div>
+        </div>
+        <div class="scroll-content">
+            
+            <!-- Mode Selector -->
+            <div class="builder-mode-selector">
+                <div class="builder-mode-btn active" onclick="app.selectBuilderMode('single-distance')">
+                    Single Distance
+                </div>
+                <div class="builder-mode-btn" onclick="app.selectBuilderMode('single-time')">
+                    Single Time
+                </div>
+                <div class="builder-mode-btn" onclick="app.selectBuilderMode('single-calorie')">
+                    Single Calorie
+                </div>
+                <div class="builder-mode-btn" onclick="app.selectBuilderMode('fixed-intervals')">
+                    Fixed Intervals
+                </div>
+                <div class="builder-mode-btn" onclick="app.selectBuilderMode('variable-intervals')">
+                    Variable Intervals
+                </div>
+            </div>
+
+            <!-- Global Targets -->
+            <div class="builder-section">
+                <div class="builder-section-title">Global Targets (Optional)</div>
+                
+                <div class="builder-toggle" onclick="app.toggleBuilderTarget('pacer')">
+                    <div class="builder-checkbox" id="pacerCheckbox"></div>
+                    <div class="builder-toggle-label">Show Pacer</div>
+                </div>
+                <div id="pacerInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
+                    <select class="builder-input" style="margin-bottom:8px;" id="pacerMetric">
+                        <option value="pace">Pace /500m</option>
+                        <option value="watts">Watts</option>
+                        <option value="calhr">Cal/hr</option>
+                    </select>
+                    <input type="text" class="builder-input" placeholder="Target value" id="pacerValue">
+                </div>
+                
+                <div class="builder-toggle" onclick="app.toggleBuilderTarget('strokeRate')">
+                    <div class="builder-checkbox" id="strokeRateCheckbox"></div>
+                    <div class="builder-toggle-label">Target Stroke Rate</div>
+                </div>
+                <div id="strokeRateInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
+                    <input type="number" class="builder-input" placeholder="s/m (e.g., 26)" id="strokeRateValue">
+                </div>
+                
+                <div class="builder-toggle" onclick="app.toggleBuilderTarget('heartRate')">
+                    <div class="builder-checkbox" id="heartRateCheckbox"></div>
+                    <div class="builder-toggle-label">Target Heart Rate Zone</div>
+                </div>
+                <div id="heartRateInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
+                    <select class="builder-input" id="heartRateZone">
+                        <option value="1">Zone 1 (Recovery)</option>
+                        <option value="2">Zone 2 (Endurance)</option>
+                        <option value="3">Zone 3 (Tempo)</option>
+                        <option value="4">Zone 4 (Threshold)</option>
+                        <option value="5">Zone 5 (Max)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Mode-Specific Inputs -->
+            <div id="builderModeContent"></div>
+
+            <button class="btn btn-primary" onclick="app.saveManualWorkout()">Save & Start Workout</button>
+        </div>
+    </div>
+
     <!-- TRAINING PLAN SCREEN -->
     <div id="screenPlan" class="screen">
         <div class="screen-header">
@@ -998,10 +873,7 @@
         <div class="scroll-content" id="planContent">
             <div class="empty-state">
                 <div class="empty-state-icon">📅</div>
-                <div style="font-size:14px; line-height:1.6;">
-                    No training plan yet.<br>
-                    Chat with Coach to create a 4-week plan.
-                </div>
+                <div style="font-size:14px;">No plan yet. Chat with Coach to create one.</div>
             </div>
         </div>
     </div>
@@ -1012,56 +884,11 @@
             <div class="screen-title">Heart Rate Monitor</div>
         </div>
         <div class="scroll-content">
-            <!-- Connection Card -->
-            <div class="hrm-connect-card" id="hrmConnectCard">
-                <div class="hrm-status">
-                    <div class="hrm-icon">❤️</div>
-                    <div class="hrm-status-text">
-                        <div class="hrm-status-title" id="hrmStatusTitle">Not Connected</div>
-                        <div class="hrm-status-desc" id="hrmStatusDesc">Connect your Polar/Garmin/Wahoo HRM</div>
-                    </div>
-                </div>
-                <button class="hrm-connect-btn" id="hrmConnectBtn" onclick="app.connectHRM()">
-                    Connect Heart Rate Monitor
-                </button>
-            </div>
-
-            <!-- Live Display (Hidden until connected) -->
-            <div class="hrm-live-display" id="hrmLiveDisplay" style="display:none;">
-                <div class="hrm-current-bpm" id="hrmCurrentBPM">--</div>
-                <div class="hrm-current-label">BEATS PER MINUTE</div>
-                
-                <div class="hrm-zone-display">
-                    <div class="hrm-zone-label">TRAINING ZONE</div>
-                    <div class="hrm-zone-bar">
-                        <div class="hrm-zone-segment" id="hrZone1" style="background:var(--zone1);">Z1</div>
-                        <div class="hrm-zone-segment" id="hrZone2" style="background:var(--zone2);">Z2</div>
-                        <div class="hrm-zone-segment" id="hrZone3" style="background:var(--zone3);">Z3</div>
-                        <div class="hrm-zone-segment" id="hrZone4" style="background:var(--zone4);">Z4</div>
-                        <div class="hrm-zone-segment" id="hrZone5" style="background:var(--zone5);">Z5</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Graph -->
-            <div class="hrm-graph-container" id="hrmGraphContainer" style="display:none;">
-                <div class="hrm-graph-title">Heart Rate Over Time</div>
-                <canvas id="hrmCanvas" class="hrm-canvas"></canvas>
-                
-                <div class="hrm-stats-grid">
-                    <div class="hrm-stat">
-                        <div class="hrm-stat-value" id="hrmAvg">--</div>
-                        <div class="hrm-stat-label">Average</div>
-                    </div>
-                    <div class="hrm-stat">
-                        <div class="hrm-stat-value" id="hrmMax">--</div>
-                        <div class="hrm-stat-label">Max</div>
-                    </div>
-                    <div class="hrm-stat">
-                        <div class="hrm-stat-value" id="hrmMin">--</div>
-                        <div class="hrm-stat-label">Min</div>
-                    </div>
-                </div>
+            <div class="card">
+                <div class="card-header">HRM Integration</div>
+                <p style="font-size:14px; line-height:1.6; color:#ccc;">
+                    Heart Rate Monitor integration coming soon. Connect your Polar/Garmin/Wahoo device via Bluetooth.
+                </p>
             </div>
         </div>
     </div>
@@ -1085,7 +912,6 @@
                     </div>
                 </div>
             </div>
-            
             <div id="historyList"></div>
         </div>
     </div>
@@ -1116,47 +942,47 @@
                 <div style="font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; margin-bottom:16px;">Heart Rate Zones</div>
                 
                 <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z1">Zone 1 (Recovery)</div>
+                    <div class="hr-zone-label z1">Zone 1</div>
                     <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z1Min" value="100" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z1Min" value="100">
                         <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z1Max" value="120" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z1Max" value="120">
                     </div>
                 </div>
                 
                 <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z2">Zone 2 (Endurance)</div>
+                    <div class="hr-zone-label z2">Zone 2</div>
                     <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z2Min" value="120" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z2Min" value="120">
                         <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z2Max" value="140" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z2Max" value="140">
                     </div>
                 </div>
                 
                 <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z3">Zone 3 (Tempo)</div>
+                    <div class="hr-zone-label z3">Zone 3</div>
                     <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z3Min" value="140" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z3Min" value="140">
                         <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z3Max" value="160" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z3Max" value="160">
                     </div>
                 </div>
                 
                 <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z4">Zone 4 (Threshold)</div>
+                    <div class="hr-zone-label z4">Zone 4</div>
                     <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z4Min" value="160" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z4Min" value="160">
                         <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z4Max" value="180" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z4Max" value="180">
                     </div>
                 </div>
                 
                 <div class="hr-zone-input-group">
-                    <div class="hr-zone-label z5">Zone 5 (Max)</div>
+                    <div class="hr-zone-label z5">Zone 5</div>
                     <div class="hr-zone-range">
-                        <input type="number" class="hr-zone-input" id="z5Min" value="180" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z5Min" value="180">
                         <span style="color:#666;">-</span>
-                        <input type="number" class="hr-zone-input" id="z5Max" value="200" onchange="app.saveHRZones()">
+                        <input type="number" class="hr-zone-input" id="z5Max" value="200">
                     </div>
                 </div>
             </div>
@@ -1171,26 +997,24 @@
 
             <div class="card">
                 <div class="card-header">Reset</div>
-                <button class="btn btn-outline" onclick="app.resetOnboarding()">
-                    Reset Onboarding
-                </button>
+                <button class="btn btn-outline" onclick="app.resetOnboarding()">Reset Onboarding</button>
             </div>
         </div>
     </div>
 
-    <!-- Navigation - 4 TABS -->
+    <!-- Navigation -->
     <nav class="nav-bar">
         <button class="nav-item active" onclick="app.navigate('screenCoach')">
             <span class="nav-icon">🤖</span>
             AI Hub
         </button>
+        <button class="nav-item" onclick="app.navigate('screenBuilder')">
+            <span class="nav-icon">🔧</span>
+            Builder
+        </button>
         <button class="nav-item" onclick="app.navigate('screenPlan')">
             <span class="nav-icon">📅</span>
             Plan
-        </button>
-        <button class="nav-item" onclick="app.navigate('screenHRM')">
-            <span class="nav-icon">❤️</span>
-            Heart Rate
         </button>
         <button class="nav-item" onclick="app.navigate('screenHistory')">
             <span class="nav-icon">📊</span>
@@ -1199,22 +1023,13 @@
     </nav>
 
     <script>
-        // ============================================================================
-        // AI ROWING COACH PRO v1.4
-        // New: HRM Integration, Enhanced Plan UI, Fixed Navigation
-        // ============================================================================
-        
         const STORAGE_KEYS = {
             PROFILE: 'rowing_coach_profile_v1',
             WORKOUTS: 'rowing_coach_workouts_v1',
             CHAT: 'rowing_coach_chat_v1',
             PLAN: 'rowing_coach_plan_v1',
-            ONBOARDING_STATE: 'rowing_coach_onboarding_v1',
-            HR_ZONES: 'rowing_coach_hr_zones_v1'
+            ONBOARDING_STATE: 'rowing_coach_onboarding_v1'
         };
-
-        const HRM_SERVICE_UUID = 0x180D;
-        const HRM_CHARACTERISTIC_UUID = 0x2A37;
 
         class AIRowingCoach {
             constructor() {
@@ -1227,15 +1042,15 @@
                     completed: false,
                     data: {}
                 };
-                this.hrZones = null;
                 
-                // HRM
-                this.hrmDevice = null;
-                this.hrmCharacteristic = null;
-                this.currentHR = 0;
-                this.hrHistory = [];
-                this.hrCanvas = null;
-                this.hrCtx = null;
+                // Builder state
+                this.builderMode = 'single-distance';
+                this.builderTargets = {
+                    pacer: false,
+                    strokeRate: false,
+                    heartRate: false
+                };
+                this.builderIntervals = [];
                 
                 this.init();
             }
@@ -1255,23 +1070,14 @@
                 this.renderChat();
                 this.renderHistory();
                 this.updateStats();
-                this.loadHRZones();
+                this.renderBuilderMode();
                 
-                // Auto-resize input
                 const input = document.getElementById('chatInput');
                 if (input) {
                     input.addEventListener('input', () => {
                         input.style.height = 'auto';
                         input.style.height = Math.min(input.scrollHeight, 120) + 'px';
                     });
-                }
-                
-                // Initialize HRM canvas
-                this.hrCanvas = document.getElementById('hrmCanvas');
-                if (this.hrCanvas) {
-                    this.hrCtx = this.hrCanvas.getContext('2d');
-                    this.hrCanvas.width = this.hrCanvas.offsetWidth;
-                    this.hrCanvas.height = 200;
                 }
             }
 
@@ -1323,7 +1129,7 @@
                 const skipBtn = document.getElementById('skipToWorkout');
                 if (skipBtn) skipBtn.classList.add('visible');
                 
-                this.addMessage('ai', `Hey there! 🤖 I'm Coach, your AI rowing partner.\n\nLet me introduce the team:\n⚙️ **Admin** handles settings\n🛠️ **Support** helps with tech\n\nLet's start: **What's your name?**`, null, 'coach');
+                this.addMessage('ai', `Hey! 🤖 I'm Coach. Let's get started.\n\n**What's your name?**`, null, 'coach');
             }
 
             async sendMessage() {
@@ -1337,15 +1143,10 @@
                 input.style.height = 'auto';
 
                 const typingIndicator = document.getElementById('typingIndicator');
-                const sendBtn = document.getElementById('sendBtn');
-                
-                if (typingIndicator) typingIndicator.classList.add('active');
-                if (sendBtn) sendBtn.disabled = true;
+                typingIndicator.classList.add('active');
 
                 await this.sleep(800);
-
-                if (typingIndicator) typingIndicator.classList.remove('active');
-                if (sendBtn) sendBtn.disabled = false;
+                typingIndicator.classList.remove('active');
 
                 if (!this.onboardingState.completed) {
                     this.processOnboardingMessage(message);
@@ -1362,7 +1163,7 @@
                     this.onboardingState.data.name = name;
                     this.onboardingState.step = 'biometrics';
                     
-                    this.addMessage('ai', `Great to meet you, **${name}**! 💪\n\nNow tell me: How old are you and what's your current weight?\n\n(e.g., "30 years old, 75kg")`, null, 'coach');
+                    this.addMessage('ai', `${name}! How old are you and what's your weight?\n\n(e.g., "30, 75kg")`, null, 'coach');
                     
                 } else if (step === 'biometrics') {
                     const age = this.extractAge(message);
@@ -1370,29 +1171,6 @@
                     
                     if (age) this.onboardingState.data.age = age;
                     if (weight) this.onboardingState.data.weight = weight;
-                    
-                    this.onboardingState.step = 'experience';
-                    
-                    const quickReplies = ['Beginner', 'Intermediate', 'Advanced'];
-                    this.addMessage('ai', `Perfect! ${age} years, ${weight}kg.\n\nExperience level?`, null, 'coach', quickReplies);
-                    
-                } else if (step === 'experience') {
-                    this.onboardingState.data.experience = this.extractExperience(message);
-                    this.onboardingState.step = 'goals';
-                    
-                    const quickReplies = ['Weight Loss', 'Endurance', 'Speed/Power', 'Competition'];
-                    this.addMessage('ai', `Awesome! Training goals?`, null, 'coach', quickReplies);
-                    
-                } else if (step === 'goals') {
-                    const goals = this.extractGoals(message);
-                    this.onboardingState.data.goals = goals;
-                    
-                    let acknowledgment = '';
-                    if (message.toLowerCase().includes('cardio') || message.toLowerCase().includes('longer')) {
-                        acknowledgment = `**Living longer through cardio** - fantastic! We'll focus on Zone 2 training for aerobic base.\n\n`;
-                    } else {
-                        acknowledgment = `${goals.join(', ')} - excellent!\n\n`;
-                    }
                     
                     this.onboardingState.step = 'complete';
                     
@@ -1407,11 +1185,11 @@
                     const skipBtn = document.getElementById('skipToWorkout');
                     if (skipBtn) skipBtn.classList.remove('visible');
                     
-                    this.addMessage('ai', acknowledgment + `Profile created!\n\n✓ **${this.profile.name}**\n✓ ${this.profile.age} years, ${this.profile.weight}kg\n✓ Max HR: ${this.profile.maxHR}`, null, 'admin');
+                    this.addMessage('ai', `Perfect!\n\n✓ ${this.profile.name}\n✓ ${age} years, ${weight}kg\n✓ Max HR: ${this.profile.maxHR}`, null, 'admin');
                     
                     setTimeout(() => {
-                        const quickReplies = ['Create my first workout', 'Create a 4-week plan'];
-                        this.addMessage('ai', `Ready to start, ${this.profile.name}?`, null, 'coach', quickReplies);
+                        const quickReplies = ['Create workout', 'Create 4-week plan', 'Manual builder'];
+                        this.addMessage('ai', `Ready to start?`, null, 'coach', quickReplies);
                     }, 1000);
                     
                     this.updateProfileDisplay();
@@ -1423,46 +1201,35 @@
             processRegularMessage(message) {
                 const lower = message.toLowerCase();
                 
-                // WORKOUT PARSING
-                if (lower.includes('workout') || lower.includes('interval') || lower.includes('x') || lower.match(/\d+min/)) {
-                    const workout = this.parseWorkoutRequest(message);
-                    if (workout) {
-                        this.addMessage('ai', `Here's your workout:`, workout, 'coach');
-                        return;
-                    }
-                }
-                
-                // TRAINING PLAN
-                if (lower.includes('plan') || lower.includes('4-week') || lower.includes('macro')) {
-                    this.generateTrainingPlan();
-                    const quickReplies = ['View Plan', 'Start Week 1'];
-                    this.addMessage('ai', `Perfect! I've created a **4-week training plan**. Check the Plan tab for full details.\n\n• Week 1: Base building\n• Week 2: Intensity\n• Week 3: Peak volume\n• Week 4: Taper & test`, null, 'coach', quickReplies);
+                if (lower.includes('manual') || lower.includes('builder')) {
+                    this.navigate('screenBuilder');
                     return;
                 }
                 
-                // Default
-                this.addMessage('ai', `I can help with:\n• Single workouts\n• 4-week training plans\n• Performance analysis\n\nWhat would you like?`, null, 'coach');
+                if (lower.includes('plan') || lower.includes('4-week')) {
+                    this.generateTrainingPlan();
+                    const quickReplies = ['View Plan', 'Start Week 1'];
+                    this.addMessage('ai', `Created 4-week plan! Check Plan tab.`, null, 'coach', quickReplies);
+                    return;
+                }
+                
+                this.addMessage('ai', `Options:\n• Create workout\n• 4-week plan\n• Manual builder`, null, 'coach');
             }
-
-            // ========================================================================
-            // ENTITY EXTRACTION
-            // ========================================================================
 
             extractName(text) {
                 let clean = text.toLowerCase()
-                    .replace(/^(hi|hey|hello|yo|sup),?\s*/i, '')
+                    .replace(/^(hi|hey|hello),?\s*/i, '')
                     .replace(/my name is\s*/i, '')
-                    .replace(/i'm\s*/i, '')
-                    .replace(/im\s*/i, '');
+                    .replace(/i'm\s*/i, '');
                 
                 return clean.split(' ')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
                     .join(' ')
                     .trim();
             }
 
             extractAge(text) {
-                const match = text.match(/(\d{1,2})\s*(?:years?\s*old)?/i);
+                const match = text.match(/(\d{1,2})/);
                 return match ? parseInt(match[1]) : null;
             }
 
@@ -1471,120 +1238,200 @@
                 return match ? parseInt(match[1]) : null;
             }
 
-            extractExperience(text) {
-                const lower = text.toLowerCase();
-                if (lower.includes('beginner')) return 'Beginner';
-                if (lower.includes('intermediate')) return 'Intermediate';
-                if (lower.includes('advanced')) return 'Advanced';
-                return text;
-            }
-
-            extractGoals(text) {
-                const goals = [];
-                const lower = text.toLowerCase();
-                
-                if (lower.includes('weight') || lower.includes('lose')) goals.push('Weight Loss');
-                if (lower.includes('endurance') || lower.includes('cardio')) goals.push('Endurance');
-                if (lower.includes('speed') || lower.includes('power')) goals.push('Speed/Power');
-                if (lower.includes('competition')) goals.push('Competition');
-                
-                return goals.length > 0 ? goals : [text];
-            }
-
             // ========================================================================
-            // WORKOUT PARSING
+            // MANUAL WORKOUT BUILDER
             // ========================================================================
 
-            parseWorkoutRequest(text) {
-                const lower = text.toLowerCase();
+            selectBuilderMode(mode) {
+                this.builderMode = mode;
                 
-                const intervalMatch = lower.match(/(\d+)\s*x\s*(\d+)m/);
-                if (intervalMatch) {
-                    const sets = parseInt(intervalMatch[1]);
-                    const distance = parseInt(intervalMatch[2]);
-                    
-                    const intervals = [];
-                    for (let i = 0; i < sets; i++) {
-                        intervals.push({
-                            type: 'WORK',
-                            distance: distance,
-                            targetPace: '1:55',
-                            targetWatts: 228
-                        });
-                        if (i < sets - 1) {
-                            intervals.push({
-                                type: 'REST',
-                                duration: 240
-                            });
-                        }
-                    }
-                    
-                    return { intervals };
+                document.querySelectorAll('.builder-mode-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                this.renderBuilderMode();
+            }
+
+            renderBuilderMode() {
+                const container = document.getElementById('builderModeContent');
+                if (!container) return;
+                
+                let html = '<div class="builder-section"><div class="builder-section-title">Workout Details</div>';
+                
+                if (this.builderMode === 'single-distance') {
+                    html += `
+                        <div class="builder-input-group">
+                            <div class="builder-label">Total Distance (meters)</div>
+                            <input type="number" class="builder-input" id="totalDistance" placeholder="5000">
+                        </div>
+                        <div class="builder-input-group">
+                            <div class="builder-label">Split Length (meters)</div>
+                            <input type="number" class="builder-input" id="splitDistance" placeholder="1000">
+                        </div>
+                    `;
+                } else if (this.builderMode === 'single-time') {
+                    html += `
+                        <div class="builder-input-group">
+                            <div class="builder-label">Total Time (minutes)</div>
+                            <input type="number" class="builder-input" id="totalTime" placeholder="30">
+                        </div>
+                        <div class="builder-input-group">
+                            <div class="builder-label">Split Time (minutes)</div>
+                            <input type="number" class="builder-input" id="splitTime" placeholder="5">
+                        </div>
+                    `;
+                } else if (this.builderMode === 'single-calorie') {
+                    html += `
+                        <div class="builder-input-group">
+                            <div class="builder-label">Total Calories</div>
+                            <input type="number" class="builder-input" id="totalCalories" placeholder="300">
+                        </div>
+                        <div class="builder-input-group">
+                            <div class="builder-label">Split Calories</div>
+                            <input type="number" class="builder-input" id="splitCalories" placeholder="50">
+                        </div>
+                    `;
+                } else if (this.builderMode === 'fixed-intervals') {
+                    html += `
+                        <div class="builder-input-group">
+                            <div class="builder-label">Work Type</div>
+                            <select class="builder-input" id="workType">
+                                <option value="distance">Distance</option>
+                                <option value="time">Time</option>
+                                <option value="calories">Calories</option>
+                            </select>
+                        </div>
+                        <div class="builder-input-group">
+                            <div class="builder-label">Work Value</div>
+                            <input type="number" class="builder-input" id="workValue" placeholder="500">
+                        </div>
+                        <div class="builder-input-group">
+                            <div class="builder-label">Number of Sets</div>
+                            <input type="number" class="builder-input" id="numSets" placeholder="6">
+                        </div>
+                        <div class="builder-input-group">
+                            <div class="builder-label">Rest Time (seconds)</div>
+                            <input type="number" class="builder-input" id="restTime" placeholder="60">
+                            <div style="font-size:11px; color:#666; margin-top:4px;">Leave empty for undefined rest</div>
+                        </div>
+                    `;
+                } else if (this.builderMode === 'variable-intervals') {
+                    html += `
+                        <div class="builder-input-group">
+                            <div class="builder-label">Work Type</div>
+                            <select class="builder-input" id="varWorkType">
+                                <option value="distance">Distance (m)</option>
+                                <option value="time">Time (sec)</option>
+                                <option value="calories">Calories</option>
+                            </select>
+                        </div>
+                        <div class="builder-input-group">
+                            <div class="builder-label">Work Value</div>
+                            <input type="number" class="builder-input" id="varWorkValue" placeholder="500">
+                        </div>
+                        <div class="builder-input-group">
+                            <div class="builder-label">Rest Time (seconds)</div>
+                            <input type="number" class="builder-input" id="varRestTime" placeholder="60">
+                        </div>
+                        <button class="btn btn-outline" style="margin-top:8px;" onclick="app.addVariableInterval()">Add Interval</button>
+                        
+                        <div class="builder-interval-list" id="variableIntervalsList">
+                            ${this.builderIntervals.map((interval, i) => `
+                                <div class="builder-interval-item">
+                                    <div class="builder-interval-info">
+                                        <div class="builder-interval-title">${i + 1}. ${interval.workValue} ${interval.workType}</div>
+                                        <div class="builder-interval-desc">Rest: ${interval.restTime}s</div>
+                                    </div>
+                                    <div class="builder-interval-actions">
+                                        <button class="builder-icon-btn" onclick="app.copyVariableInterval(${i})">📋</button>
+                                        <button class="builder-icon-btn" onclick="app.deleteVariableInterval(${i})">🗑️</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
                 }
                 
-                return null;
+                html += '</div>';
+                container.innerHTML = html;
+            }
+
+            toggleBuilderTarget(target) {
+                this.builderTargets[target] = !this.builderTargets[target];
+                
+                const checkbox = document.getElementById(`${target}Checkbox`);
+                const inputs = document.getElementById(`${target}Inputs`);
+                
+                if (this.builderTargets[target]) {
+                    checkbox.classList.add('checked');
+                    checkbox.textContent = '✓';
+                    inputs.style.display = 'block';
+                } else {
+                    checkbox.classList.remove('checked');
+                    checkbox.textContent = '';
+                    inputs.style.display = 'none';
+                }
+            }
+
+            addVariableInterval() {
+                const workType = document.getElementById('varWorkType').value;
+                const workValue = document.getElementById('varWorkValue').value;
+                const restTime = document.getElementById('varRestTime').value;
+                
+                if (!workValue) {
+                    this.showToast('Enter work value', 'error');
+                    return;
+                }
+                
+                this.builderIntervals.push({
+                    workType: workType,
+                    workValue: parseInt(workValue),
+                    restTime: parseInt(restTime) || 0
+                });
+                
+                this.renderBuilderMode();
+            }
+
+            copyVariableInterval(index) {
+                const interval = {...this.builderIntervals[index]};
+                this.builderIntervals.push(interval);
+                this.renderBuilderMode();
+            }
+
+            deleteVariableInterval(index) {
+                this.builderIntervals.splice(index, 1);
+                this.renderBuilderMode();
+            }
+
+            saveManualWorkout() {
+                this.showToast('Workout saved! Starting...', 'success');
+                // In production, this would actually save and start
             }
 
             // ========================================================================
-            // TRAINING PLAN - ENHANCED WITH STRATEGIES
+            // TRAINING PLAN
             // ========================================================================
 
             generateTrainingPlan() {
                 this.trainingPlan = {
                     overview: {
                         title: 'Macro-Cycle Strategy',
-                        text: `This 4-week block focuses on building aerobic capacity and sustainable power. Week 1-2 establish volume, Week 3 peaks intensity, and Week 4 tapers for a 2k test.\n\n**Success Metrics:** By Week 4, you should hold 2:00 pace with 5-10 BPM lower HR than Week 1. This indicates improved aerobic efficiency.\n\n**Philosophy:** We prioritize consistency over heroics. Miss a session? Don't double up—stick to the schedule.`
+                        text: `4-week progressive block. Week 1-2: volume, Week 3: peak, Week 4: taper.`
                     },
-                    weeks: [
-                        {
-                            number: 1,
-                            focus: 'Base Building',
-                            days: [
-                                {
-                                    day: 'Monday',
-                                    title: '30min Steady State',
-                                    desc: 'Easy pace, Z2',
-                                    strategy: {
-                                        title: 'Approach',
-                                        text: `**Goal:** Build aerobic foundation without fatigue.\n\n**Execution:** Start easy—your HR should be in low Z2 (120-130). If it climbs above 140, you're going too hard. Focus on long, controlled strokes. Rate should be 18-20 s/m.\n\n**Mental Game:** This feels "too easy" but it's critical. Aerobic base = everything. Don't rush it.`
-                                    },
-                                    status: 'pending'
-                                },
-                                {
-                                    day: 'Wednesday',
-                                    title: '4x1500m',
-                                    desc: '@ 2:00 pace, 3min rest',
-                                    strategy: {
-                                        title: 'Interval Strategy',
-                                        text: `**Key Rule:** Do NOT sprint the first interval. Hold back.\n\n**Pacing:** All 4 intervals should be within 2 seconds of each other. If Set 1 is 1:58 and Set 4 is 2:05, you went out too hot.\n\n**Execution:** Start at 2:01-2:02 pace. Rate 24-26 s/m. Focus on rhythm, not power. Rest fully between sets—walk around, breathe.`
-                                    },
-                                    status: 'pending'
-                                },
-                                {
-                                    day: 'Friday',
-                                    title: '40min Steady',
-                                    desc: 'Zone 2 endurance',
-                                    strategy: {
-                                        title: 'Long Steady State',
-                                        text: `**Purpose:** Build aerobic capacity. This is your money session.\n\n**Execution:** Keep HR in Z2 (130-145). If you can't hold a conversation, slow down. Rate 18-22 s/m. Focus on stroke length, not speed.\n\n**Nutrition:** Hydrate well. If going >45min, consider taking carbs during the session.`
-                                    },
-                                    status: 'pending'
-                                },
-                                {
-                                    day: 'Saturday',
-                                    title: '6x500m',
-                                    desc: 'Speed work @ 1:50, 2min rest',
-                                    strategy: {
-                                        title: 'Speed Development',
-                                        text: `**Goal:** Develop top-end speed and power.\n\n**Execution:** These are HARD. Rate 28-32 s/m. Each piece is a mini-race—commit fully. Rest is short (2min) so expect cumulative fatigue.\n\n**Don't:** Try to negative split. Hold consistent 1:50 across all 6. If you fade, it's a learning experience.`
-                                    },
-                                    status: 'pending'
-                                }
-                            ]
-                        }
-                        // Additional weeks would go here
-                    ],
-                    created: new Date().toISOString()
+                    weeks: [{
+                        number: 1,
+                        focus: 'Base',
+                        days: [{
+                            day: 'Monday',
+                            title: '30min Steady',
+                            desc: 'Z2',
+                            strategy: {
+                                title: 'Approach',
+                                text: `Easy pace, low Z2. Focus on form.`
+                            }
+                        }]
+                    }]
                 };
                 
                 this.saveData();
@@ -1595,43 +1442,21 @@
                 const container = document.getElementById('planContent');
                 if (!container || !this.trainingPlan) return;
                 
-                let html = '';
+                let html = `
+                    <div class="plan-overview">
+                        <div class="plan-overview-title">${this.trainingPlan.overview.title}</div>
+                        <div class="plan-overview-text">${this.trainingPlan.overview.text}</div>
+                    </div>
+                `;
                 
-                // Overview
-                if (this.trainingPlan.overview) {
-                    html += `
-                        <div class="plan-overview">
-                            <div class="plan-overview-title">${this.trainingPlan.overview.title}</div>
-                            <div class="plan-overview-text">${this.trainingPlan.overview.text}</div>
-                        </div>
-                    `;
-                }
-                
-                // Weeks
                 html += this.trainingPlan.weeks.map(week => `
                     <div class="plan-week">
-                        <div class="plan-week-header">
-                            <div class="plan-week-title">Week ${week.number}</div>
-                            <div class="plan-week-focus">${week.focus}</div>
-                        </div>
                         ${week.days.map((day, idx) => `
                             <div class="plan-day" id="planDay_${week.number}_${idx}" onclick="app.togglePlanDay(${week.number}, ${idx})">
-                                <div class="plan-day-header">
-                                    <div class="plan-day-info">
-                                        <div class="plan-day-title">${day.day}: ${day.title}</div>
-                                        <div class="plan-day-desc">${day.desc}</div>
-                                    </div>
-                                    <div class="plan-day-status ${day.status}">${day.status === 'completed' ? '✓' : '○'}</div>
+                                <div><strong>${day.day}:</strong> ${day.title}</div>
+                                <div class="plan-day-strategy">
+                                    <div class="plan-day-strategy-text">${day.strategy.text}</div>
                                 </div>
-                                ${day.strategy ? `
-                                    <div class="plan-day-strategy">
-                                        <div class="plan-day-strategy-title">${day.strategy.title}</div>
-                                        <div class="plan-day-strategy-text">${day.strategy.text}</div>
-                                        <button class="plan-day-action" onclick="event.stopPropagation(); app.startPlanWorkout(${week.number}, ${idx})">
-                                            Start This Workout →
-                                        </button>
-                                    </div>
-                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -1647,260 +1472,6 @@
                 }
             }
 
-            startPlanWorkout(weekNum, dayIdx) {
-                this.showToast(`Loading Week ${weekNum}, Day ${dayIdx + 1} workout...`, 'success');
-                // In real version, this would load workout builder
-            }
-
-            // ========================================================================
-            // HEART RATE MONITOR - BLUETOOTH
-            // ========================================================================
-
-            async connectHRM() {
-                const btn = document.getElementById('hrmConnectBtn');
-                const statusTitle = document.getElementById('hrmStatusTitle');
-                const statusDesc = document.getElementById('hrmStatusDesc');
-                
-                btn.disabled = true;
-                btn.textContent = 'Connecting...';
-                
-                try {
-                    console.log('🔍 Requesting Bluetooth device...');
-                    
-                    this.hrmDevice = await navigator.bluetooth.requestDevice({
-                        filters: [{ services: [HRM_SERVICE_UUID] }]
-                    });
-                    
-                    console.log(`✓ Device selected: ${this.hrmDevice.name}`);
-                    statusDesc.textContent = `Connecting to ${this.hrmDevice.name}...`;
-                    
-                    const server = await this.hrmDevice.gatt.connect();
-                    console.log('✓ GATT server connected');
-                    
-                    const service = await server.getPrimaryService(HRM_SERVICE_UUID);
-                    console.log('✓ Heart Rate service found');
-                    
-                    this.hrmCharacteristic = await service.getCharacteristic(HRM_CHARACTERISTIC_UUID);
-                    console.log('✓ Heart Rate characteristic found');
-                    
-                    await this.hrmCharacteristic.startNotifications();
-                    this.hrmCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
-                        this.handleHRMData(event.target.value);
-                    });
-                    
-                    console.log('✓ Notifications started');
-                    
-                    statusTitle.textContent = `Connected: ${this.hrmDevice.name}`;
-                    statusDesc.textContent = 'Receiving heart rate data';
-                    btn.textContent = 'Disconnect';
-                    btn.disabled = false;
-                    btn.onclick = () => this.disconnectHRM();
-                    
-                    // Show live display
-                    document.getElementById('hrmLiveDisplay').style.display = 'block';
-                    document.getElementById('hrmGraphContainer').style.display = 'block';
-                    
-                    this.showToast('Heart rate monitor connected!', 'success');
-                    
-                } catch (error) {
-                    console.error('❌ HRM Connection Error:', error);
-                    statusTitle.textContent = 'Connection Failed';
-                    statusDesc.textContent = error.message;
-                    btn.textContent = 'Retry Connection';
-                    btn.disabled = false;
-                    
-                    this.showToast('Failed to connect HRM: ' + error.message, 'error');
-                }
-            }
-
-            handleHRMData(value) {
-                const flags = value.getUint8(0);
-                const hrValueFormat = flags & 0x01;
-                
-                let hr;
-                if (hrValueFormat === 0) {
-                    hr = value.getUint8(1);
-                } else {
-                    hr = value.getUint16(1, true);
-                }
-                
-                this.currentHR = hr;
-                this.hrHistory.push(hr);
-                
-                // Keep last 60 readings (1 minute at 1Hz)
-                if (this.hrHistory.length > 60) {
-                    this.hrHistory.shift();
-                }
-                
-                this.updateHRMDisplay();
-                this.updateHRMGraph();
-            }
-
-            updateHRMDisplay() {
-                const bpmElem = document.getElementById('hrmCurrentBPM');
-                if (bpmElem) {
-                    bpmElem.textContent = this.currentHR;
-                }
-                
-                // Update zone visualization
-                const zone = this.calculateHRZone(this.currentHR);
-                for (let i = 1; i <= 5; i++) {
-                    const zoneElem = document.getElementById(`hrZone${i}`);
-                    if (zoneElem) {
-                        if (i === zone) {
-                            zoneElem.classList.add('active');
-                        } else {
-                            zoneElem.classList.remove('active');
-                        }
-                    }
-                }
-            }
-
-            calculateHRZone(hr) {
-                if (!this.hrZones) return 1;
-                
-                if (hr < this.hrZones.z1.max) return 1;
-                if (hr < this.hrZones.z2.max) return 2;
-                if (hr < this.hrZones.z3.max) return 3;
-                if (hr < this.hrZones.z4.max) return 4;
-                return 5;
-            }
-
-            updateHRMGraph() {
-                if (!this.hrCtx || this.hrHistory.length < 2) return;
-                
-                const ctx = this.hrCtx;
-                const canvas = this.hrCanvas;
-                const width = canvas.width;
-                const height = canvas.height;
-                
-                // Clear
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, width, height);
-                
-                // Calculate stats
-                const avg = Math.round(this.hrHistory.reduce((a, b) => a + b, 0) / this.hrHistory.length);
-                const max = Math.max(...this.hrHistory);
-                const min = Math.min(...this.hrHistory);
-                
-                // Update stats display
-                document.getElementById('hrmAvg').textContent = avg;
-                document.getElementById('hrmMax').textContent = max;
-                document.getElementById('hrmMin').textContent = min;
-                
-                // Draw grid
-                ctx.strokeStyle = '#222';
-                ctx.lineWidth = 1;
-                for (let i = 0; i < 5; i++) {
-                    const y = (height / 5) * i;
-                    ctx.beginPath();
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(width, y);
-                    ctx.stroke();
-                }
-                
-                // Draw HR line
-                const minHR = Math.max(min - 10, 0);
-                const maxHR = max + 10;
-                const hrRange = maxHR - minHR;
-                
-                ctx.strokeStyle = '#ff6b6b';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                
-                this.hrHistory.forEach((hr, i) => {
-                    const x = (width / 60) * i;
-                    const y = height - ((hr - minHR) / hrRange) * height;
-                    
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                });
-                
-                ctx.stroke();
-            }
-
-            disconnectHRM() {
-                if (this.hrmDevice && this.hrmDevice.gatt.connected) {
-                    this.hrmDevice.gatt.disconnect();
-                }
-                
-                this.hrmDevice = null;
-                this.hrmCharacteristic = null;
-                this.currentHR = 0;
-                this.hrHistory = [];
-                
-                document.getElementById('hrmStatusTitle').textContent = 'Not Connected';
-                document.getElementById('hrmStatusDesc').textContent = 'Connect your Polar/Garmin/Wahoo HRM';
-                document.getElementById('hrmLiveDisplay').style.display = 'none';
-                document.getElementById('hrmGraphContainer').style.display = 'none';
-                
-                const btn = document.getElementById('hrmConnectBtn');
-                btn.textContent = 'Connect Heart Rate Monitor';
-                btn.onclick = () => this.connectHRM();
-                
-                this.showToast('HRM disconnected', 'success');
-            }
-
-            // ========================================================================
-            // HR ZONES SETTINGS
-            // ========================================================================
-
-            loadHRZones() {
-                const stored = localStorage.getItem(STORAGE_KEYS.HR_ZONES);
-                if (stored) {
-                    this.hrZones = JSON.parse(stored);
-                } else {
-                    // Default zones
-                    this.hrZones = {
-                        z1: { min: 100, max: 120 },
-                        z2: { min: 120, max: 140 },
-                        z3: { min: 140, max: 160 },
-                        z4: { min: 160, max: 180 },
-                        z5: { min: 180, max: 200 }
-                    };
-                    this.saveHRZones();
-                }
-                
-                // Update UI
-                ['z1', 'z2', 'z3', 'z4', 'z5'].forEach(zone => {
-                    const minElem = document.getElementById(`${zone}Min`);
-                    const maxElem = document.getElementById(`${zone}Max`);
-                    if (minElem) minElem.value = this.hrZones[zone].min;
-                    if (maxElem) maxElem.value = this.hrZones[zone].max;
-                });
-            }
-
-            saveHRZones() {
-                this.hrZones = {
-                    z1: {
-                        min: parseInt(document.getElementById('z1Min').value),
-                        max: parseInt(document.getElementById('z1Max').value)
-                    },
-                    z2: {
-                        min: parseInt(document.getElementById('z2Min').value),
-                        max: parseInt(document.getElementById('z2Max').value)
-                    },
-                    z3: {
-                        min: parseInt(document.getElementById('z3Min').value),
-                        max: parseInt(document.getElementById('z3Max').value)
-                    },
-                    z4: {
-                        min: parseInt(document.getElementById('z4Min').value),
-                        max: parseInt(document.getElementById('z4Max').value)
-                    },
-                    z5: {
-                        min: parseInt(document.getElementById('z5Min').value),
-                        max: parseInt(document.getElementById('z5Max').value)
-                    }
-                };
-                
-                localStorage.setItem(STORAGE_KEYS.HR_ZONES, JSON.stringify(this.hrZones));
-                this.showToast('HR zones saved', 'success');
-            }
-
             // ========================================================================
             // CSV IMPORT - FIXED DATE PARSING
             // ========================================================================
@@ -1909,24 +1480,19 @@
                 const file = event.target.files[0];
                 if (!file) return;
 
-                console.log(`📁 Importing: ${file.name}`);
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const csv = e.target.result;
                         const lines = csv.split('\n');
                         
-                        console.log(`📄 Total lines: ${lines.length}`);
-                        
-                        // SKIP HEADER ROW
+                        // SKIP HEADER
                         const headers = lines[0].split(',').map(h => h.trim());
-                        console.log(`📋 Headers: ${headers.join(', ')}`);
                         
                         let imported = 0;
                         const existingIds = new Set(this.workouts.map(w => w.id));
                         
-                        // START FROM LINE 1 (skip header)
+                        // START FROM LINE 1
                         for (let i = 1; i < lines.length; i++) {
                             const line = lines[i].trim();
                             if (!line) continue;
@@ -1939,16 +1505,34 @@
                                 row[header] = values[idx]?.trim();
                             });
                             
-                            // Validate date
+                            // PARSE DD/M/YYYY HH:MM format
                             const dateStr = row['Date'];
-                            if (!dateStr || dateStr === 'Date') continue; // Skip if header somehow repeated
+                            if (!dateStr || dateStr === 'Date') continue;
+                            
+                            let parsedDate = new Date().toISOString();
+                            try {
+                                // Parse: "15/1/2026 21:25"
+                                const parts = dateStr.split(' ');
+                                if (parts.length === 2) {
+                                    const [datePart, timePart] = parts;
+                                    const [day, month, year] = datePart.split('/');
+                                    const [hour, minute] = timePart.split(':');
+                                    
+                                    const d = new Date(year, month - 1, day, hour, minute);
+                                    if (!isNaN(d.getTime())) {
+                                        parsedDate = d.toISOString();
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('Date parse error:', dateStr);
+                            }
                             
                             const id = row['Log ID'] || String(Date.now() + Math.random());
                             
                             if (!existingIds.has(id)) {
                                 this.workouts.push({
                                     id: id,
-                                    date: dateStr,
+                                    date: parsedDate,
                                     description: row['Description'] || '',
                                     distance: parseInt(row['Work Distance']) || 0,
                                     pace: row['Pace'] || '',
@@ -1961,7 +1545,6 @@
                         }
                         
                         console.log(`✅ Imported ${imported} workouts`);
-                        console.log(`📊 Total database: ${this.workouts.length}`);
                         
                         this.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
                         
@@ -1969,7 +1552,7 @@
                         this.renderHistory();
                         this.updateStats();
                         
-                        this.showToast(`✓ Imported ${imported} new workouts! (${this.workouts.length} total)`, 'success');
+                        this.showToast(`✓ Imported ${imported} workouts! (${this.workouts.length} total)`, 'success');
                         
                         event.target.value = '';
                     } catch (error) {
@@ -1982,7 +1565,7 @@
             }
 
             // ========================================================================
-            // HISTORY - SIMPLIFIED (NO FILTER TABS)
+            // HISTORY
             // ========================================================================
 
             renderHistory() {
@@ -1990,17 +1573,11 @@
                 if (!container) return;
 
                 if (this.workouts.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📊</div>
-                            <div style="font-size:14px;">No workouts yet. Import CSV to get started.</div>
-                        </div>
-                    `;
+                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div>No workouts yet.</div></div>';
                     return;
                 }
 
                 const html = this.workouts.map(workout => {
-                    // Parse date properly
                     let dateStr = 'Invalid Date';
                     try {
                         const d = new Date(workout.date);
@@ -2008,7 +1585,7 @@
                             dateStr = d.toLocaleDateString();
                         }
                     } catch (e) {
-                        console.warn('Date parse error:', workout.date);
+                        console.warn('Date render error:', workout.date);
                     }
                     
                     return `
@@ -2028,19 +1605,15 @@
             }
 
             updateStats() {
-                const totalWorkoutsElem = document.getElementById('totalWorkouts');
-                const historyCountElem = document.getElementById('historyCount');
-                const totalDistanceElem = document.getElementById('totalDistance');
-                
-                if (totalWorkoutsElem) totalWorkoutsElem.textContent = this.workouts.length;
-                if (historyCountElem) historyCountElem.textContent = this.workouts.length;
+                document.getElementById('totalWorkouts').textContent = this.workouts.length;
+                document.getElementById('historyCount').textContent = this.workouts.length;
                 
                 const totalDist = this.workouts.reduce((sum, w) => sum + (w.distance || 0), 0);
-                if (totalDistanceElem) totalDistanceElem.textContent = Math.floor(totalDist / 1000) + 'k';
+                document.getElementById('totalDistance').textContent = Math.floor(totalDist / 1000) + 'k';
             }
 
             // ========================================================================
-            // CHAT RENDERING
+            // CHAT
             // ========================================================================
 
             addMessage(sender, text, workout = null, persona = 'coach', quickReplies = null) {
@@ -2062,72 +1635,22 @@
                 const container = document.getElementById('chatMessages');
                 if (!container) return;
                 
-                const html = this.chatHistory.map((msg, idx) => {
+                const html = this.chatHistory.map((msg) => {
                     if (msg.sender === 'user') {
-                        return `
-                            <div class="chat-message msg-user">
-                                <div class="msg-header">
-                                    <span>👤</span> You
-                                </div>
-                                ${this.formatMessageText(msg.text)}
-                            </div>
-                        `;
+                        return `<div class="chat-message msg-user"><div class="msg-header"><span>👤</span> You</div>${msg.text.replace(/\n/g, '<br>')}</div>`;
                     } else {
-                        const personas = {
-                            coach: { emoji: '🤖', color: 'coach' },
-                            admin: { emoji: '⚙️', color: 'admin' },
-                            support: { emoji: '🛠️', color: 'support' }
-                        };
-                        const p = personas[msg.persona] || personas.coach;
-                        
-                        let workoutHtml = '';
-                        if (msg.workout && msg.workout.intervals) {
-                            workoutHtml = `
-                                <div class="workout-preview">
-                                    <div class="workout-preview-title">📋 Workout Plan</div>
-                                    ${msg.workout.intervals.map((interval, i) => {
-                                        if (interval.type === 'WORK') {
-                                            return `
-                                                <div class="interval-preview">
-                                                    <span><strong>${i + 1}.</strong> 🚣 ${interval.distance}m</span>
-                                                    <span>${interval.targetPace} (${interval.targetWatts}W)</span>
-                                                </div>
-                                            `;
-                                        } else if (interval.type === 'REST') {
-                                            return `
-                                                <div class="interval-preview rest">
-                                                    <span><strong>${i + 1}.</strong> ⏸️ ${this.formatTime(interval.duration)} rest</span>
-                                                </div>
-                                            `;
-                                        }
-                                    }).join('')}
-                                    <div class="workout-actions">
-                                        <button class="workout-action-btn primary" onclick="app.showToast('Starting workout...', 'success')">Start Workout</button>
-                                        <button class="workout-action-btn secondary" onclick="app.addMessage('user', 'Can you modify this?')">Modify</button>
-                                    </div>
-                                </div>
-                            `;
-                        }
+                        const p = msg.persona === 'admin' ? { emoji: '⚙️', color: 'admin' } : { emoji: '🤖', color: 'coach' };
                         
                         let quickRepliesHtml = '';
                         if (msg.quickReplies && msg.quickReplies.length > 0) {
                             quickRepliesHtml = `
                                 <div class="quick-replies">
                                     ${msg.quickReplies.map(reply => {
-                                        // FIXED NAVIGATION
-                                        let onclick = `app.handleQuickReply('${reply.replace(/'/g, "\\'")}')`;
+                                        let onclick = `app.handleQuickReply('${reply}')`;
+                                        if (reply === 'View Plan') onclick = `app.navigate('screenPlan')`;
+                                        if (reply === 'Manual builder') onclick = `app.navigate('screenBuilder')`;
                                         
-                                        if (reply === 'View Plan') {
-                                            onclick = `app.navigate('screenPlan')`;
-                                        } else if (reply === 'Start Week 1') {
-                                            onclick = `app.startPlanWorkout(1, 0)`;
-                                        }
-                                        
-                                        return `
-                                            <button class="quick-reply-btn" onclick="${onclick}">
-                                                ${reply}
-                                            </button>
-                                        `;
+                                        return `<button class="quick-reply-btn" onclick="${onclick}">${reply}</button>`;
                                     }).join('')}
                                 </div>
                             `;
@@ -2138,8 +1661,7 @@
                                 <div class="msg-header persona-${p.color}">
                                     <span>${p.emoji}</span> ${msg.persona.charAt(0).toUpperCase() + msg.persona.slice(1)}
                                 </div>
-                                ${this.formatMessageText(msg.text)}
-                                ${workoutHtml}
+                                ${msg.text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                 ${quickRepliesHtml}
                             </div>
                         `;
@@ -2153,27 +1675,15 @@
             }
 
             handleQuickReply(text) {
-                const input = document.getElementById('chatInput');
-                if (input) {
-                    input.value = text;
-                    this.sendMessage();
-                }
-            }
-
-            formatMessageText(text) {
-                return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                document.getElementById('chatInput').value = text;
+                this.sendMessage();
             }
 
             updateProfileDisplay() {
                 if (!this.profile) return;
-
-                const nameElem = document.getElementById('profileName');
-                const ageElem = document.getElementById('profileAge');
-                const weightElem = document.getElementById('profileWeight');
-
-                if (nameElem) nameElem.textContent = this.profile.name || '--';
-                if (ageElem) ageElem.textContent = this.profile.age || '--';
-                if (weightElem) weightElem.textContent = this.profile.weight ? `${this.profile.weight} kg` : '--';
+                document.getElementById('profileName').textContent = this.profile.name || '--';
+                document.getElementById('profileAge').textContent = this.profile.age || '--';
+                document.getElementById('profileWeight').textContent = this.profile.weight ? `${this.profile.weight} kg` : '--';
             }
 
             // ========================================================================
@@ -2181,38 +1691,28 @@
             // ========================================================================
 
             skipOnboarding() {
-                this.profile = {
-                    name: 'Athlete',
-                    age: 30,
-                    weight: 75,
-                    maxHR: 190
-                };
-                
+                this.profile = { name: 'Athlete', age: 30, weight: 75, maxHR: 190 };
                 this.onboardingState.completed = true;
                 this.saveData();
                 
                 const skipBtn = document.getElementById('skipToWorkout');
                 if (skipBtn) skipBtn.classList.remove('visible');
                 
-                this.addMessage('ai', `Profile created! Update details in Settings anytime.`, null, 'coach');
+                // GO STRAIGHT TO BUILDER
+                this.navigate('screenBuilder');
+                this.showToast('Ready to build workout!', 'success');
             }
 
             resetOnboarding() {
                 if (!confirm('Reset onboarding?')) return;
                 
-                this.onboardingState = {
-                    step: 'welcome',
-                    completed: false,
-                    data: {}
-                };
+                this.onboardingState = { step: 'welcome', completed: false, data: {} };
                 this.profile = null;
                 this.chatHistory = [];
                 
                 this.saveData();
                 this.navigate('screenCoach');
                 this.startOnboarding();
-                
-                this.showToast('Onboarding reset', 'success');
             }
 
             navigate(screenId) {
@@ -2226,8 +1726,8 @@
                 
                 const screenMap = {
                     'screenCoach': 0,
-                    'screenPlan': 1,
-                    'screenHRM': 2,
+                    'screenBuilder': 1,
+                    'screenPlan': 2,
                     'screenHistory': 3,
                     'screenSettings': -1
                 };
@@ -2242,30 +1742,14 @@
                 const toast = document.getElementById('toast');
                 toast.textContent = message;
                 toast.className = `toast ${type}`;
-                
-                void toast.offsetWidth;
-                
                 toast.classList.add('show');
-
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
-            }
-
-            formatTime(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
+                setTimeout(() => toast.classList.remove('show'), 3000);
             }
 
             sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
         }
-
-        // ============================================================================
-        // INITIALIZE APP
-        // ============================================================================
 
         const app = new AIRowingCoach();
     </script>
