@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Rowing Coach v1.6</title>
+    
+    <!-- Firebase SDK (only loads if FIREBASE_ENABLED = true) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
     <style>
         :root {
             --bg: #000;
@@ -793,7 +799,7 @@
         <div class="screen-header">
             <button class="header-btn" onclick="app.endWorkout()">End</button>
             <div class="screen-title">Rowing</div>
-            <button class="header-btn" onclick="app.connectPM5()">Connect PM5</button>
+            <button class="header-btn" onclick="app.openDevicesModal()">🔗 Devices</button>
         </div>
         
         <div class="dashboard-container" id="dashboardContainer">
@@ -1091,7 +1097,196 @@
         </button>
     </nav>
 
+    <!-- DEVICES MODAL -->
+    <div id="devicesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; padding:20px;">
+        <div style="max-width:500px; margin:80px auto; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="font-size:18px; font-weight:700; color:var(--accent);">Connect Devices</h2>
+                <button onclick="app.closeDevicesModal()" style="background:transparent; border:none; color:#666; font-size:24px; cursor:pointer;">×</button>
+            </div>
+            
+            <!-- PM5 Connection -->
+            <div style="background:#050505; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:15px; font-weight:700; margin-bottom:4px;">Concept2 PM5</div>
+                        <div style="font-size:12px; color:#666;" id="pm5Status">Not connected</div>
+                    </div>
+                    <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="pm5Indicator"></div>
+                </div>
+                <button class="btn btn-primary" onclick="app.connectPM5()" id="pm5ConnectBtn">Connect PM5</button>
+            </div>
+            
+            <!-- HRM Connection -->
+            <div style="background:#050505; border:1px solid var(--border); border-radius:8px; padding:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:15px; font-weight:700; margin-bottom:4px;">Heart Rate Monitor</div>
+                        <div style="font-size:12px; color:#666;" id="hrmStatus">Not connected</div>
+                    </div>
+                    <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="hrmIndicator"></div>
+                </div>
+                <button class="btn btn-outline" onclick="app.connectHRM()" id="hrmConnectBtn">Connect HRM</button>
+            </div>
+            
+            <div style="margin-top:20px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:12px; color:#ccc;">
+                💡 <strong>Tip:</strong> Connect PM5 first, then connect your chest strap HRM if you want separate HR monitoring.
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ========================================================================
+        // FIREBASE CONFIGURATION
+        // ========================================================================
+        
+        // NOTE: These are PUBLIC Firebase config values - safe to expose
+        // They are rate-limited and domain-restricted in Firebase Console
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY_HERE", // Replace with your Firebase API key
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Set this to true once you've added your Firebase credentials above
+        const FIREBASE_ENABLED = false;
+        
+        // ========================================================================
+        // STORAGE ABSTRACTION LAYER
+        // ========================================================================
+        
+        class DataStore {
+            constructor() {
+                this.userId = null;
+                this.isFirebase = FIREBASE_ENABLED;
+            }
+            
+            async init() {
+                if (this.isFirebase) {
+                    // Initialize Firebase
+                    try {
+                        firebase.initializeApp(firebaseConfig);
+                        
+                        // Anonymous Auth
+                        const auth = firebase.auth();
+                        const result = await auth.signInAnonymously();
+                        this.userId = result.user.uid;
+                        
+                        console.log('✓ Firebase initialized. User ID:', this.userId);
+                        
+                        // Listen for auth state
+                        auth.onAuthStateChanged((user) => {
+                            if (user) {
+                                this.userId = user.uid;
+                                console.log('✓ User authenticated:', this.userId);
+                            }
+                        });
+                    } catch (error) {
+                        console.error('❌ Firebase init error:', error);
+                        this.isFirebase = false; // Fallback to localStorage
+                    }
+                } else {
+                    // localStorage fallback
+                    this.userId = localStorage.getItem('anonymous_user_id');
+                    if (!this.userId) {
+                        this.userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                        localStorage.setItem('anonymous_user_id', this.userId);
+                    }
+                    console.log('✓ localStorage mode. User ID:', this.userId);
+                }
+            }
+            
+            async saveProfile(profile) {
+                if (this.isFirebase) {
+                    const db = firebase.firestore();
+                    await db.collection('users').doc(this.userId).set({
+                        profile: profile,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } else {
+                    localStorage.setItem('rowing_coach_profile_v1', JSON.stringify(profile));
+                }
+            }
+            
+            async loadProfile() {
+                if (this.isFirebase) {
+                    const db = firebase.firestore();
+                    const doc = await db.collection('users').doc(this.userId).get();
+                    return doc.exists ? doc.data().profile : null;
+                } else {
+                    const data = localStorage.getItem('rowing_coach_profile_v1');
+                    return data ? JSON.parse(data) : null;
+                }
+            }
+            
+            async saveWorkout(workout) {
+                if (this.isFirebase) {
+                    const db = firebase.firestore();
+                    await db.collection('users').doc(this.userId)
+                        .collection('workouts').doc(workout.id).set(workout);
+                } else {
+                    const workouts = await this.loadWorkouts();
+                    const existing = workouts.findIndex(w => w.id === workout.id);
+                    if (existing >= 0) {
+                        workouts[existing] = workout;
+                    } else {
+                        workouts.push(workout);
+                    }
+                    localStorage.setItem('rowing_coach_workouts_v1', JSON.stringify(workouts));
+                }
+            }
+            
+            async loadWorkouts() {
+                if (this.isFirebase) {
+                    const db = firebase.firestore();
+                    const snapshot = await db.collection('users').doc(this.userId)
+                        .collection('workouts').orderBy('date', 'desc').get();
+                    return snapshot.docs.map(doc => doc.data());
+                } else {
+                    const data = localStorage.getItem('rowing_coach_workouts_v1');
+                    return data ? JSON.parse(data) : [];
+                }
+            }
+            
+            async deleteWorkout(workoutId) {
+                if (this.isFirebase) {
+                    const db = firebase.firestore();
+                    await db.collection('users').doc(this.userId)
+                        .collection('workouts').doc(workoutId).delete();
+                } else {
+                    const workouts = await this.loadWorkouts();
+                    const filtered = workouts.filter(w => w.id !== workoutId);
+                    localStorage.setItem('rowing_coach_workouts_v1', JSON.stringify(filtered));
+                }
+            }
+            
+            async saveChat(messages) {
+                if (this.isFirebase) {
+                    const db = firebase.firestore();
+                    await db.collection('users').doc(this.userId).set({
+                        chatHistory: messages,
+                        chatUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } else {
+                    localStorage.setItem('rowing_coach_chat_v1', JSON.stringify(messages));
+                }
+            }
+            
+            async loadChat() {
+                if (this.isFirebase) {
+                    const db = firebase.firestore();
+                    const doc = await db.collection('users').doc(this.userId).get();
+                    return doc.exists ? (doc.data().chatHistory || []) : [];
+                } else {
+                    const data = localStorage.getItem('rowing_coach_chat_v1');
+                    return data ? JSON.parse(data) : [];
+                }
+            }
+        }
+        
         const STORAGE_KEYS = {
             PROFILE: 'rowing_coach_profile_v1',
             WORKOUTS: 'rowing_coach_workouts_v1'
@@ -1102,6 +1297,7 @@
 
         class AIRowingCoach {
             constructor() {
+                this.dataStore = new DataStore();
                 this.profile = null;
                 this.workouts = [];
                 this.chatHistory = [];
@@ -1116,15 +1312,20 @@
                 this.liveData = { time: 0, dist: 0, pace: 0, watts: 0, rate: 0, hr: 0 };
                 this.paceHistory = [];
                 
-                // PM5
+                // PM5 & HRM
                 this.pm5Device = null;
                 this.pm5Characteristic = null;
+                this.hrmDevice = null;
+                this.hrmCharacteristic = null;
                 
                 this.init();
             }
 
-            init() {
-                this.loadData();
+            async init() {
+                // Initialize storage (Firebase or localStorage)
+                await this.dataStore.init();
+                
+                await this.loadData();
                 this.loadProfile();
                 this.setupDashboardSwipe();
                 this.renderBuilderMode();
@@ -1150,33 +1351,25 @@
                 }
             }
 
-            loadData() {
+            async loadData() {
                 try {
-                    const profileData = localStorage.getItem(STORAGE_KEYS.PROFILE);
-                    if (profileData) this.profile = JSON.parse(profileData);
-
-                    const workoutData = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-                    if (workoutData) {
-                        this.workouts = JSON.parse(workoutData);
-                        console.log(`✓ Loaded ${this.workouts.length} workouts`);
-                    }
+                    this.profile = await this.dataStore.loadProfile();
+                    this.workouts = await this.dataStore.loadWorkouts();
+                    this.chatHistory = await this.dataStore.loadChat();
                     
-                    const chatData = localStorage.getItem('rowing_coach_chat_v1');
-                    if (chatData) {
-                        this.chatHistory = JSON.parse(chatData);
-                    }
+                    console.log(`✓ Loaded ${this.workouts.length} workouts`);
                 } catch (error) {
                     console.error('Load error:', error);
                 }
             }
 
-            saveData() {
+            async saveData() {
                 try {
                     if (this.profile) {
-                        localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(this.profile));
+                        await this.dataStore.saveProfile(this.profile);
                     }
-                    localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(this.workouts));
-                    localStorage.setItem('rowing_coach_chat_v1', JSON.stringify(this.chatHistory));
+                    await this.dataStore.saveChat(this.chatHistory);
+                    // Note: Workouts saved individually via saveWorkout()
                 } catch (error) {
                     console.error('Save error:', error);
                 }
@@ -1331,6 +1524,176 @@
 
             sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // ========================================================================
+            // DEVICES MODAL
+            // ========================================================================
+
+            openDevicesModal() {
+                document.getElementById('devicesModal').style.display = 'block';
+            }
+
+            closeDevicesModal() {
+                document.getElementById('devicesModal').style.display = 'none';
+            }
+
+            // ========================================================================
+            // PM5 CONNECTION
+            // ========================================================================
+
+            async connectPM5() {
+                const btn = document.getElementById('pm5ConnectBtn');
+                const status = document.getElementById('pm5Status');
+                const indicator = document.getElementById('pm5Indicator');
+                
+                btn.disabled = true;
+                btn.textContent = 'Connecting...';
+                status.textContent = 'Connecting...';
+                
+                try {
+                    console.log('🔍 Requesting PM5...');
+                    
+                    this.pm5Device = await navigator.bluetooth.requestDevice({
+                        filters: [{ services: [PM5_SERVICE_UUID] }]
+                    });
+                    
+                    console.log(`✓ Device: ${this.pm5Device.name}`);
+                    status.textContent = `Connecting to ${this.pm5Device.name}...`;
+                    
+                    const server = await this.pm5Device.gatt.connect();
+                    const service = await server.getPrimaryService(PM5_SERVICE_UUID);
+                    this.pm5Characteristic = await service.getCharacteristic(PM5_CHARACTERISTIC_UUID);
+                    
+                    await this.pm5Characteristic.startNotifications();
+                    this.pm5Characteristic.addEventListener('characteristicvaluechanged', (e) => {
+                        this.handlePM5Data(e.target.value);
+                    });
+                    
+                    console.log('✓ PM5 connected');
+                    
+                    status.textContent = `Connected: ${this.pm5Device.name}`;
+                    indicator.style.background = '#00FF99';
+                    btn.textContent = 'Disconnect';
+                    btn.disabled = false;
+                    btn.onclick = () => this.disconnectPM5();
+                    
+                    this.showToast('PM5 connected!', 'success');
+                } catch (error) {
+                    console.error('❌ PM5 error:', error);
+                    status.textContent = 'Connection failed';
+                    indicator.style.background = '#FF4444';
+                    btn.textContent = 'Retry';
+                    btn.disabled = false;
+                    
+                    this.showToast('PM5 connection failed: ' + error.message, 'error');
+                }
+            }
+
+            disconnectPM5() {
+                if (this.pm5Device && this.pm5Device.gatt.connected) {
+                    this.pm5Device.gatt.disconnect();
+                }
+                
+                document.getElementById('pm5Status').textContent = 'Not connected';
+                document.getElementById('pm5Indicator').style.background = '#666';
+                
+                const btn = document.getElementById('pm5ConnectBtn');
+                btn.textContent = 'Connect PM5';
+                btn.onclick = () => this.connectPM5();
+                
+                this.showToast('PM5 disconnected', 'success');
+            }
+
+            handlePM5Data(value) {
+                // Parse PM5 data and update dashboard
+                console.log('PM5 data:', value);
+                // TODO: Implement PM5 data parsing based on Concept2 spec
+            }
+
+            // ========================================================================
+            // HRM CONNECTION
+            // ========================================================================
+
+            async connectHRM() {
+                const HRM_SERVICE = 0x180D;
+                const HRM_CHARACTERISTIC = 0x2A37;
+                
+                const btn = document.getElementById('hrmConnectBtn');
+                const status = document.getElementById('hrmStatus');
+                const indicator = document.getElementById('hrmIndicator');
+                
+                btn.disabled = true;
+                btn.textContent = 'Connecting...';
+                status.textContent = 'Connecting...';
+                
+                try {
+                    console.log('🔍 Requesting HRM...');
+                    
+                    this.hrmDevice = await navigator.bluetooth.requestDevice({
+                        filters: [{ services: [HRM_SERVICE] }]
+                    });
+                    
+                    console.log(`✓ Device: ${this.hrmDevice.name}`);
+                    status.textContent = `Connecting to ${this.hrmDevice.name}...`;
+                    
+                    const server = await this.hrmDevice.gatt.connect();
+                    const service = await server.getPrimaryService(HRM_SERVICE);
+                    this.hrmCharacteristic = await service.getCharacteristic(HRM_CHARACTERISTIC);
+                    
+                    await this.hrmCharacteristic.startNotifications();
+                    this.hrmCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
+                        this.handleHRMData(e.target.value);
+                    });
+                    
+                    console.log('✓ HRM connected');
+                    
+                    status.textContent = `Connected: ${this.hrmDevice.name}`;
+                    indicator.style.background = '#ff6b6b';
+                    btn.textContent = 'Disconnect';
+                    btn.disabled = false;
+                    btn.onclick = () => this.disconnectHRM();
+                    
+                    this.showToast('HRM connected!', 'success');
+                } catch (error) {
+                    console.error('❌ HRM error:', error);
+                    status.textContent = 'Connection failed';
+                    indicator.style.background = '#FF4444';
+                    btn.textContent = 'Retry';
+                    btn.disabled = false;
+                    
+                    this.showToast('HRM connection failed: ' + error.message, 'error');
+                }
+            }
+
+            disconnectHRM() {
+                if (this.hrmDevice && this.hrmDevice.gatt.connected) {
+                    this.hrmDevice.gatt.disconnect();
+                }
+                
+                document.getElementById('hrmStatus').textContent = 'Not connected';
+                document.getElementById('hrmIndicator').style.background = '#666';
+                
+                const btn = document.getElementById('hrmConnectBtn');
+                btn.textContent = 'Connect HRM';
+                btn.onclick = () => this.connectHRM();
+                
+                this.showToast('HRM disconnected', 'success');
+            }
+
+            handleHRMData(value) {
+                const flags = value.getUint8(0);
+                const hrValueFormat = flags & 0x01;
+                
+                let hr;
+                if (hrValueFormat === 0) {
+                    hr = value.getUint8(1);
+                } else {
+                    hr = value.getUint16(1, true);
+                }
+                
+                this.liveData.hr = hr;
+                this.updateHRZone();
             }
 
             // ========================================================================
@@ -1935,10 +2298,12 @@
                 container.innerHTML = html;
             }
 
-            deleteWorkout(index) {
+            async deleteWorkout(index) {
                 if (confirm('Delete this workout?')) {
+                    const workout = this.workouts[index];
+                    await this.dataStore.deleteWorkout(workout.id);
+                    
                     this.workouts.splice(index, 1);
-                    this.saveData();
                     this.renderHistory();
                     this.updateStats();
                     this.showToast('Workout deleted', 'success');
