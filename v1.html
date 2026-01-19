@@ -940,6 +940,16 @@
             
             <div class="builder-section">
                 <div class="builder-section-title">Global Targets (Optional)</div>
+                
+                <div class="builder-toggle" onclick="app.toggleBuilderTarget('splitPace')">
+                    <div class="builder-checkbox" id="splitPaceCheckbox"></div>
+                    <div style="flex:1; font-size:13px; font-weight:700;">Target Split /500m</div>
+                </div>
+                <div id="splitPaceInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
+                    <div class="builder-label">Split Pace (e.g., 1:55.0)</div>
+                    <input type="text" class="builder-input" placeholder="1:55.0" id="splitPaceValue">
+                </div>
+                
                 <div class="builder-toggle" onclick="app.toggleBuilderTarget('pacer')">
                     <div class="builder-checkbox" id="pacerCheckbox"></div>
                     <div style="flex:1; font-size:13px; font-weight:700;">Show Pacer</div>
@@ -959,6 +969,20 @@
                 </div>
                 <div id="strokeRateInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
                     <input type="number" class="builder-input" placeholder="s/m (e.g., 26)" id="strokeRateValue">
+                </div>
+                
+                <div class="builder-toggle" onclick="app.toggleBuilderTarget('heartRate')">
+                    <div class="builder-checkbox" id="heartRateCheckbox"></div>
+                    <div style="flex:1; font-size:13px; font-weight:700;">Target Heart Rate Zone</div>
+                </div>
+                <div id="heartRateInputs" style="display:none; margin-left:32px; margin-bottom:16px;">
+                    <select class="builder-input" id="heartRateZone">
+                        <option value="1">Zone 1 (Recovery)</option>
+                        <option value="2">Zone 2 (Endurance)</option>
+                        <option value="3">Zone 3 (Tempo)</option>
+                        <option value="4">Zone 4 (Threshold)</option>
+                        <option value="5">Zone 5 (Max)</option>
+                    </select>
                 </div>
             </div>
             
@@ -1083,7 +1107,7 @@
                 this.chatHistory = [];
                 this.currentView = 0;
                 this.builderMode = 'single-distance';
-                this.builderTargets = { pacer: false, strokeRate: false };
+                this.builderTargets = { splitPace: false, pacer: false, strokeRate: false, heartRate: false };
                 this.builderIntervals = [];
                 this.editingInterval = -1;
                 this.reviewWorkout = null;
