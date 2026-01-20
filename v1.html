@@ -936,7 +936,6 @@
         <div class="screen-header">
             <button class="header-btn" onclick="app.endWorkout()">End</button>
             <div class="screen-title">Rowing</div>
-            <button class="header-btn" onclick="app.openDevicesModal()">🔗 Devices</button>
         </div>
         
         <div class="dashboard-container" id="dashboardContainer">
@@ -1352,6 +1351,39 @@
                 </button>
                 <div style="margin-top:12px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#ccc;">
                     💡 <strong>Test without clearing cache:</strong> Click "Test Cloud Sync" to verify your data is saving to Firebase. Check console (F12) for detailed logs.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Connect Devices</div>
+                <div style="font-size:12px; color:#888; margin-bottom:16px;">Connect PM5 and Heart Rate Monitor via Bluetooth</div>
+                
+                <!-- PM5 Connection -->
+                <div style="background:#050505; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div>
+                            <div style="font-size:14px; font-weight:700; margin-bottom:4px;">Concept2 PM5</div>
+                            <div style="font-size:12px; color:#666;" id="pm5StatusSettings">Not connected</div>
+                        </div>
+                        <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="pm5IndicatorSettings"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.connectPM5()" id="pm5ConnectBtnSettings">Connect PM5</button>
+                </div>
+                
+                <!-- HRM Connection -->
+                <div style="background:#050505; border:1px solid var(--border); border-radius:8px; padding:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div>
+                            <div style="font-size:14px; font-weight:700; margin-bottom:4px;">Heart Rate Monitor</div>
+                            <div style="font-size:12px; color:#666;" id="hrmStatusSettings">Not connected</div>
+                        </div>
+                        <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="hrmIndicatorSettings"></div>
+                    </div>
+                    <button class="btn btn-outline" onclick="app.connectHRM()" id="hrmConnectBtnSettings">Connect HRM</button>
+                </div>
+                
+                <div style="margin-top:16px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#ccc;">
+                    💡 <strong>Tip:</strong> Connect PM5 first for rowing data, then connect HRM for heart rate monitoring.
                 </div>
             </div>
 
@@ -1879,9 +1911,21 @@
                 const status = document.getElementById('pm5Status');
                 const indicator = document.getElementById('pm5Indicator');
                 
-                btn.disabled = true;
-                btn.textContent = 'Connecting...';
-                status.textContent = 'Connecting...';
+                // Also update Settings card elements
+                const btnSettings = document.getElementById('pm5ConnectBtnSettings');
+                const statusSettings = document.getElementById('pm5StatusSettings');
+                const indicatorSettings = document.getElementById('pm5IndicatorSettings');
+                
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Connecting...';
+                }
+                if (btnSettings) {
+                    btnSettings.disabled = true;
+                    btnSettings.textContent = 'Connecting...';
+                }
+                if (status) status.textContent = 'Connecting...';
+                if (statusSettings) statusSettings.textContent = 'Connecting...';
                 
                 try {
                     console.log('🔍 Requesting PM5...');
@@ -1891,7 +1935,8 @@
                     });
                     
                     console.log(`✓ Device: ${this.pm5Device.name}`);
-                    status.textContent = `Connecting to ${this.pm5Device.name}...`;
+                    if (status) status.textContent = `Connecting to ${this.pm5Device.name}...`;
+                    if (statusSettings) statusSettings.textContent = `Connecting to ${this.pm5Device.name}...`;
                     
                     const server = await this.pm5Device.gatt.connect();
                     const service = await server.getPrimaryService(PM5_SERVICE_UUID);
@@ -1904,19 +1949,38 @@
                     
                     console.log('✓ PM5 connected');
                     
-                    status.textContent = `Connected: ${this.pm5Device.name}`;
-                    indicator.style.background = '#00FF99';
-                    btn.textContent = 'Disconnect';
-                    btn.disabled = false;
-                    btn.onclick = () => this.disconnectPM5();
+                    if (status) status.textContent = `Connected: ${this.pm5Device.name}`;
+                    if (statusSettings) statusSettings.textContent = `Connected: ${this.pm5Device.name}`;
+                    if (indicator) indicator.style.background = '#00FF99';
+                    if (indicatorSettings) indicatorSettings.style.background = '#00FF99';
+                    
+                    if (btn) {
+                        btn.textContent = 'Disconnect';
+                        btn.disabled = false;
+                        btn.onclick = () => this.disconnectPM5();
+                    }
+                    if (btnSettings) {
+                        btnSettings.textContent = 'Disconnect';
+                        btnSettings.disabled = false;
+                        btnSettings.onclick = () => this.disconnectPM5();
+                    }
                     
                     this.showToast('PM5 connected!', 'success');
                 } catch (error) {
                     console.error('❌ PM5 error:', error);
-                    status.textContent = 'Connection failed';
-                    indicator.style.background = '#FF4444';
-                    btn.textContent = 'Retry';
-                    btn.disabled = false;
+                    if (status) status.textContent = 'Connection failed';
+                    if (statusSettings) statusSettings.textContent = 'Connection failed';
+                    if (indicator) indicator.style.background = '#FF4444';
+                    if (indicatorSettings) indicatorSettings.style.background = '#FF4444';
+                    
+                    if (btn) {
+                        btn.textContent = 'Retry';
+                        btn.disabled = false;
+                    }
+                    if (btnSettings) {
+                        btnSettings.textContent = 'Retry';
+                        btnSettings.disabled = false;
+                    }
                     
                     this.showToast('PM5 connection failed: ' + error.message, 'error');
                 }
@@ -1927,12 +1991,26 @@
                     this.pm5Device.gatt.disconnect();
                 }
                 
-                document.getElementById('pm5Status').textContent = 'Not connected';
-                document.getElementById('pm5Indicator').style.background = '#666';
-                
+                const status = document.getElementById('pm5Status');
+                const indicator = document.getElementById('pm5Indicator');
                 const btn = document.getElementById('pm5ConnectBtn');
-                btn.textContent = 'Connect PM5';
-                btn.onclick = () => this.connectPM5();
+                const statusSettings = document.getElementById('pm5StatusSettings');
+                const indicatorSettings = document.getElementById('pm5IndicatorSettings');
+                const btnSettings = document.getElementById('pm5ConnectBtnSettings');
+                
+                if (status) status.textContent = 'Not connected';
+                if (statusSettings) statusSettings.textContent = 'Not connected';
+                if (indicator) indicator.style.background = '#666';
+                if (indicatorSettings) indicatorSettings.style.background = '#666';
+                
+                if (btn) {
+                    btn.textContent = 'Connect PM5';
+                    btn.onclick = () => this.connectPM5();
+                }
+                if (btnSettings) {
+                    btnSettings.textContent = 'Connect PM5';
+                    btnSettings.onclick = () => this.connectPM5();
+                }
                 
                 this.showToast('PM5 disconnected', 'success');
             }
@@ -1955,9 +2033,21 @@
                 const status = document.getElementById('hrmStatus');
                 const indicator = document.getElementById('hrmIndicator');
                 
-                btn.disabled = true;
-                btn.textContent = 'Connecting...';
-                status.textContent = 'Connecting...';
+                // Also update Settings card elements
+                const btnSettings = document.getElementById('hrmConnectBtnSettings');
+                const statusSettings = document.getElementById('hrmStatusSettings');
+                const indicatorSettings = document.getElementById('hrmIndicatorSettings');
+                
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Connecting...';
+                }
+                if (btnSettings) {
+                    btnSettings.disabled = true;
+                    btnSettings.textContent = 'Connecting...';
+                }
+                if (status) status.textContent = 'Connecting...';
+                if (statusSettings) statusSettings.textContent = 'Connecting...';
                 
                 try {
                     console.log('🔍 Requesting HRM...');
@@ -1967,7 +2057,8 @@
                     });
                     
                     console.log(`✓ Device: ${this.hrmDevice.name}`);
-                    status.textContent = `Connecting to ${this.hrmDevice.name}...`;
+                    if (status) status.textContent = `Connecting to ${this.hrmDevice.name}...`;
+                    if (statusSettings) statusSettings.textContent = `Connecting to ${this.hrmDevice.name}...`;
                     
                     const server = await this.hrmDevice.gatt.connect();
                     const service = await server.getPrimaryService(HRM_SERVICE);
@@ -1980,19 +2071,38 @@
                     
                     console.log('✓ HRM connected');
                     
-                    status.textContent = `Connected: ${this.hrmDevice.name}`;
-                    indicator.style.background = '#ff6b6b';
-                    btn.textContent = 'Disconnect';
-                    btn.disabled = false;
-                    btn.onclick = () => this.disconnectHRM();
+                    if (status) status.textContent = `Connected: ${this.hrmDevice.name}`;
+                    if (statusSettings) statusSettings.textContent = `Connected: ${this.hrmDevice.name}`;
+                    if (indicator) indicator.style.background = '#ff6b6b';
+                    if (indicatorSettings) indicatorSettings.style.background = '#ff6b6b';
+                    
+                    if (btn) {
+                        btn.textContent = 'Disconnect';
+                        btn.disabled = false;
+                        btn.onclick = () => this.disconnectHRM();
+                    }
+                    if (btnSettings) {
+                        btnSettings.textContent = 'Disconnect';
+                        btnSettings.disabled = false;
+                        btnSettings.onclick = () => this.disconnectHRM();
+                    }
                     
                     this.showToast('HRM connected!', 'success');
                 } catch (error) {
                     console.error('❌ HRM error:', error);
-                    status.textContent = 'Connection failed';
-                    indicator.style.background = '#FF4444';
-                    btn.textContent = 'Retry';
-                    btn.disabled = false;
+                    if (status) status.textContent = 'Connection failed';
+                    if (statusSettings) statusSettings.textContent = 'Connection failed';
+                    if (indicator) indicator.style.background = '#FF4444';
+                    if (indicatorSettings) indicatorSettings.style.background = '#FF4444';
+                    
+                    if (btn) {
+                        btn.textContent = 'Retry';
+                        btn.disabled = false;
+                    }
+                    if (btnSettings) {
+                        btnSettings.textContent = 'Retry';
+                        btnSettings.disabled = false;
+                    }
                     
                     this.showToast('HRM connection failed: ' + error.message, 'error');
                 }
@@ -2003,12 +2113,26 @@
                     this.hrmDevice.gatt.disconnect();
                 }
                 
-                document.getElementById('hrmStatus').textContent = 'Not connected';
-                document.getElementById('hrmIndicator').style.background = '#666';
-                
+                const status = document.getElementById('hrmStatus');
+                const indicator = document.getElementById('hrmIndicator');
                 const btn = document.getElementById('hrmConnectBtn');
-                btn.textContent = 'Connect HRM';
-                btn.onclick = () => this.connectHRM();
+                const statusSettings = document.getElementById('hrmStatusSettings');
+                const indicatorSettings = document.getElementById('hrmIndicatorSettings');
+                const btnSettings = document.getElementById('hrmConnectBtnSettings');
+                
+                if (status) status.textContent = 'Not connected';
+                if (statusSettings) statusSettings.textContent = 'Not connected';
+                if (indicator) indicator.style.background = '#666';
+                if (indicatorSettings) indicatorSettings.style.background = '#666';
+                
+                if (btn) {
+                    btn.textContent = 'Connect HRM';
+                    btn.onclick = () => this.connectHRM();
+                }
+                if (btnSettings) {
+                    btnSettings.textContent = 'Connect HRM';
+                    btnSettings.onclick = () => this.connectHRM();
+                }
                 
                 this.showToast('HRM disconnected', 'success');
             }
