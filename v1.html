@@ -936,6 +936,7 @@
         <div class="screen-header">
             <button class="header-btn" onclick="app.endWorkout()">End</button>
             <div class="screen-title">Rowing</div>
+            <button class="header-btn" id="manualStartBtn" style="display:none; background:var(--accent); color:#000;" onclick="app.onFirstStroke()">Start</button>
         </div>
         
         <div class="dashboard-container" id="dashboardContainer">
@@ -1657,6 +1658,7 @@
                 this.activeWorkout = null;
                 this.workoutTimer = null;
                 this.isCountingDown = false;
+                this.waitingForFirstStroke = false;
                 this.workoutTimeRemaining = 0;
                 this.workoutTimeTotal = 0;
                 
@@ -2023,7 +2025,16 @@
             handlePM5Data(value) {
                 // Parse PM5 data and update dashboard
                 console.log('PM5 data:', value);
-                // TODO: Implement PM5 data parsing based on Concept2 spec
+                
+                // Check if this is the first stroke
+                if (this.waitingForFirstStroke) {
+                    // Any PM5 data means user started rowing
+                    this.onFirstStroke();
+                }
+                
+                // TODO: Implement full PM5 data parsing based on Concept2 spec
+                // For now, update basic metrics when data arrives
+                // This will be replaced with proper parsing of the PM5 protocol
             }
 
             // ========================================================================
@@ -3006,7 +3017,7 @@
                 // Set up active workout
                 this.activeWorkout = {
                     ...this.reviewWorkout,
-                    startTime: Date.now(),
+                    startTime: null, // Will be set on first stroke
                     currentInterval: 0,
                     isResting: false
                 };
@@ -3014,23 +3025,68 @@
                 // Get first interval
                 const firstInterval = this.reviewWorkout.intervals[0];
                 
-                // Initialize countdown for time-based workouts
+                // Initialize countdown for time-based workouts (but don't start yet)
                 if (firstInterval.type === 'time' || this.builderMode === 'single-time') {
                     this.workoutTimeRemaining = firstInterval.value; // seconds remaining
                     this.workoutTimeTotal = firstInterval.value; // total seconds for progress
-                    this.isCountingDown = true;
+                    this.isCountingDown = false; // Wait for first stroke
+                    this.waitingForFirstStroke = true;
                 } else {
                     this.isCountingDown = false;
+                    this.waitingForFirstStroke = true;
                     this.workoutTimeRemaining = 0;
                 }
                 
-                // Start workout timer
-                this.startWorkoutTimer();
+                // Display ready state
+                this.updateDashboardReadyState();
                 
-                this.showToast('Workout started!', 'success');
+                this.showToast('Ready! Pull first stroke to begin.', 'success');
                 setTimeout(() => {
                     this.navigate('screenDashboard');
                 }, 500);
+            }
+            
+            updateDashboardReadyState() {
+                // Show initial time without starting countdown
+                if (this.workoutTimeRemaining > 0) {
+                    const mins = Math.floor(this.workoutTimeRemaining / 60);
+                    const secs = this.workoutTimeRemaining % 60;
+                    const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    document.getElementById('time1').textContent = timeStr;
+                }
+                
+                const coachMsg = document.getElementById('coachMessage');
+                if (coachMsg) {
+                    coachMsg.textContent = `🚣 Ready to row! Pull first stroke to start timer.`;
+                }
+                
+                // Show manual start button for testing (hidden when PM5 is connected)
+                const startBtn = document.getElementById('manualStartBtn');
+                if (startBtn) {
+                    startBtn.style.display = 'block';
+                }
+            }
+            
+            onFirstStroke() {
+                // Called when PM5 detects first stroke or user starts rowing
+                if (this.waitingForFirstStroke) {
+                    this.waitingForFirstStroke = false;
+                    this.activeWorkout.startTime = Date.now();
+                    
+                    // Hide manual start button
+                    const startBtn = document.getElementById('manualStartBtn');
+                    if (startBtn) {
+                        startBtn.style.display = 'none';
+                    }
+                    
+                    // Start countdown if time-based workout
+                    if (this.workoutTimeRemaining > 0) {
+                        this.isCountingDown = true;
+                        this.startWorkoutTimer();
+                    }
+                    
+                    this.showToast('Workout started!', 'success');
+                }
             }
             
             startWorkoutTimer() {
@@ -3079,6 +3135,73 @@
             
             completeWorkout() {
                 clearInterval(this.workoutTimer);
+                
+                // Check if there are more intervals
+                if (this.activeWorkout && this.activeWorkout.intervals && 
+                    this.activeWorkout.currentInterval < this.activeWorkout.intervals.length - 1) {
+                    
+                    // Move to rest period if there's rest time
+                    const currentInterval = this.activeWorkout.intervals[this.activeWorkout.currentInterval];
+                    if (currentInterval.restTime && currentInterval.restTime > 0) {
+                        this.startRestPeriod(currentInterval.restTime);
+                    } else {
+                        // No rest, move to next interval immediately
+                        this.startNextInterval();
+                    }
+                } else {
+                    // All intervals complete - finish workout
+                    this.finishWorkout();
+                }
+            }
+            
+            startRestPeriod(restSeconds) {
+                this.activeWorkout.isResting = true;
+                this.isCountingDown = true;
+                this.workoutTimeRemaining = restSeconds;
+                
+                const coachMsg = document.getElementById('coachMessage');
+                if (coachMsg) {
+                    coachMsg.textContent = `💤 Rest period - ${restSeconds}s`;
+                }
+                
+                // Countdown rest time
+                this.workoutTimer = setInterval(() => {
+                    if (this.workoutTimeRemaining > 0) {
+                        this.workoutTimeRemaining--;
+                        
+                        // Update display
+                        const mins = Math.floor(this.workoutTimeRemaining / 60);
+                        const secs = this.workoutTimeRemaining % 60;
+                        document.getElementById('time1').textContent = `REST ${mins}:${secs.toString().padStart(2, '0')}`;
+                        
+                        if (coachMsg) {
+                            coachMsg.textContent = `💤 Rest: ${this.workoutTimeRemaining}s remaining`;
+                        }
+                    } else {
+                        // Rest complete - start next interval
+                        this.startNextInterval();
+                    }
+                }, 1000);
+            }
+            
+            startNextInterval() {
+                clearInterval(this.workoutTimer);
+                this.activeWorkout.currentInterval++;
+                this.activeWorkout.isResting = false;
+                this.waitingForFirstStroke = true;
+                
+                const nextInterval = this.activeWorkout.intervals[this.activeWorkout.currentInterval];
+                
+                if (nextInterval.type === 'time' || nextInterval.workValue) {
+                    this.workoutTimeRemaining = nextInterval.value || nextInterval.workValue;
+                    this.workoutTimeTotal = this.workoutTimeRemaining;
+                }
+                
+                this.showToast(`Next interval - pull to start!`, 'success');
+                this.updateDashboardReadyState();
+            }
+            
+            finishWorkout() {
                 this.isCountingDown = false;
                 this.showToast('🎉 Workout complete!', 'success');
                 
@@ -3090,13 +3213,21 @@
                     duration: Math.round((Date.now() - this.activeWorkout.startTime) / 1000),
                     distance: this.liveData.dist || 0,
                     avgPace: this.liveData.pace || 0,
-                    avgHR: this.liveData.hr || 0
+                    avgHR: this.liveData.hr || 0,
+                    completed: true
                 };
                 
                 this.workouts.push(workout);
                 this.dataStore.saveWorkouts(this.workouts);
                 this.renderHistory();
                 this.updateStats();
+                
+                this.activeWorkout = null;
+                
+                const coachMsg = document.getElementById('coachMessage');
+                if (coachMsg) {
+                    coachMsg.textContent = `🎉 Great work! Workout complete.`;
+                }
             }
 
             endWorkout() {
