@@ -1654,6 +1654,11 @@
                 this.builderIntervals = [];
                 this.editingInterval = -1;
                 this.reviewWorkout = null;
+                this.activeWorkout = null;
+                this.workoutTimer = null;
+                this.isCountingDown = false;
+                this.workoutTimeRemaining = 0;
+                this.workoutTimeTotal = 0;
                 
                 // Rowing data
                 this.liveData = { time: 0, dist: 0, pace: 0, watts: 0, rate: 0, hr: 0 };
@@ -2750,12 +2755,78 @@
                     intervals: []
                 };
                 
+                // Handle different workout modes
                 if (this.builderMode === 'single-distance') {
                     const total = parseInt(document.getElementById('totalDistance').value);
                     const split = parseInt(document.getElementById('splitDistance').value);
-                    this.reviewWorkout.intervals = [{ type: 'distance', value: total, split: split }];
+                    
+                    if (!total) {
+                        this.showToast('Enter total distance', 'error');
+                        return;
+                    }
+                    
+                    this.reviewWorkout.intervals = [{ type: 'distance', value: total, split: split || total }];
+                    
+                } else if (this.builderMode === 'single-time') {
+                    const mins = parseInt(document.getElementById('totalMins').value) || 0;
+                    const secs = parseInt(document.getElementById('totalSecs').value) || 0;
+                    const splitMins = parseInt(document.getElementById('splitMins').value) || 0;
+                    const splitSecs = parseInt(document.getElementById('splitSecs').value) || 0;
+                    
+                    const totalTime = mins * 60 + secs;
+                    const splitTime = splitMins * 60 + splitSecs;
+                    
+                    if (totalTime === 0) {
+                        this.showToast('Enter total time', 'error');
+                        return;
+                    }
+                    
+                    this.reviewWorkout.intervals = [{ 
+                        type: 'time', 
+                        value: totalTime, 
+                        split: splitTime || totalTime,
+                        displayValue: `${mins}:${secs.toString().padStart(2, '0')}`
+                    }];
+                    
+                } else if (this.builderMode === 'fixed-intervals') {
+                    const workType = document.getElementById('workType').value;
+                    const workValue = parseInt(document.getElementById('workValue').value);
+                    const numSets = parseInt(document.getElementById('numSets').value);
+                    const restMins = parseInt(document.getElementById('restMins').value) || 0;
+                    const restSecs = parseInt(document.getElementById('restSecs').value) || 0;
+                    
+                    if (!workValue || !numSets) {
+                        this.showToast('Enter work value and number of sets', 'error');
+                        return;
+                    }
+                    
+                    const restTime = restMins * 60 + restSecs;
+                    
+                    for (let i = 0; i < numSets; i++) {
+                        this.reviewWorkout.intervals.push({
+                            type: workType,
+                            workValue: workValue,
+                            restTime: restTime
+                        });
+                    }
+                    
                 } else if (this.builderMode === 'variable-intervals') {
+                    if (this.builderIntervals.length === 0) {
+                        this.showToast('Add at least one interval', 'error');
+                        return;
+                    }
                     this.reviewWorkout.intervals = this.builderIntervals;
+                }
+                
+                // Capture global targets
+                if (document.getElementById('splitPaceCheckbox').classList.contains('checked')) {
+                    this.reviewWorkout.targetSplit = document.getElementById('splitPaceValue').value;
+                }
+                if (document.getElementById('heartRateCheckbox').classList.contains('checked')) {
+                    this.reviewWorkout.targetHRZone = document.getElementById('heartRateZone').value;
+                }
+                if (document.getElementById('strokeRateCheckbox').classList.contains('checked')) {
+                    this.reviewWorkout.targetStrokeRate = document.getElementById('strokeRateValue').value;
                 }
                 
                 this.renderReview();
@@ -2786,9 +2857,9 @@
                     
                     // Mode
                     const modeNames = {
-                        'time': 'Time-Based',
-                        'distance': 'Distance-Based',
-                        'intervals': 'Fixed Intervals',
+                        'single-time': 'Time-Based',
+                        'single-distance': 'Distance-Based',
+                        'fixed-intervals': 'Fixed Intervals',
                         'variable-intervals': 'Variable Intervals',
                         'just-row': 'Just Row'
                     };
@@ -2803,26 +2874,32 @@
                     let totalWork = 0;
                     let totalRest = 0;
                     let intervalCount = this.reviewWorkout.intervals.length;
+                    let isTimeMode = false;
                     
                     this.reviewWorkout.intervals.forEach(interval => {
+                        if (interval.type === 'time') {
+                            isTimeMode = true;
+                        }
                         if (interval.workValue) totalWork += parseInt(interval.workValue);
                         if (interval.value) totalWork += parseInt(interval.value);
                         if (interval.restTime) totalRest += parseInt(interval.restTime);
                     });
                     
-                    // Total Work
-                    if (this.builderMode === 'time' || this.builderMode === 'just-row') {
+                    // Total Work - display based on type
+                    if (isTimeMode || this.builderMode === 'single-time') {
+                        const mins = Math.floor(totalWork / 60);
+                        const secs = totalWork % 60;
                         html += `
                             <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
                                 <div style="color:#888;">Total Time</div>
-                                <div style="font-weight:700;">${totalWork} minutes</div>
+                                <div style="font-weight:700; font-size:20px; color:var(--accent);">${mins}:${secs.toString().padStart(2, '0')}</div>
                             </div>
                         `;
                     } else {
                         html += `
                             <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
                                 <div style="color:#888;">Total Distance</div>
-                                <div style="font-weight:700;">${totalWork}m</div>
+                                <div style="font-weight:700; font-size:20px; color:var(--accent);">${totalWork}m</div>
                             </div>
                         `;
                     }
@@ -2848,20 +2925,29 @@
                     }
                     
                     // Global Targets
-                    if (this.globalTargetSplit) {
+                    if (this.reviewWorkout.targetSplit) {
                         html += `
                             <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
                                 <div style="color:#888;">Target Split</div>
-                                <div style="font-weight:700; color:#4a90e2;">${this.globalTargetSplit}/500m</div>
+                                <div style="font-weight:700; color:#4a90e2;">${this.reviewWorkout.targetSplit}/500m</div>
                             </div>
                         `;
                     }
                     
-                    if (this.globalTargetHR) {
+                    if (this.reviewWorkout.targetHRZone) {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
+                                <div style="color:#888;">Target HR Zone</div>
+                                <div style="font-weight:700; color:#ff6b6b;">Zone ${this.reviewWorkout.targetHRZone}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (this.reviewWorkout.targetStrokeRate) {
                         html += `
                             <div style="display:flex; justify-content:space-between; padding:12px 0;">
-                                <div style="color:#888;">Target HR Zone</div>
-                                <div style="font-weight:700; color:#ff6b6b;">Zone ${this.globalTargetHR}</div>
+                                <div style="color:#888;">Target Stroke Rate</div>
+                                <div style="font-weight:700;">${this.reviewWorkout.targetStrokeRate} s/m</div>
                             </div>
                         `;
                     }
@@ -2877,14 +2963,22 @@
                         
                         this.reviewWorkout.intervals.forEach((interval, i) => {
                             const workValue = interval.workValue || interval.value;
-                            const workUnit = (this.builderMode === 'time' || this.builderMode === 'just-row') ? 'min' : 'm';
+                            const workUnit = (interval.type === 'time') ? 's' : 'm';
                             const restValue = interval.restTime || 0;
+                            
+                            // Format time display if needed
+                            let displayValue = workValue;
+                            if (interval.type === 'time') {
+                                const mins = Math.floor(workValue / 60);
+                                const secs = workValue % 60;
+                                displayValue = `${mins}:${secs.toString().padStart(2, '0')}`;
+                            }
                             
                             html += `
                                 <div style="background:#050505; border:1px solid #222; border-radius:8px; padding:16px; margin-bottom:12px;">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                         <div style="font-weight:700; font-size:14px;">Set ${i + 1}</div>
-                                        <div style="font-size:18px; font-weight:900; color:var(--accent);">${workValue}${workUnit}</div>
+                                        <div style="font-size:18px; font-weight:900; color:var(--accent);">${displayValue}${workUnit === 's' ? '' : workUnit}</div>
                                     </div>
                                     ${restValue > 0 ? `
                                         <div style="display:flex; justify-content:space-between; font-size:12px; color:#888;">
@@ -2904,15 +2998,136 @@
             }
 
             startWorkout() {
-                this.showToast('Starting workout...', 'success');
+                if (!this.reviewWorkout || !this.reviewWorkout.intervals || this.reviewWorkout.intervals.length === 0) {
+                    this.showToast('No workout to start', 'error');
+                    return;
+                }
+                
+                // Set up active workout
+                this.activeWorkout = {
+                    ...this.reviewWorkout,
+                    startTime: Date.now(),
+                    currentInterval: 0,
+                    isResting: false
+                };
+                
+                // Get first interval
+                const firstInterval = this.reviewWorkout.intervals[0];
+                
+                // Initialize countdown for time-based workouts
+                if (firstInterval.type === 'time' || this.builderMode === 'single-time') {
+                    this.workoutTimeRemaining = firstInterval.value; // seconds remaining
+                    this.workoutTimeTotal = firstInterval.value; // total seconds for progress
+                    this.isCountingDown = true;
+                } else {
+                    this.isCountingDown = false;
+                    this.workoutTimeRemaining = 0;
+                }
+                
+                // Start workout timer
+                this.startWorkoutTimer();
+                
+                this.showToast('Workout started!', 'success');
                 setTimeout(() => {
                     this.navigate('screenDashboard');
                 }, 500);
             }
+            
+            startWorkoutTimer() {
+                // Clear any existing timer
+                if (this.workoutTimer) {
+                    clearInterval(this.workoutTimer);
+                }
+                
+                // Update every second
+                this.workoutTimer = setInterval(() => {
+                    if (this.isCountingDown && this.workoutTimeRemaining > 0) {
+                        this.workoutTimeRemaining--;
+                        this.updateDashboardWorkoutDisplay();
+                        
+                        // Workout complete
+                        if (this.workoutTimeRemaining === 0) {
+                            this.completeWorkout();
+                        }
+                    }
+                }, 1000);
+            }
+            
+            updateDashboardWorkoutDisplay() {
+                if (!this.isCountingDown) return;
+                
+                const mins = Math.floor(this.workoutTimeRemaining / 60);
+                const secs = this.workoutTimeRemaining % 60;
+                const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                // Update all time displays
+                document.getElementById('time1').textContent = timeStr;
+                
+                // Update coach message with progress
+                const progress = Math.round((1 - this.workoutTimeRemaining / this.workoutTimeTotal) * 100);
+                const coachMsg = document.getElementById('coachMessage');
+                if (coachMsg) {
+                    if (this.workoutTimeRemaining <= 60) {
+                        coachMsg.textContent = `🔥 Final minute! Push hard!`;
+                    } else if (this.workoutTimeRemaining <= 120) {
+                        coachMsg.textContent = `💪 ${mins} minutes left - stay strong!`;
+                    } else {
+                        coachMsg.textContent = `⏱️ ${mins}:${secs.toString().padStart(2, '0')} remaining (${progress}% complete)`;
+                    }
+                }
+            }
+            
+            completeWorkout() {
+                clearInterval(this.workoutTimer);
+                this.isCountingDown = false;
+                this.showToast('🎉 Workout complete!', 'success');
+                
+                // Save workout to history
+                const workout = {
+                    id: Date.now().toString(),
+                    date: new Date().toISOString(),
+                    type: this.activeWorkout.mode || 'manual',
+                    duration: Math.round((Date.now() - this.activeWorkout.startTime) / 1000),
+                    distance: this.liveData.dist || 0,
+                    avgPace: this.liveData.pace || 0,
+                    avgHR: this.liveData.hr || 0
+                };
+                
+                this.workouts.push(workout);
+                this.dataStore.saveWorkouts(this.workouts);
+                this.renderHistory();
+                this.updateStats();
+            }
 
             endWorkout() {
-                if (confirm('End workout?')) {
-                    this.showToast('Workout saved!', 'success');
+                if (!this.activeWorkout) {
+                    this.showToast('No active workout', 'error');
+                    return;
+                }
+                
+                if (confirm('End workout early?')) {
+                    clearInterval(this.workoutTimer);
+                    this.isCountingDown = false;
+                    
+                    // Save partial workout
+                    const workout = {
+                        id: Date.now().toString(),
+                        date: new Date().toISOString(),
+                        type: this.activeWorkout.mode || 'manual',
+                        duration: Math.round((Date.now() - this.activeWorkout.startTime) / 1000),
+                        distance: this.liveData.dist || 0,
+                        avgPace: this.liveData.pace || 0,
+                        avgHR: this.liveData.hr || 0,
+                        completed: false
+                    };
+                    
+                    this.workouts.push(workout);
+                    this.dataStore.saveWorkouts(this.workouts);
+                    this.renderHistory();
+                    this.updateStats();
+                    
+                    this.activeWorkout = null;
+                    this.showToast('Workout ended and saved', 'success');
                 }
             }
 
