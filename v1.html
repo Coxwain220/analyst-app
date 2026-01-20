@@ -1145,7 +1145,7 @@
             <div class="review-workout-title" id="reviewTitle">Your Workout</div>
             <div id="reviewIntervals"></div>
             <div class="review-actions">
-                <button class="btn btn-outline" onclick="app.restrategize()" style="flex:1;">🔄 Restrategize</button>
+                <button class="btn btn-outline" onclick="app.navigate('screenBuilder')" style="flex:1;">← Back</button>
                 <button class="btn btn-primary" onclick="app.startWorkout()" style="flex:2;">🚣 Start Row</button>
             </div>
         </div>
@@ -1278,6 +1278,62 @@
                 <div style="display:flex; gap:12px; margin-top:16px;">
                     <button class="btn btn-primary" onclick="app.saveProfile()">Save Profile</button>
                     <button class="btn btn-outline" onclick="app.loadProfile()">Cancel</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Heart Rate Zones</div>
+                <div style="font-size:12px; color:#888; margin-bottom:16px;">Configure your training zones based on max HR</div>
+                
+                <div class="editable-field">
+                    <div class="editable-label">Max Heart Rate</div>
+                    <input type="number" class="editable-input" id="editMaxHR" placeholder="190">
+                </div>
+                
+                <div style="margin-top:16px; padding:16px; background:#050505; border-radius:8px;">
+                    <div style="font-size:11px; color:#666; text-transform:uppercase; margin-bottom:12px;">Zones Preview</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:40px; height:30px; background:#4a90e2; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z1</div>
+                            <div style="flex:1; font-size:12px;">
+                                <div style="color:#e0e0e0;">Recovery (50-60%)</div>
+                                <div style="color:#666; font-size:11px;" id="zone1Range">95-114 bpm</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:40px; height:30px; background:#50c878; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z2</div>
+                            <div style="flex:1; font-size:12px;">
+                                <div style="color:#e0e0e0;">Aerobic (60-70%)</div>
+                                <div style="color:#666; font-size:11px;" id="zone2Range">114-133 bpm</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:40px; height:30px; background:#ffa500; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z3</div>
+                            <div style="flex:1; font-size:12px;">
+                                <div style="color:#e0e0e0;">Tempo (70-80%)</div>
+                                <div style="color:#666; font-size:11px;" id="zone3Range">133-152 bpm</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:40px; height:30px; background:#ff6347; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z4</div>
+                            <div style="flex:1; font-size:12px;">
+                                <div style="color:#e0e0e0;">Threshold (80-90%)</div>
+                                <div style="color:#666; font-size:11px;" id="zone4Range">152-171 bpm</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:40px; height:30px; background:#dc143c; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z5</div>
+                            <div style="flex:1; font-size:12px;">
+                                <div style="color:#e0e0e0;">Max (90-100%)</div>
+                                <div style="color:#666; font-size:11px;" id="zone5Range">171-190 bpm</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:12px; margin-top:16px;">
+                    <button class="btn btn-primary" onclick="app.saveHRZones()">Save Zones</button>
+                    <button class="btn btn-outline" onclick="app.loadHRZones()">Reset</button>
                 </div>
             </div>
 
@@ -1600,9 +1656,6 @@
                         chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
                     });
                 }
-                
-                // Demo data
-                this.startDemoData();
                 
                 // Welcome message if no chat history
                 if (this.chatHistory.length === 0) {
@@ -2235,27 +2288,6 @@
                 });
             }
 
-            startDemoData() {
-                setInterval(() => {
-                    this.liveData.time++;
-                    this.liveData.dist += 4;
-                    this.liveData.pace = 115 + Math.random() * 10;
-                    this.liveData.watts = 220 + Math.random() * 30;
-                    this.liveData.rate = 24 + Math.floor(Math.random() * 4);
-                    this.liveData.hr = 150 + Math.floor(Math.random() * 20);
-                    
-                    this.paceHistory.push(this.liveData.pace);
-                    if (this.paceHistory.length > 20) this.paceHistory.shift();
-                    
-                    this.updateDashboardMetrics();
-                    this.updateCoachMessage();
-                    this.updateHRZone();
-                    this.drawForceC();
-                    this.drawPaceboat();
-                    this.drawBarChart();
-                }, 1000);
-            }
-
             updateDashboardMetrics() {
                 const mins = Math.floor(this.liveData.pace / 60);
                 const secs = Math.floor(this.liveData.pace % 60);
@@ -2613,27 +2645,138 @@
                 titleElem.textContent = 'Review Your Workout';
                 
                 let html = '';
-                if (this.reviewWorkout && this.reviewWorkout.intervals) {
-                    this.reviewWorkout.intervals.forEach((interval, i) => {
+                
+                if (!this.reviewWorkout || !this.reviewWorkout.intervals || this.reviewWorkout.intervals.length === 0) {
+                    html = `
+                        <div style="text-align:center; padding:40px 20px; color:#666;">
+                            <div style="font-size:48px; margin-bottom:12px;">📋</div>
+                            <div style="font-size:14px;">No workout data to review</div>
+                        </div>
+                    `;
+                } else {
+                    // Workout Summary Card
+                    html += `
+                        <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px;">
+                            <div style="font-size:12px; color:#666; text-transform:uppercase; margin-bottom:12px;">Workout Summary</div>
+                    `;
+                    
+                    // Mode
+                    const modeNames = {
+                        'time': 'Time-Based',
+                        'distance': 'Distance-Based',
+                        'intervals': 'Fixed Intervals',
+                        'variable-intervals': 'Variable Intervals',
+                        'just-row': 'Just Row'
+                    };
+                    html += `
+                        <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
+                            <div style="color:#888;">Mode</div>
+                            <div style="font-weight:700; color:var(--accent);">${modeNames[this.builderMode] || this.builderMode}</div>
+                        </div>
+                    `;
+                    
+                    // Calculate totals
+                    let totalWork = 0;
+                    let totalRest = 0;
+                    let intervalCount = this.reviewWorkout.intervals.length;
+                    
+                    this.reviewWorkout.intervals.forEach(interval => {
+                        if (interval.workValue) totalWork += parseInt(interval.workValue);
+                        if (interval.value) totalWork += parseInt(interval.value);
+                        if (interval.restTime) totalRest += parseInt(interval.restTime);
+                    });
+                    
+                    // Total Work
+                    if (this.builderMode === 'time' || this.builderMode === 'just-row') {
                         html += `
-                            <div class="review-interval">
-                                <div class="review-interval-info">
-                                    <div class="review-interval-title">${i + 1}. ${interval.workValue || interval.value}m</div>
-                                    <div class="review-interval-desc">Rest: ${interval.restTime || 0}s</div>
-                                </div>
+                            <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
+                                <div style="color:#888;">Total Time</div>
+                                <div style="font-weight:700;">${totalWork} minutes</div>
                             </div>
                         `;
-                    });
+                    } else {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
+                                <div style="color:#888;">Total Distance</div>
+                                <div style="font-weight:700;">${totalWork}m</div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Intervals
+                    if (intervalCount > 1) {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
+                                <div style="color:#888;">Intervals</div>
+                                <div style="font-weight:700;">${intervalCount} sets</div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Total Rest
+                    if (totalRest > 0) {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
+                                <div style="color:#888;">Total Rest</div>
+                                <div style="font-weight:700;">${totalRest}s (${Math.round(totalRest/60)}min)</div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Global Targets
+                    if (this.globalTargetSplit) {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #222;">
+                                <div style="color:#888;">Target Split</div>
+                                <div style="font-weight:700; color:#4a90e2;">${this.globalTargetSplit}/500m</div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (this.globalTargetHR) {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; padding:12px 0;">
+                                <div style="color:#888;">Target HR Zone</div>
+                                <div style="font-weight:700; color:#ff6b6b;">Zone ${this.globalTargetHR}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `</div>`;
+                    
+                    // Intervals Breakdown (if multiple intervals)
+                    if (intervalCount > 1) {
+                        html += `
+                            <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:20px;">
+                                <div style="font-size:12px; color:#666; text-transform:uppercase; margin-bottom:12px;">Intervals Breakdown</div>
+                        `;
+                        
+                        this.reviewWorkout.intervals.forEach((interval, i) => {
+                            const workValue = interval.workValue || interval.value;
+                            const workUnit = (this.builderMode === 'time' || this.builderMode === 'just-row') ? 'min' : 'm';
+                            const restValue = interval.restTime || 0;
+                            
+                            html += `
+                                <div style="background:#050505; border:1px solid #222; border-radius:8px; padding:16px; margin-bottom:12px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <div style="font-weight:700; font-size:14px;">Set ${i + 1}</div>
+                                        <div style="font-size:18px; font-weight:900; color:var(--accent);">${workValue}${workUnit}</div>
+                                    </div>
+                                    ${restValue > 0 ? `
+                                        <div style="display:flex; justify-content:space-between; font-size:12px; color:#888;">
+                                            <div>Rest</div>
+                                            <div>${restValue}s</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        });
+                        
+                        html += `</div>`;
+                    }
                 }
                 
                 intervalsElem.innerHTML = html;
-            }
-
-            restrategize() {
-                this.showToast('AI restrategizing...', 'success');
-                setTimeout(() => {
-                    this.navigate('screenBuilder');
-                }, 1000);
             }
 
             startWorkout() {
@@ -2811,6 +2954,36 @@
                 document.getElementById('editName').value = this.profile.name || '';
                 document.getElementById('editAge').value = this.profile.age || '';
                 document.getElementById('editWeight').value = this.profile.weight || '';
+                
+                this.loadHRZones();
+            }
+            
+            loadHRZones() {
+                const maxHR = this.profile?.maxHR || 190;
+                document.getElementById('editMaxHR').value = maxHR;
+                
+                // Update zone ranges
+                document.getElementById('zone1Range').textContent = `${Math.round(maxHR * 0.5)}-${Math.round(maxHR * 0.6)} bpm`;
+                document.getElementById('zone2Range').textContent = `${Math.round(maxHR * 0.6)}-${Math.round(maxHR * 0.7)} bpm`;
+                document.getElementById('zone3Range').textContent = `${Math.round(maxHR * 0.7)}-${Math.round(maxHR * 0.8)} bpm`;
+                document.getElementById('zone4Range').textContent = `${Math.round(maxHR * 0.8)}-${Math.round(maxHR * 0.9)} bpm`;
+                document.getElementById('zone5Range').textContent = `${Math.round(maxHR * 0.9)}-${maxHR} bpm`;
+            }
+            
+            async saveHRZones() {
+                const maxHR = parseInt(document.getElementById('editMaxHR').value);
+                
+                if (!maxHR || maxHR < 100 || maxHR > 220) {
+                    this.showToast('Enter valid max HR (100-220)', 'error');
+                    return;
+                }
+                
+                this.profile = this.profile || {};
+                this.profile.maxHR = maxHR;
+                await this.dataStore.saveProfile(this.profile);
+                
+                this.loadHRZones();
+                this.showToast('HR zones saved!', 'success');
             }
 
             async saveProfile() {
@@ -2950,14 +3123,38 @@
                 const container = document.getElementById('planContent');
                 if (!container || !this.trainingPlan) return;
                 
-                const html = this.trainingPlan.weeks.map(week => `
+                // Plan Overview
+                let html = `
+                    <div style="background:linear-gradient(135deg, rgba(0,255,153,0.1) 0%, rgba(0,255,153,0.02) 100%); border:2px solid var(--accent); border-radius:12px; padding:20px; margin-bottom:20px;">
+                        <div style="font-size:16px; font-weight:700; color:var(--accent); margin-bottom:12px;">🎯 Your 4-Week Training Plan</div>
+                        <div style="font-size:13px; line-height:1.6; color:#ccc; margin-bottom:16px;">
+                            This progressive program is designed to build your aerobic base, increase training intensity, reach peak volume, and then taper for a final test. Each week builds on the previous one, gradually preparing you for peak performance.
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
+                            <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:12px;">
+                                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Objective</div>
+                                <div style="font-size:13px; font-weight:700;">2000m Time Trial</div>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:12px;">
+                                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Duration</div>
+                                <div style="font-size:13px; font-weight:700;">4 Weeks</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(0,255,153,0.2); font-size:12px; color:#888;">
+                            💡 <strong>Tip:</strong> Click any workout to view details or make adjustments
+                        </div>
+                    </div>
+                `;
+                
+                // Weekly Breakdown
+                html += this.trainingPlan.weeks.map(week => `
                     <div class="plan-week">
                         <div class="plan-week-header">
                             <div class="plan-week-title">Week ${week.number}</div>
                             <div class="plan-week-focus">${week.focus}</div>
                         </div>
-                        ${week.days.map(day => `
-                            <div class="plan-day">
+                        ${week.days.map((day, dayIndex) => `
+                            <div class="plan-day" onclick="app.viewPlanDay(${week.number}, ${dayIndex})" style="cursor:pointer;">
                                 <div class="plan-day-info">
                                     <div class="plan-day-title">${day.day}: ${day.title}</div>
                                     <div class="plan-day-desc">${day.desc}</div>
@@ -2969,6 +3166,31 @@
                 `).join('');
                 
                 container.innerHTML = html;
+            }
+            
+            viewPlanDay(weekNum, dayIndex) {
+                const week = this.trainingPlan.weeks.find(w => w.number === weekNum);
+                if (!week) return;
+                
+                const day = week.days[dayIndex];
+                if (!day) return;
+                
+                const message = `
+<strong>${day.day} - Week ${weekNum}</strong>
+
+<strong>Workout:</strong> ${day.title}
+<strong>Details:</strong> ${day.desc}
+<strong>Status:</strong> ${day.status === 'completed' ? '✓ Completed' : '○ Pending'}
+
+Would you like to:
+• View detailed strategy for this workout
+• Adjust the workout parameters
+• Mark as completed
+• Get AI coaching tips
+                `.trim();
+                
+                alert(message);
+                // Future: Open a modal with edit options
             }
 
             generateNewPlan() {
