@@ -913,7 +913,7 @@
     
     <!-- TOP NAVIGATION BAR -->
     <nav class="top-nav-bar">
-        <button class="top-nav-item active" onclick="app.navigate('screenSettings')">
+        <button class="top-nav-item" onclick="app.navigate('screenSettings')">
             <span class="top-nav-icon">⚙️</span>
             <span class="top-nav-label">Settings</span>
         </button>
@@ -3208,6 +3208,7 @@ Would you like to:
                 document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
                 document.getElementById(screenId).classList.add('active');
 
+                // Update BOTTOM navigation
                 const navItems = document.querySelectorAll('.nav-item');
                 navItems.forEach(item => item.classList.remove('active'));
                 
@@ -3222,6 +3223,20 @@ Would you like to:
                 const index = screenMap[screenId];
                 if (index !== undefined && navItems[index]) {
                     navItems[index].classList.add('active');
+                }
+                
+                // Update TOP navigation
+                const topNavItems = document.querySelectorAll('.top-nav-item');
+                topNavItems.forEach(item => item.classList.remove('active'));
+                
+                const topScreenMap = {
+                    'screenSettings': 0,
+                    'screenHRM': 1
+                };
+                
+                const topIndex = topScreenMap[screenId];
+                if (topIndex !== undefined && topNavItems[topIndex]) {
+                    topNavItems[topIndex].classList.add('active');
                 }
                 
                 // Update Firebase status when opening settings
