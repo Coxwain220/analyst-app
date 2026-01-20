@@ -1947,15 +1947,24 @@
                 console.log('🔍 Requesting PM5 device...');
                 console.log('💡 Make sure PM5 is on and showing "Ready" or "Waiting"');
                 
-                // Try to find PM5 using both service UUIDs
-                this.pm5Device = await navigator.bluetooth.requestDevice({
-                    filters: [
-                        { services: [PM5_ROWING_SERVICE] },
-                        { services: [PM5_SERVICE_UUID] },
-                        { namePrefix: 'PM5' }
-                    ],
-                    optionalServices: [PM5_ROWING_SERVICE, PM5_SERVICE_UUID, PM5_DEVICE_INFO]
-                });
+                // Try to find PM5 - use acceptAllDevices with optionalServices as fallback
+                let deviceOptions;
+                try {
+                    // First try: Look for Concept2 PM service
+                    deviceOptions = {
+                        filters: [{ services: [PM5_ROWING_SERVICE] }],
+                        optionalServices: [PM5_SERVICE_UUID, PM5_DEVICE_INFO]
+                    };
+                    this.pm5Device = await navigator.bluetooth.requestDevice(deviceOptions);
+                } catch (e) {
+                    console.log('⚠️ Concept2 service not advertised, trying standard Fitness Machine...');
+                    // Second try: Standard Fitness Machine service
+                    deviceOptions = {
+                        filters: [{ services: [PM5_SERVICE_UUID] }],
+                        optionalServices: [PM5_ROWING_SERVICE, PM5_DEVICE_INFO]
+                    };
+                    this.pm5Device = await navigator.bluetooth.requestDevice(deviceOptions);
+                }
                 
                 console.log(`✓ Found device: ${this.pm5Device.name}`);
                 if (status) status.textContent = `Connecting to ${this.pm5Device.name}...`;
