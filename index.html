@@ -902,9 +902,178 @@
             .scroll-content {
                 padding: 8px;
             }
-            
+
             .card {
                 padding: 16px;
+            }
+        }
+
+        /* ========================================
+           DNA FACT SHEET - CORTEX BRANDING
+           ======================================== */
+
+        /* Safety Header - Blood Red Border */
+        .dna-safety-section {
+            background: var(--panel);
+            border: 2px solid #FF0000;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .dna-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .dna-status-indicator {
+            font-size: 24px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .dna-status-indicator.ready {
+            color: #00FF99;
+        }
+
+        .dna-status-indicator.caution {
+            color: #FF0000;
+        }
+
+        .dna-medical-flags {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dna-flag {
+            color: #FF4444;
+            font-size: 14px;
+            padding: 8px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Performance Benchmarks - Neon Green */
+        .dna-benchmarks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .dna-benchmark {
+            text-align: center;
+            padding: 16px;
+            background: rgba(0, 255, 153, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 153, 0.2);
+        }
+
+        .dna-benchmark-label {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dna-benchmark-value {
+            color: #00FF99;
+            font-size: 36px;
+            font-weight: bold;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .dna-benchmark-total {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Lifestyle & Recovery */
+        .dna-lifestyle-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .dna-lifestyle-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dna-lifestyle-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dna-lifestyle-bar {
+            background: #222;
+            height: 24px;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dna-lifestyle-fill {
+            background: #00FF99;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .dna-lifestyle-fill.stress {
+            background: #FF9900;
+        }
+
+        .dna-lifestyle-value {
+            color: #00FF99;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .dna-lifestyle-text {
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        /* AI Insight Card */
+        .dna-ai-insight-card {
+            background: var(--panel);
+            border: 1px solid #00FF99;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            box-shadow: 0 0 20px rgba(0, 255, 153, 0.1);
+        }
+
+        .dna-ai-header {
+            color: #00FF99;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dna-ai-content {
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Pulse animation for status indicator */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
             }
         }
     </style>
@@ -1253,6 +1422,92 @@
         </div>
     </div>
 
+    <!-- DNA FACT SHEET SCREEN -->
+    <div id="screenDNA" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">ATHLETIC DNA</div>
+        </div>
+        <div class="scroll-content">
+
+            <!-- Safety Header -->
+            <div class="dna-safety-section">
+                <div class="dna-status" id="dnaStatus">
+                    <span class="dna-status-indicator" id="dnaStatusIndicator">●</span>
+                    <span id="dnaStatusText">READY</span>
+                </div>
+                <div class="dna-medical-flags">
+                    <div class="dna-flag">⚠️ C5-C7 Disc Replacement</div>
+                    <div class="dna-flag">⚠️ C4-C5 Instability</div>
+                </div>
+            </div>
+
+            <!-- Performance Benchmarks -->
+            <div class="card">
+                <div class="card-header">Engine Benchmarks</div>
+                <div class="dna-benchmarks-grid">
+                    <div class="dna-benchmark">
+                        <div class="dna-benchmark-label">2k PB</div>
+                        <div class="dna-benchmark-value" id="dna2kPB">1:51.0</div>
+                        <div class="dna-benchmark-total" id="dna2kTotal">(7:24.0)</div>
+                    </div>
+                    <div class="dna-benchmark">
+                        <div class="dna-benchmark-label">5k PB</div>
+                        <div class="dna-benchmark-value" id="dna5kPB">--:--</div>
+                        <div class="dna-benchmark-total" id="dna5kTotal">--</div>
+                    </div>
+                    <div class="dna-benchmark">
+                        <div class="dna-benchmark-label">Max HR</div>
+                        <div class="dna-benchmark-value" id="dnaMaxHR">184</div>
+                        <div class="dna-benchmark-total">BPM</div>
+                    </div>
+                    <div class="dna-benchmark">
+                        <div class="dna-benchmark-label">Avg Drag</div>
+                        <div class="dna-benchmark-value" id="dnaAvgDrag">132</div>
+                        <div class="dna-benchmark-total"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lifestyle & Recovery -->
+            <div class="card">
+                <div class="card-header">Lifestyle & Recovery</div>
+                <div class="dna-lifestyle-grid">
+                    <div class="dna-lifestyle-item">
+                        <div class="dna-lifestyle-label">Sleep Quality</div>
+                        <div class="dna-lifestyle-bar">
+                            <div class="dna-lifestyle-fill" id="dnaSleepBar" style="width: 70%"></div>
+                        </div>
+                        <div class="dna-lifestyle-value" id="dnaSleepValue">7/10</div>
+                    </div>
+                    <div class="dna-lifestyle-item">
+                        <div class="dna-lifestyle-label">Stress Level</div>
+                        <div class="dna-lifestyle-bar">
+                            <div class="dna-lifestyle-fill stress" id="dnaStressBar" style="width: 50%"></div>
+                        </div>
+                        <div class="dna-lifestyle-value" id="dnaStressValue">Medium</div>
+                    </div>
+                    <div class="dna-lifestyle-item">
+                        <div class="dna-lifestyle-label">Activity Level</div>
+                        <div class="dna-lifestyle-text" id="dnaActivityLevel">Sedentary (Office Job)</div>
+                    </div>
+                    <div class="dna-lifestyle-item">
+                        <div class="dna-lifestyle-label">Injury History</div>
+                        <button class="btn btn-outline" onclick="app.toggleInjuryDetails()">View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Insight Card -->
+            <div class="dna-ai-insight-card">
+                <div class="dna-ai-header">🧠 Cortex Insight</div>
+                <div class="dna-ai-content" id="dnaAIInsight">
+                    Connect your PM5 and complete a workout to receive personalized insights.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- SETTINGS SCREEN -->
     <div id="screenSettings" class="screen">
         <div class="screen-header">
@@ -1418,9 +1673,9 @@
             <span class="nav-icon">📅</span>
             Plan
         </button>
-        <button class="nav-item" onclick="app.navigate('screenHistory')">
-            <span class="nav-icon">📊</span>
-            History
+        <button class="nav-item" onclick="app.navigate('screenDNA')">
+            <span class="nav-icon">🧬</span>
+            DNA
         </button>
     </nav>
 
@@ -1558,7 +1813,7 @@
                 if (this.isFirebase) {
                     const { doc, setDoc } = window.firebaseModules;
                     const db = window.firebaseDb;
-                    
+
                     await setDoc(doc(db, 'users', this.userId, 'workouts', workout.id), workout);
                     console.log('✓ Workout saved to Firebase:', workout.id);
                 } else {
@@ -1571,6 +1826,9 @@
                     }
                     localStorage.setItem('rowing_coach_workouts_v1', JSON.stringify(workouts));
                 }
+
+                // Update DNA Profile with workout data
+                await this.updateDNAProfile(workout);
             }
             
             async loadWorkouts() {
@@ -1694,12 +1952,15 @@
 
                 // Initialize storage (Firebase or localStorage)
                 await this.dataStore.init();
-                
+
                 await this.loadData();
                 this.loadProfile();
+                await this.loadDNA();
+                this.initAudioCoach();
                 this.setupDashboardSwipe();
                 this.renderBuilderMode();
                 this.renderHistory();
+                this.renderDNA();
                 this.updateStats();
                 this.renderChat();
                 
@@ -1739,6 +2000,272 @@
                     // Note: Workouts saved individually via saveWorkout()
                 } catch (error) {
                     console.error('Save error:', error);
+                }
+            }
+
+            // ========================================================================
+            // DNA FACT SHEET FUNCTIONALITY
+            // ========================================================================
+
+            async loadDNA() {
+                try {
+                    // Initialize default DNA profile
+                    this.dnaProfile = {
+                        medical_constraints: [
+                            "C5-C7 Disc Replacement",
+                            "C4-C5 Instability"
+                        ],
+                        performance_benchmarks: {
+                            "2k_split": "1:51.0",
+                            "2k_total": "7:24.0",
+                            "5k_split": null,
+                            "5k_total": null,
+                            "max_hr": 184,
+                            "avg_drag": 132
+                        },
+                        lifestyle: {
+                            job: "office",
+                            activity_level: "Sedentary (Office Job)",
+                            sleep_quality: 7,
+                            stress_level: "medium"
+                        },
+                        ai_summary: "Connect your PM5 and complete a workout to receive personalized insights.",
+                        status: "ready",  // "ready" or "caution"
+                        last_updated: new Date().toISOString()
+                    };
+
+                    // Try to load from localStorage or Firebase
+                    const stored = localStorage.getItem('rowing_coach_dna_v1');
+                    if (stored) {
+                        this.dnaProfile = { ...this.dnaProfile, ...JSON.parse(stored) };
+                    }
+
+                    console.log('✓ DNA Profile loaded');
+                } catch (error) {
+                    console.error('DNA load error:', error);
+                }
+            }
+
+            async saveDNA() {
+                try {
+                    this.dnaProfile.last_updated = new Date().toISOString();
+                    localStorage.setItem('rowing_coach_dna_v1', JSON.stringify(this.dnaProfile));
+                    console.log('✓ DNA Profile saved');
+                } catch (error) {
+                    console.error('DNA save error:', error);
+                }
+            }
+
+            renderDNA() {
+                if (!this.dnaProfile) return;
+
+                const pb = this.dnaProfile.performance_benchmarks;
+                const lifestyle = this.dnaProfile.lifestyle;
+
+                // Update status indicator
+                const statusIndicator = document.getElementById('dnaStatusIndicator');
+                const statusText = document.getElementById('dnaStatusText');
+                if (statusIndicator && statusText) {
+                    if (this.dnaProfile.status === 'ready') {
+                        statusIndicator.className = 'dna-status-indicator ready';
+                        statusText.textContent = 'READY';
+                        statusText.style.color = '#00FF99';
+                    } else {
+                        statusIndicator.className = 'dna-status-indicator caution';
+                        statusText.textContent = 'CAUTION: DELOAD RECOMMENDED';
+                        statusText.style.color = '#FF0000';
+                    }
+                }
+
+                // Update benchmarks
+                const set = (id, value) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = value || '--';
+                };
+
+                set('dna2kPB', pb['2k_split'] || '--:--');
+                set('dna2kTotal', pb['2k_total'] ? `(${pb['2k_total']})` : '');
+                set('dna5kPB', pb['5k_split'] || '--:--');
+                set('dna5kTotal', pb['5k_total'] || '--');
+                set('dnaMaxHR', pb.max_hr || '--');
+                set('dnaAvgDrag', pb.avg_drag || '--');
+
+                // Update lifestyle
+                set('dnaSleepValue', `${lifestyle.sleep_quality}/10`);
+                set('dnaStressValue', lifestyle.stress_level || 'Medium');
+                set('dnaActivityLevel', lifestyle.activity_level || 'Unknown');
+
+                // Update progress bars
+                const sleepBar = document.getElementById('dnaSleepBar');
+                if (sleepBar) {
+                    sleepBar.style.width = `${(lifestyle.sleep_quality / 10) * 100}%`;
+                }
+
+                const stressBar = document.getElementById('dnaStressBar');
+                if (stressBar) {
+                    const stressMap = { low: 30, medium: 50, high: 80 };
+                    stressBar.style.width = `${stressMap[lifestyle.stress_level] || 50}%`;
+                }
+
+                // Update AI insight
+                set('dnaAIInsight', this.dnaProfile.ai_summary);
+            }
+
+            async updateDNAProfile(workoutData) {
+                if (!this.dnaProfile) return;
+
+                // Update performance benchmarks if new PBs detected
+                const avgPace = workoutData.avgPace;  // in seconds per 500m
+                const distance = workoutData.distance;
+                const avgHR = workoutData.avgHR;
+
+                // Check for 2k PB
+                if (distance >= 2000 && distance <= 2050) {
+                    const current2kSplit = this.convertPaceToSeconds(this.dnaProfile.performance_benchmarks['2k_split']);
+                    if (!current2kSplit || avgPace < current2kSplit) {
+                        this.dnaProfile.performance_benchmarks['2k_split'] = this.formatPace(avgPace);
+                        const totalTime = (avgPace * 4);  // 2000m = 4 x 500m
+                        this.dnaProfile.performance_benchmarks['2k_total'] = this.formatTime(totalTime);
+                        this.showToast('🎉 New 2k PB!', 'success');
+                    }
+                }
+
+                // Check for 5k PB
+                if (distance >= 5000 && distance <= 5050) {
+                    const current5kSplit = this.convertPaceToSeconds(this.dnaProfile.performance_benchmarks['5k_split']);
+                    if (!current5kSplit || avgPace < current5kSplit) {
+                        this.dnaProfile.performance_benchmarks['5k_split'] = this.formatPace(avgPace);
+                        const totalTime = (avgPace * 10);  // 5000m = 10 x 500m
+                        this.dnaProfile.performance_benchmarks['5k_total'] = this.formatTime(totalTime);
+                        this.showToast('🎉 New 5k PB!', 'success');
+                    }
+                }
+
+                // Update Max HR if exceeded
+                if (avgHR > this.dnaProfile.performance_benchmarks.max_hr) {
+                    this.dnaProfile.performance_benchmarks.max_hr = avgHR;
+                }
+
+                // Generate AI insight using simple analysis
+                this.generateAIInsight(workoutData);
+
+                await this.saveDNA();
+                this.renderDNA();
+            }
+
+            generateAIInsight(workoutData) {
+                // Simple rule-based insight generation (will be replaced with Claude API later)
+                const insights = [];
+
+                // Check pacing consistency
+                if (workoutData.intervals && workoutData.intervals.length > 1) {
+                    const splits = workoutData.intervals.map(i => i.avgPace);
+                    const spread = Math.max(...splits) - Math.min(...splits);
+                    if (spread < 2) {
+                        insights.push("Excellent pacing consistency! Your split spread was under 2 seconds.");
+                    } else if (spread > 5) {
+                        insights.push(`Your pacing varied by ${spread.toFixed(1)}s. Focus on maintaining consistent effort.`);
+                    }
+                }
+
+                // Check HR response
+                if (workoutData.avgHR) {
+                    const maxHR = this.dnaProfile.performance_benchmarks.max_hr;
+                    const hrPercent = (workoutData.avgHR / maxHR) * 100;
+                    if (hrPercent > 90) {
+                        insights.push(`High HR effort at ${hrPercent.toFixed(0)}% of max. Consider 48hr recovery.`);
+                    } else if (hrPercent < 70) {
+                        insights.push(`Good Zone 2 work at ${hrPercent.toFixed(0)}% of max HR.`);
+                    }
+                }
+
+                // Medical safety check
+                if (workoutData.avgHR > 175) {
+                    insights.push("⚠️ Remember your C5-C7 condition. Monitor for hand numbness.");
+                }
+
+                this.dnaProfile.ai_summary = insights.join(' ') || this.dnaProfile.ai_summary;
+            }
+
+            convertPaceToSeconds(paceString) {
+                if (!paceString || paceString === '--:--') return null;
+                const [min, sec] = paceString.split(':').map(Number);
+                return min * 60 + sec;
+            }
+
+            toggleInjuryDetails() {
+                this.showToast('Injury details: Hand numbness/weakness. C5-C7 disc replacement. Monitor during high-intensity efforts.', 'success');
+            }
+
+            // ========================================================================
+            // AUDIO COACH (Web Speech API)
+            // ========================================================================
+
+            initAudioCoach() {
+                // Initialize Web Speech API
+                if ('speechSynthesis' in window) {
+                    this.audioEnabled = true;
+                    this.audioQueue = [];
+                    console.log('✓ Audio Coach enabled');
+                } else {
+                    this.audioEnabled = false;
+                    console.warn('⚠️ Web Speech API not supported');
+                }
+            }
+
+            speak(text, priority = false) {
+                if (!this.audioEnabled) return;
+
+                // Cancel current speech if priority message
+                if (priority && window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;  // Normal speed
+                utterance.pitch = 1.0;  // Normal pitch
+                utterance.volume = 1.0;  // Full volume
+
+                // Use a clear, athletic voice if available
+                const voices = window.speechSynthesis.getVoices();
+                const preferredVoice = voices.find(v => v.name.includes('Samantha') || v.name.includes('Karen'));
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+
+                window.speechSynthesis.speak(utterance);
+            }
+
+            // Audio cues for interval workouts
+            announceIntervalStart(intervalNum, targetSplit) {
+                const message = `Interval ${intervalNum} starting. Target split ${targetSplit}.`;
+                this.speak(message, true);
+            }
+
+            announceIntervalMidpoint() {
+                this.speak('Halfway there. Hold the pace.', false);
+            }
+
+            announceIntervalEnd(intervalNum) {
+                this.speak(`Interval ${intervalNum} complete. Nice work.`, true);
+            }
+
+            announceRestStart(restTime) {
+                this.speak(`Rest period. ${restTime} seconds.`, true);
+            }
+
+            announceWorkoutComplete() {
+                this.speak('Workout complete. Great effort.', true);
+            }
+
+            announcePaceCheck(currentPace, targetPace) {
+                const diff = currentPace - targetPace;
+                if (Math.abs(diff) > 3) {
+                    if (diff > 0) {
+                        this.speak(`You're ${Math.abs(diff).toFixed(0)} seconds slow. Pick it up.`, true);
+                    } else {
+                        this.speak(`You're ${Math.abs(diff).toFixed(0)} seconds fast. Ease back.`, true);
+                    }
                 }
             }
 
