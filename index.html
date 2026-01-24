@@ -2268,58 +2268,108 @@
                     const text = await file.text();
                     const lines = text.split('\n');
 
+                    if (lines.length < 2) {
+                        throw new Error('CSV file is empty or invalid');
+                    }
+
+                    // Get header to understand column positions
+                    const header = lines[0].toLowerCase();
+                    console.log('CSV Header:', header);
+
                     // Skip header row
                     const dataLines = lines.slice(1).filter(line => line.trim());
 
                     let imported = 0;
+                    let skipped = 0;
 
-                    for (const line of dataLines) {
-                        // Parse CSV line (Concept2 format)
-                        // Expected columns: Date, Time, Description, Work Time, Rest Time, Work Distance, Rest Distance, Avg Pace, Avg Watts, Avg HR, etc.
-                        const cols = line.split(',').map(c => c.trim().replace(/"/g, ''));
+                    for (let i = 0; i < dataLines.length; i++) {
+                        try {
+                            const line = dataLines[i];
 
-                        if (cols.length < 8) continue;
+                            // Parse CSV line (handle quoted fields)
+                            const cols = this.parseCSVLine(line);
 
-                        // Extract key fields
-                        const date = cols[0];  // Date
-                        const description = cols[2] || 'Imported Workout';  // Description
-                        const workTime = this.parseTimeToSeconds(cols[3]);  // Work Time (mm:ss.t)
-                        const distance = parseInt(cols[5]) || 0;  // Work Distance
-                        const avgPaceStr = cols[7];  // Avg Pace (m:ss.t)
-                        const avgWatts = parseInt(cols[8]) || 0;  // Avg Watts
-                        const avgHR = parseInt(cols[9]) || null;  // Avg HR
+                            if (cols.length < 6) {
+                                skipped++;
+                                continue;
+                            }
 
-                        if (distance === 0 || !avgPaceStr) continue;
+                            // Extract key fields (robust parsing)
+                            const dateStr = cols[0] || '';
+                            const description = cols[2] || 'Imported Workout';
+                            const workTimeStr = cols[3] || '0';
+                            const distanceStr = cols[5] || '0';
+                            const avgPaceStr = cols[7] || '';
+                            const avgWattsStr = cols[8] || '0';
+                            const avgHRStr = cols[9] || '';
 
-                        // Parse pace to seconds per 500m
-                        const avgPace = this.parsePaceToSeconds(avgPaceStr);
+                            // Parse distance
+                            const distance = parseInt(distanceStr.replace(/[^0-9]/g, '')) || 0;
+                            if (distance === 0) {
+                                skipped++;
+                                continue;
+                            }
 
-                        // Create workout object
-                        const workout = {
-                            id: `import_${Date.parse(date) || Date.now()}_${imported}`,
-                            date: new Date(date).toISOString(),
-                            type: 'imported',
-                            description: description,
-                            duration: workTime,
-                            distance: distance,
-                            avgPace: avgPace,
-                            avgWatts: avgWatts,
-                            avgHR: avgHR,
-                            completed: true
-                        };
+                            // Parse time (flexible)
+                            const workTime = this.parseTimeToSeconds(workTimeStr);
 
-                        // Save workout
-                        await this.dataStore.saveWorkout(workout);
-                        this.workouts.unshift(workout);
-                        imported++;
+                            // Parse pace (flexible)
+                            const avgPace = this.parsePaceToSeconds(avgPaceStr);
+                            if (avgPace === 0) {
+                                skipped++;
+                                continue;
+                            }
 
-                        // Update DNA profile with this workout data
-                        await this.updateDNAProfile(workout);
+                            // Parse watts and HR
+                            const avgWatts = parseInt(avgWattsStr.replace(/[^0-9]/g, '')) || 0;
+                            const avgHR = parseInt(avgHRStr.replace(/[^0-9]/g, '')) || null;
+
+                            // Parse date (flexible)
+                            let workoutDate;
+                            try {
+                                workoutDate = new Date(dateStr);
+                                if (isNaN(workoutDate.getTime())) {
+                                    workoutDate = new Date();
+                                }
+                            } catch (e) {
+                                workoutDate = new Date();
+                            }
+
+                            // Create workout object
+                            const workout = {
+                                id: `import_${workoutDate.getTime()}_${imported}`,
+                                date: workoutDate.toISOString(),
+                                type: 'imported',
+                                description: description,
+                                duration: workTime,
+                                distance: distance,
+                                avgPace: avgPace,
+                                avgWatts: avgWatts,
+                                avgHR: avgHR,
+                                completed: true
+                            };
+
+                            // Save workout
+                            await this.dataStore.saveWorkout(workout);
+                            this.workouts.unshift(workout);
+                            imported++;
+
+                            // Update DNA profile with this workout data
+                            await this.updateDNAProfile(workout);
+
+                        } catch (lineError) {
+                            console.warn(`Skipping line ${i + 2}:`, lineError.message);
+                            skipped++;
+                        }
                     }
 
-                    this.showToast(`✓ Imported ${imported} workouts!`, 'success');
-                    this.renderDNA();
-                    this.updateStats();
+                    if (imported > 0) {
+                        this.showToast(`✓ Imported ${imported} workouts!`, 'success');
+                        this.renderDNA();
+                        this.updateStats();
+                    } else {
+                        throw new Error('No valid workouts found in CSV');
+                    }
 
                 } catch (error) {
                     console.error('CSV import error:', error);
@@ -2330,32 +2380,91 @@
                 event.target.value = '';
             }
 
-            parseTimeToSeconds(timeStr) {
-                // Parse format: mm:ss.t or hh:mm:ss.t
-                if (!timeStr) return 0;
-                const parts = timeStr.split(':');
-                if (parts.length === 2) {
-                    // mm:ss.t
-                    const [min, secParts] = parts;
-                    const sec = parseFloat(secParts);
-                    return parseInt(min) * 60 + sec;
-                } else if (parts.length === 3) {
-                    // hh:mm:ss.t
-                    const [hr, min, secParts] = parts;
-                    const sec = parseFloat(secParts);
-                    return parseInt(hr) * 3600 + parseInt(min) * 60 + sec;
+            parseCSVLine(line) {
+                // Handle CSV with quoted fields
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
                 }
+                result.push(current.trim());
+
+                return result;
+            }
+
+            parseTimeToSeconds(timeStr) {
+                // Parse format: mm:ss.t or hh:mm:ss.t or just seconds
+                if (!timeStr || timeStr === '') return 0;
+
+                // Remove any non-numeric characters except : and .
+                timeStr = timeStr.toString().trim();
+
+                // If it's just a number, return it
+                if (!timeStr.includes(':')) {
+                    const num = parseFloat(timeStr);
+                    return isNaN(num) ? 0 : num;
+                }
+
+                const parts = timeStr.split(':');
+
+                try {
+                    if (parts.length === 2) {
+                        // mm:ss.t
+                        const min = parseInt(parts[0]) || 0;
+                        const sec = parseFloat(parts[1]) || 0;
+                        return min * 60 + sec;
+                    } else if (parts.length === 3) {
+                        // hh:mm:ss.t
+                        const hr = parseInt(parts[0]) || 0;
+                        const min = parseInt(parts[1]) || 0;
+                        const sec = parseFloat(parts[2]) || 0;
+                        return hr * 3600 + min * 60 + sec;
+                    }
+                } catch (e) {
+                    console.warn('Time parse error:', timeStr, e);
+                    return 0;
+                }
+
                 return 0;
             }
 
             parsePaceToSeconds(paceStr) {
                 // Parse pace format: m:ss.t (pace per 500m)
-                if (!paceStr) return 0;
+                if (!paceStr || paceStr === '') return 0;
+
+                paceStr = paceStr.toString().trim();
+
+                // If it's just a number, return it
+                if (!paceStr.includes(':')) {
+                    const num = parseFloat(paceStr);
+                    return isNaN(num) ? 0 : num;
+                }
+
                 const parts = paceStr.split(':');
-                if (parts.length !== 2) return 0;
-                const [min, secParts] = parts;
-                const sec = parseFloat(secParts);
-                return parseInt(min) * 60 + sec;
+
+                try {
+                    if (parts.length === 2) {
+                        const min = parseInt(parts[0]) || 0;
+                        const sec = parseFloat(parts[1]) || 0;
+                        return min * 60 + sec;
+                    }
+                } catch (e) {
+                    console.warn('Pace parse error:', paceStr, e);
+                    return 0;
+                }
+
+                return 0;
             }
 
             // ========================================================================
