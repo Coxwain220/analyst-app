@@ -2073,9 +2073,6 @@
                     }
                     localStorage.setItem('rowing_coach_workouts_v1', JSON.stringify(workouts));
                 }
-
-                // Update DNA Profile with workout data
-                await this.updateDNAProfile(workout);
             }
             
             async loadWorkouts() {
@@ -2233,19 +2230,24 @@
                     this.workouts = await this.dataStore.loadWorkouts();
                     this.chatHistory = await this.dataStore.loadChat();
 
+                    console.log(`✓ Loaded ${this.workouts.length} workouts from storage`);
+
                     // Add sample workouts if empty (for testing)
                     if (this.workouts.length === 0) {
-                        console.log('Adding sample workouts for testing...');
+                        console.log('⚠️ No workouts found - adding 8 sample workouts...');
                         this.workouts = this.getSampleWorkouts();
+                        console.log('✓ Sample workouts created:', this.workouts.length);
+
                         // Save sample workouts
                         for (const workout of this.workouts) {
                             await this.dataStore.saveWorkout(workout);
                         }
+                        console.log('✓ Sample workouts saved to storage');
                     }
 
-                    console.log(`✓ Loaded ${this.workouts.length} workouts`);
+                    console.log(`✓ Total workouts ready: ${this.workouts.length}`);
                 } catch (error) {
-                    console.error('Load error:', error);
+                    console.error('❌ Load error:', error);
                 }
             }
 
@@ -2811,15 +2813,22 @@
 
             renderTrainingLog() {
                 const container = document.getElementById('trainingLogList');
-                if (!container) return;
+                if (!container) {
+                    console.warn('Training log container not found');
+                    return;
+                }
+
+                console.log(`Rendering training log with ${this.workouts.length} total workouts`);
 
                 // Get filtered workouts
                 const filtered = this.getFilteredWorkouts();
 
+                console.log(`After filtering: ${filtered.length} workouts`);
+
                 if (filtered.length === 0) {
                     container.innerHTML = `
                         <p style="font-size: 12px; color: #666; text-align: center; padding: 40px 20px;">
-                            No workouts found.<br>
+                            No workouts found (${this.workouts.length} total).<br>
                             Try adjusting your filters or add a new workout.
                         </p>
                     `;
