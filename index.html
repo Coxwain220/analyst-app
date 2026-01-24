@@ -2593,6 +2593,20 @@
                 return min * 60 + sec;
             }
 
+            formatPace(seconds) {
+                if (!seconds || seconds === 0) return '--:--';
+                const mins = Math.floor(seconds / 60);
+                const secs = (seconds % 60).toFixed(1);
+                return `${mins}:${secs.padStart(4, '0')}`;
+            }
+
+            formatTime(seconds) {
+                if (!seconds || seconds === 0) return '0:00';
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
             toggleInjuryDetails() {
                 this.showToast('Injury details: Hand numbness/weakness. C5-C7 disc replacement. Monitor during high-intensity efforts.', 'success');
             }
