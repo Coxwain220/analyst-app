@@ -2232,11 +2232,121 @@
                     this.profile = await this.dataStore.loadProfile();
                     this.workouts = await this.dataStore.loadWorkouts();
                     this.chatHistory = await this.dataStore.loadChat();
-                    
+
+                    // Add sample workouts if empty (for testing)
+                    if (this.workouts.length === 0) {
+                        console.log('Adding sample workouts for testing...');
+                        this.workouts = this.getSampleWorkouts();
+                        // Save sample workouts
+                        for (const workout of this.workouts) {
+                            await this.dataStore.saveWorkout(workout);
+                        }
+                    }
+
                     console.log(`✓ Loaded ${this.workouts.length} workouts`);
                 } catch (error) {
                     console.error('Load error:', error);
                 }
+            }
+
+            getSampleWorkouts() {
+                const now = Date.now();
+                const day = 24 * 60 * 60 * 1000;
+
+                return [
+                    // Today - Rowing
+                    {
+                        id: 'sample_1',
+                        date: new Date(now).toISOString(),
+                        activityType: 'rowing',
+                        duration: 1200,
+                        distance: 5000,
+                        avgPace: 120,
+                        avgHR: 165,
+                        completed: true,
+                        description: '5k Steady State',
+                        metadata: { distance: 5000, avgPace: 120, avgHR: 165 }
+                    },
+                    // Today - Football
+                    {
+                        id: 'sample_2',
+                        date: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+                        activityType: 'football',
+                        duration: 5400,
+                        completed: true,
+                        description: 'Team Practice',
+                        metadata: { intensity: 7, avgHR: 155 }
+                    },
+                    // Yesterday - Rowing intervals
+                    {
+                        id: 'sample_3',
+                        date: new Date(now - day).toISOString(),
+                        activityType: 'rowing',
+                        duration: 1500,
+                        distance: 4000,
+                        avgPace: 112,
+                        avgHR: 178,
+                        completed: true,
+                        description: '8x500m Intervals',
+                        metadata: { distance: 4000, avgPace: 112, avgHR: 178 }
+                    },
+                    // 2 days ago - BJJ
+                    {
+                        id: 'sample_4',
+                        date: new Date(now - 2 * day).toISOString(),
+                        activityType: 'bjj',
+                        duration: 3600,
+                        completed: true,
+                        description: 'No-Gi Rolling',
+                        metadata: { intensity: 9, avgHR: 172 }
+                    },
+                    // 3 days ago - Weights
+                    {
+                        id: 'sample_5',
+                        date: new Date(now - 3 * day).toISOString(),
+                        activityType: 'weights',
+                        duration: 2700,
+                        completed: true,
+                        description: 'Upper Body Strength',
+                        metadata: { intensity: 8, avgHR: 145 }
+                    },
+                    // 4 days ago - Rowing
+                    {
+                        id: 'sample_6',
+                        date: new Date(now - 4 * day).toISOString(),
+                        activityType: 'rowing',
+                        duration: 1800,
+                        distance: 10000,
+                        avgPace: 108,
+                        avgHR: 152,
+                        completed: true,
+                        description: '10k Long Pull',
+                        metadata: { distance: 10000, avgPace: 108, avgHR: 152 }
+                    },
+                    // 5 days ago - Football
+                    {
+                        id: 'sample_7',
+                        date: new Date(now - 5 * day).toISOString(),
+                        activityType: 'football',
+                        duration: 5400,
+                        completed: true,
+                        description: 'Match Day',
+                        metadata: { intensity: 10, avgHR: 175 }
+                    },
+                    // 6 days ago - Rowing
+                    {
+                        id: 'sample_8',
+                        date: new Date(now - 6 * day).toISOString(),
+                        activityType: 'rowing',
+                        duration: 900,
+                        distance: 2000,
+                        avgPace: 111,
+                        avgHR: 184,
+                        completed: true,
+                        description: '2k Test',
+                        metadata: { distance: 2000, avgPace: 111, avgHR: 184 }
+                    }
+                ];
             }
 
             async saveData() {
@@ -2951,92 +3061,100 @@
             }
 
             async saveManualWorkoutEntry() {
-                const type = document.getElementById('addWorkoutType').value;
-                if (!type) {
-                    this.showToast('Please select an activity type', 'error');
-                    return;
-                }
-
-                const date = document.getElementById('addWorkoutDate').value;
-                const notes = document.getElementById('addWorkoutNotes')?.value || '';
-                const avgHR = parseInt(document.getElementById('addWorkoutHR')?.value) || null;
-
-                let workout;
-
-                if (type === 'rowing') {
-                    const distance = parseInt(document.getElementById('addWorkoutDistance').value) || 0;
-                    const durationStr = document.getElementById('addWorkoutDuration').value;
-                    const paceStr = document.getElementById('addWorkoutPace').value;
-
-                    const duration = this.parseTimeToSeconds(durationStr);
-                    const avgPace = this.parsePaceToSeconds(paceStr);
-
-                    if (distance === 0) {
-                        this.showToast('Please enter distance', 'error');
+                try {
+                    const type = document.getElementById('addWorkoutType').value;
+                    if (!type) {
+                        this.showToast('Please select an activity type', 'error');
                         return;
                     }
 
-                    workout = {
-                        id: Date.now().toString(),
-                        date: new Date(date).toISOString(),
-                        activityType: 'rowing',
-                        duration: duration,
-                        completed: true,
-                        description: notes || 'Rowing Session',
-                        metadata: {
-                            distance: distance,
-                            avgPace: avgPace,
-                            avgHR: avgHR
+                    const date = document.getElementById('addWorkoutDate').value;
+                    const notes = document.getElementById('addWorkoutNotes')?.value || '';
+                    const avgHR = parseInt(document.getElementById('addWorkoutHR')?.value) || null;
+
+                    let workout;
+
+                    if (type === 'rowing') {
+                        const distance = parseInt(document.getElementById('addWorkoutDistance').value) || 0;
+                        const durationStr = document.getElementById('addWorkoutDuration').value;
+                        const paceStr = document.getElementById('addWorkoutPace').value;
+
+                        const duration = this.parseTimeToSeconds(durationStr);
+                        const avgPace = this.parsePaceToSeconds(paceStr);
+
+                        if (distance === 0) {
+                            this.showToast('Please enter distance', 'error');
+                            return;
                         }
-                    };
 
-                    // For backwards compatibility, also add at root level
-                    workout.distance = distance;
-                    workout.avgPace = avgPace;
-                    workout.avgHR = avgHR;
+                        workout = {
+                            id: Date.now().toString(),
+                            date: new Date(date).toISOString(),
+                            activityType: 'rowing',
+                            duration: duration,
+                            completed: true,
+                            description: notes || 'Rowing Session',
+                            metadata: {
+                                distance: distance,
+                                avgPace: avgPace,
+                                avgHR: avgHR
+                            }
+                        };
 
-                } else {
-                    // Simple activities
-                    const durationMins = parseInt(document.getElementById('addWorkoutDuration').value) || 0;
-                    const intensity = parseInt(document.getElementById('addWorkoutIntensity').value) || 5;
+                        // For backwards compatibility, also add at root level
+                        workout.distance = distance;
+                        workout.avgPace = avgPace;
+                        workout.avgHR = avgHR;
 
-                    if (durationMins === 0) {
-                        this.showToast('Please enter duration', 'error');
-                        return;
+                    } else {
+                        // Simple activities
+                        const durationMins = parseInt(document.getElementById('addWorkoutDuration').value) || 0;
+                        const intensity = parseInt(document.getElementById('addWorkoutIntensity').value) || 5;
+
+                        if (durationMins === 0) {
+                            this.showToast('Please enter duration', 'error');
+                            return;
+                        }
+
+                        workout = {
+                            id: Date.now().toString(),
+                            date: new Date(date).toISOString(),
+                            activityType: type,
+                            duration: durationMins * 60,
+                            completed: true,
+                            description: notes || this.getActivityName(type),
+                            metadata: {
+                                intensity: intensity,
+                                avgHR: avgHR
+                            }
+                        };
                     }
 
-                    workout = {
-                        id: Date.now().toString(),
-                        date: new Date(date).toISOString(),
-                        activityType: type,
-                        duration: durationMins * 60,
-                        completed: true,
-                        description: notes || this.getActivityName(type),
-                        metadata: {
-                            intensity: intensity,
-                            avgHR: avgHR
-                        }
-                    };
+                    console.log('Saving workout:', workout);
+
+                    // Save workout
+                    this.workouts.unshift(workout);
+                    await this.dataStore.saveWorkout(workout);
+
+                    // Update DNA if rowing
+                    if (type === 'rowing') {
+                        await this.updateDNAProfile(workout);
+                    }
+
+                    // Update displays
+                    this.renderTrainingLog();
+                    this.renderDNA();
+                    this.updateStats();
+
+                    // Close modal
+                    this.closeAddWorkoutModal();
+
+                    this.showToast('✓ Workout saved!', 'success');
+
+                } catch (error) {
+                    console.error('Save workout error:', error);
+                    this.showToast('Error saving workout: ' + error.message, 'error');
                 }
-
-                // Save workout
-                this.workouts.unshift(workout);
-                await this.dataStore.saveWorkout(workout);
-
-                // Update DNA if rowing
-                if (type === 'rowing') {
-                    await this.updateDNAProfile(workout);
-                }
-
-                // Update displays
-                this.renderTrainingLog();
-                this.renderDNA();
-                this.updateStats();
-
-                // Close modal
-                this.closeAddWorkoutModal();
-
-                this.showToast('✓ Workout saved!', 'success');
             }
 
             // ========================================================================
