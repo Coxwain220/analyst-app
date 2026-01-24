@@ -1505,6 +1505,28 @@
                 </div>
             </div>
 
+            <!-- CSV Upload -->
+            <div class="card">
+                <div class="card-header">Import Workout Data</div>
+                <p style="font-size: 12px; color: #888; margin-bottom: 12px;">
+                    Upload your Concept2 Logbook CSV to automatically update your PBs and training history.
+                </p>
+                <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="app.handleCSVUpload(event)">
+                <button class="btn btn-outline" onclick="document.getElementById('csvFileInput').click()">
+                    📊 Upload CSV File
+                </button>
+            </div>
+
+            <!-- Workout History -->
+            <div class="card">
+                <div class="card-header">Recent Workouts (<span id="dnaWorkoutCount">0</span>)</div>
+                <div id="dnaWorkoutList">
+                    <p style="font-size: 12px; color: #666; text-align: center; padding: 20px;">
+                        No workouts yet. Complete a workout or upload your Concept2 CSV to see your history.
+                    </p>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -2109,6 +2131,45 @@
 
                 // Update AI insight
                 set('dnaAIInsight', this.dnaProfile.ai_summary);
+
+                // Update workout history list
+                const workoutList = document.getElementById('dnaWorkoutList');
+                const workoutCount = document.getElementById('dnaWorkoutCount');
+
+                if (workoutCount) {
+                    workoutCount.textContent = this.workouts.length;
+                }
+
+                if (workoutList && this.workouts.length > 0) {
+                    // Show last 10 workouts
+                    const recentWorkouts = this.workouts.slice(0, 10);
+                    workoutList.innerHTML = recentWorkouts.map(w => `
+                        <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="font-size: 14px; font-weight: bold; color: var(--text);">
+                                    ${w.description || 'Workout'}
+                                </div>
+                                <div style="font-size: 11px; color: #666;">
+                                    ${new Date(w.date).toLocaleDateString()}
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px;">
+                                <div>
+                                    <div style="color: #666;">Distance</div>
+                                    <div style="color: #00FF99; font-weight: bold;">${w.distance}m</div>
+                                </div>
+                                <div>
+                                    <div style="color: #666;">Avg Pace</div>
+                                    <div style="color: #00FF99; font-weight: bold;">${this.formatPace(w.avgPace)}</div>
+                                </div>
+                                <div>
+                                    <div style="color: #666;">Avg HR</div>
+                                    <div style="color: #FF6B6B; font-weight: bold;">${w.avgHR || '--'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
             }
 
             async updateDNAProfile(workoutData) {
@@ -2195,6 +2256,106 @@
 
             toggleInjuryDetails() {
                 this.showToast('Injury details: Hand numbness/weakness. C5-C7 disc replacement. Monitor during high-intensity efforts.', 'success');
+            }
+
+            async handleCSVUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                this.showToast('Processing CSV file...', 'success');
+
+                try {
+                    const text = await file.text();
+                    const lines = text.split('\n');
+
+                    // Skip header row
+                    const dataLines = lines.slice(1).filter(line => line.trim());
+
+                    let imported = 0;
+
+                    for (const line of dataLines) {
+                        // Parse CSV line (Concept2 format)
+                        // Expected columns: Date, Time, Description, Work Time, Rest Time, Work Distance, Rest Distance, Avg Pace, Avg Watts, Avg HR, etc.
+                        const cols = line.split(',').map(c => c.trim().replace(/"/g, ''));
+
+                        if (cols.length < 8) continue;
+
+                        // Extract key fields
+                        const date = cols[0];  // Date
+                        const description = cols[2] || 'Imported Workout';  // Description
+                        const workTime = this.parseTimeToSeconds(cols[3]);  // Work Time (mm:ss.t)
+                        const distance = parseInt(cols[5]) || 0;  // Work Distance
+                        const avgPaceStr = cols[7];  // Avg Pace (m:ss.t)
+                        const avgWatts = parseInt(cols[8]) || 0;  // Avg Watts
+                        const avgHR = parseInt(cols[9]) || null;  // Avg HR
+
+                        if (distance === 0 || !avgPaceStr) continue;
+
+                        // Parse pace to seconds per 500m
+                        const avgPace = this.parsePaceToSeconds(avgPaceStr);
+
+                        // Create workout object
+                        const workout = {
+                            id: `import_${Date.parse(date) || Date.now()}_${imported}`,
+                            date: new Date(date).toISOString(),
+                            type: 'imported',
+                            description: description,
+                            duration: workTime,
+                            distance: distance,
+                            avgPace: avgPace,
+                            avgWatts: avgWatts,
+                            avgHR: avgHR,
+                            completed: true
+                        };
+
+                        // Save workout
+                        await this.dataStore.saveWorkout(workout);
+                        this.workouts.unshift(workout);
+                        imported++;
+
+                        // Update DNA profile with this workout data
+                        await this.updateDNAProfile(workout);
+                    }
+
+                    this.showToast(`✓ Imported ${imported} workouts!`, 'success');
+                    this.renderDNA();
+                    this.updateStats();
+
+                } catch (error) {
+                    console.error('CSV import error:', error);
+                    this.showToast('CSV import failed: ' + error.message, 'error');
+                }
+
+                // Reset file input
+                event.target.value = '';
+            }
+
+            parseTimeToSeconds(timeStr) {
+                // Parse format: mm:ss.t or hh:mm:ss.t
+                if (!timeStr) return 0;
+                const parts = timeStr.split(':');
+                if (parts.length === 2) {
+                    // mm:ss.t
+                    const [min, secParts] = parts;
+                    const sec = parseFloat(secParts);
+                    return parseInt(min) * 60 + sec;
+                } else if (parts.length === 3) {
+                    // hh:mm:ss.t
+                    const [hr, min, secParts] = parts;
+                    const sec = parseFloat(secParts);
+                    return parseInt(hr) * 3600 + parseInt(min) * 60 + sec;
+                }
+                return 0;
+            }
+
+            parsePaceToSeconds(paceStr) {
+                // Parse pace format: m:ss.t (pace per 500m)
+                if (!paceStr) return 0;
+                const parts = paceStr.split(':');
+                if (parts.length !== 2) return 0;
+                const [min, secParts] = parts;
+                const sec = parseFloat(secParts);
+                return parseInt(min) * 60 + sec;
             }
 
             // ========================================================================
@@ -3868,16 +4029,16 @@
                 }
             }
 
-            endWorkout() {
+            async endWorkout() {
                 if (!this.activeWorkout) {
                     this.showToast('No active workout', 'error');
                     return;
                 }
-                
+
                 if (confirm('End workout early?')) {
                     clearInterval(this.workoutTimer);
                     this.isCountingDown = false;
-                    
+
                     // Save partial workout
                     const workout = {
                         id: Date.now().toString(),
@@ -3887,14 +4048,21 @@
                         distance: this.liveData.dist || 0,
                         avgPace: this.liveData.pace || 0,
                         avgHR: this.liveData.hr || 0,
-                        completed: false
+                        avgWatts: this.liveData.watts || 0,
+                        completed: false,
+                        description: 'Manual Workout'
                     };
-                    
-                    this.workouts.push(workout);
-                    this.dataStore.saveWorkouts(this.workouts);
+
+                    this.workouts.unshift(workout);  // Add to beginning of array
+                    await this.dataStore.saveWorkout(workout);
+
+                    // Update DNA profile with workout data
+                    await this.updateDNAProfile(workout);
+
                     this.renderHistory();
+                    this.renderDNA();
                     this.updateStats();
-                    
+
                     this.activeWorkout = null;
                     this.showToast('Workout ended and saved', 'success');
                 }
