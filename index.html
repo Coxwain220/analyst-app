@@ -1076,6 +1076,158 @@
                 opacity: 0.5;
             }
         }
+
+        /* ========================================
+           TRAINING LOG & MODAL
+           ======================================== */
+
+        /* Modal Overlay */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 32px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Activity Cards with Color Coding */
+        .activity-card {
+            background: var(--panel);
+            border-left: 4px solid;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: transform 0.2s;
+        }
+
+        .activity-card:active {
+            transform: scale(0.98);
+        }
+
+        .activity-card.rowing {
+            border-left-color: #00A8E8;
+        }
+
+        .activity-card.weights {
+            border-left-color: #00C853;
+        }
+
+        .activity-card.bjj {
+            border-left-color: #9C27B0;
+        }
+
+        .activity-card.football {
+            border-left-color: #FF6B00;
+        }
+
+        .activity-card.other {
+            border-left-color: #666;
+        }
+
+        .activity-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .activity-card-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .activity-card-date {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .activity-card-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .activity-card-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .activity-card-stat-label {
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .activity-card-stat-value {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* Date Dividers in Training Log */
+        .training-log-date-divider {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
@@ -1092,9 +1244,9 @@
             <span class="top-nav-icon">❤️</span>
             <span class="top-nav-label">HR Mon</span>
         </button>
-        <button class="top-nav-item" style="opacity:0.3; cursor:not-allowed;">
-            <span class="top-nav-icon">📍</span>
-            <span class="top-nav-label">TBD</span>
+        <button class="top-nav-item" onclick="app.navigate('screenDNA')">
+            <span class="top-nav-icon">🧬</span>
+            <span class="top-nav-label">DNA</span>
         </button>
         <button class="top-nav-item" style="opacity:0.3; cursor:not-allowed;">
             <span class="top-nav-icon">📍</span>
@@ -1530,6 +1682,79 @@
         </div>
     </div>
 
+    <!-- TRAINING LOG SCREEN -->
+    <div id="screenTrainingLog" class="screen">
+        <div class="screen-header">
+            <div class="screen-title">TRAINING LOG</div>
+            <button class="header-btn" onclick="app.showAddWorkoutModal()" style="background:var(--accent); color:#000; font-weight:bold;">+ Add</button>
+        </div>
+        <div class="scroll-content">
+
+            <!-- Filters -->
+            <div style="display:flex; gap:8px; margin-bottom:16px;">
+                <select id="activityFilter" class="builder-input" style="flex:1;" onchange="app.filterTrainingLog()">
+                    <option value="all">All Activities</option>
+                    <option value="rowing">🚣 Rowing</option>
+                    <option value="weights">🏋️ Weights</option>
+                    <option value="bjj">🥋 BJJ</option>
+                    <option value="football">⚽ Football</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="dateFilter" class="builder-input" style="flex:1;" onchange="app.filterTrainingLog()">
+                    <option value="all">All Time</option>
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                </select>
+            </div>
+
+            <!-- Search -->
+            <input type="text" class="builder-input" id="trainingLogSearch" placeholder="🔍 Search workouts..." oninput="app.filterTrainingLog()" style="margin-bottom:16px;">
+
+            <!-- Workout List -->
+            <div id="trainingLogList">
+                <p style="font-size: 12px; color: #666; text-align: center; padding: 40px 20px;">
+                    No workouts yet.<br>
+                    Connect your PM5 and row, or click <strong>+ Add</strong> to log a workout.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ADD WORKOUT MODAL -->
+    <div id="addWorkoutModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add Workout</div>
+                <button class="modal-close" onclick="app.closeAddWorkoutModal()">×</button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Activity Type Selection -->
+                <div class="card" style="margin-bottom:16px;">
+                    <div class="card-header">Activity Type</div>
+                    <select id="addWorkoutType" class="builder-input" onchange="app.updateAddWorkoutForm()">
+                        <option value="">Select activity...</option>
+                        <option value="rowing">🚣 Rowing</option>
+                        <option value="weights">🏋️ Weights</option>
+                        <option value="bjj">🥋 BJJ</option>
+                        <option value="football">⚽ Football</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Dynamic Form Content -->
+                <div id="addWorkoutFormContent"></div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="app.closeAddWorkoutModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="app.saveManualWorkoutEntry()">Save Workout</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SETTINGS SCREEN -->
     <div id="screenSettings" class="screen">
         <div class="screen-header">
@@ -1695,9 +1920,9 @@
             <span class="nav-icon">📅</span>
             Plan
         </button>
-        <button class="nav-item" onclick="app.navigate('screenDNA')">
-            <span class="nav-icon">🧬</span>
-            DNA
+        <button class="nav-item" onclick="app.navigate('screenTrainingLog')">
+            <span class="nav-icon">📊</span>
+            Log
         </button>
     </nav>
 
@@ -1983,6 +2208,7 @@
                 this.renderBuilderMode();
                 this.renderHistory();
                 this.renderDNA();
+                this.renderTrainingLog();
                 this.updateStats();
                 this.renderChat();
                 
@@ -2212,6 +2438,7 @@
 
                 await this.saveDNA();
                 this.renderDNA();
+                this.renderTrainingLog();
             }
 
             generateAIInsight(workoutData) {
@@ -2366,6 +2593,7 @@
                     if (imported > 0) {
                         this.showToast(`✓ Imported ${imported} workouts!`, 'success');
                         this.renderDNA();
+                        this.renderTrainingLog();
                         this.updateStats();
                     } else {
                         throw new Error('No valid workouts found in CSV');
@@ -2465,6 +2693,350 @@
                 }
 
                 return 0;
+            }
+
+            // ========================================================================
+            // TRAINING LOG
+            // ========================================================================
+
+            renderTrainingLog() {
+                const container = document.getElementById('trainingLogList');
+                if (!container) return;
+
+                // Get filtered workouts
+                const filtered = this.getFilteredWorkouts();
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <p style="font-size: 12px; color: #666; text-align: center; padding: 40px 20px;">
+                            No workouts found.<br>
+                            Try adjusting your filters or add a new workout.
+                        </p>
+                    `;
+                    return;
+                }
+
+                // Group by date
+                const grouped = {};
+                filtered.forEach(workout => {
+                    const date = new Date(workout.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    if (!grouped[date]) grouped[date] = [];
+                    grouped[date].push(workout);
+                });
+
+                // Render
+                let html = '';
+                Object.keys(grouped).forEach(date => {
+                    html += `<div class="training-log-date-divider">${date}</div>`;
+                    grouped[date].forEach(workout => {
+                        html += this.renderActivityCard(workout);
+                    });
+                });
+
+                container.innerHTML = html;
+            }
+
+            renderActivityCard(workout) {
+                const activityType = workout.activityType || workout.type || 'rowing';
+                const metadata = workout.metadata || workout;
+
+                // Activity-specific rendering
+                let statsHtml = '';
+
+                if (activityType === 'rowing') {
+                    statsHtml = `
+                        <div class="activity-card-stat">
+                            <div class="activity-card-stat-label">Distance</div>
+                            <div class="activity-card-stat-value">${metadata.distance || 0}m</div>
+                        </div>
+                        <div class="activity-card-stat">
+                            <div class="activity-card-stat-label">Avg Pace</div>
+                            <div class="activity-card-stat-value">${this.formatPace(metadata.avgPace)}</div>
+                        </div>
+                        <div class="activity-card-stat">
+                            <div class="activity-card-stat-label">Avg HR</div>
+                            <div class="activity-card-stat-value" style="color:#ff6b6b;">${metadata.avgHR || '--'}</div>
+                        </div>
+                    `;
+                } else {
+                    // Simple activities (football, etc.)
+                    statsHtml = `
+                        <div class="activity-card-stat">
+                            <div class="activity-card-stat-label">Duration</div>
+                            <div class="activity-card-stat-value">${this.formatTime(metadata.duration || workout.duration)}</div>
+                        </div>
+                        <div class="activity-card-stat">
+                            <div class="activity-card-stat-label">Intensity</div>
+                            <div class="activity-card-stat-value">${metadata.intensity || '--'}/10</div>
+                        </div>
+                        ${metadata.avgHR ? `
+                        <div class="activity-card-stat">
+                            <div class="activity-card-stat-label">Avg HR</div>
+                            <div class="activity-card-stat-value" style="color:#ff6b6b;">${metadata.avgHR}</div>
+                        </div>
+                        ` : ''}
+                    `;
+                }
+
+                const icon = this.getActivityIcon(activityType);
+                const description = workout.description || this.getActivityName(activityType);
+
+                return `
+                    <div class="activity-card ${activityType}">
+                        <div class="activity-card-header">
+                            <div class="activity-card-title">${icon} ${description}</div>
+                            <div class="activity-card-date">${new Date(workout.date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
+                        </div>
+                        <div class="activity-card-stats">
+                            ${statsHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            getFilteredWorkouts() {
+                const activityFilter = document.getElementById('activityFilter')?.value || 'all';
+                const dateFilter = document.getElementById('dateFilter')?.value || 'all';
+                const searchQuery = document.getElementById('trainingLogSearch')?.value.toLowerCase() || '';
+
+                let filtered = [...this.workouts];
+
+                // Activity type filter
+                if (activityFilter !== 'all') {
+                    filtered = filtered.filter(w => {
+                        const type = w.activityType || w.type || 'rowing';
+                        return type === activityFilter;
+                    });
+                }
+
+                // Date filter
+                if (dateFilter !== 'all') {
+                    const days = parseInt(dateFilter);
+                    const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+                    filtered = filtered.filter(w => new Date(w.date).getTime() >= cutoff);
+                }
+
+                // Search filter
+                if (searchQuery) {
+                    filtered = filtered.filter(w => {
+                        const desc = (w.description || '').toLowerCase();
+                        const type = this.getActivityName(w.activityType || w.type || 'rowing').toLowerCase();
+                        return desc.includes(searchQuery) || type.includes(searchQuery);
+                    });
+                }
+
+                return filtered;
+            }
+
+            filterTrainingLog() {
+                this.renderTrainingLog();
+            }
+
+            getActivityIcon(type) {
+                const icons = {
+                    rowing: '🚣',
+                    weights: '🏋️',
+                    bjj: '🥋',
+                    football: '⚽',
+                    other: '🏃'
+                };
+                return icons[type] || '🏃';
+            }
+
+            getActivityName(type) {
+                const names = {
+                    rowing: 'Rowing',
+                    weights: 'Weights',
+                    bjj: 'BJJ',
+                    football: 'Football',
+                    other: 'Workout',
+                    imported: 'Imported Workout'
+                };
+                return names[type] || 'Workout';
+            }
+
+            showAddWorkoutModal() {
+                const modal = document.getElementById('addWorkoutModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    // Reset form
+                    document.getElementById('addWorkoutType').value = '';
+                    document.getElementById('addWorkoutFormContent').innerHTML = '';
+                }
+            }
+
+            closeAddWorkoutModal() {
+                const modal = document.getElementById('addWorkoutModal');
+                if (modal) modal.style.display = 'none';
+            }
+
+            updateAddWorkoutForm() {
+                const type = document.getElementById('addWorkoutType').value;
+                const container = document.getElementById('addWorkoutFormContent');
+
+                if (!type || !container) return;
+
+                if (type === 'rowing') {
+                    container.innerHTML = `
+                        <div class="card">
+                            <div class="card-header">Workout Details</div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Date & Time</div>
+                                <input type="datetime-local" class="builder-input" id="addWorkoutDate" value="${this.getCurrentDateTime()}">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Distance (meters)</div>
+                                <input type="number" class="builder-input" id="addWorkoutDistance" placeholder="5000">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Duration (mm:ss)</div>
+                                <input type="text" class="builder-input" id="addWorkoutDuration" placeholder="20:00">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Avg Pace (/500m)</div>
+                                <input type="text" class="builder-input" id="addWorkoutPace" placeholder="2:00.0">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Avg Heart Rate (optional)</div>
+                                <input type="number" class="builder-input" id="addWorkoutHR" placeholder="155">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Notes (optional)</div>
+                                <textarea class="builder-input" id="addWorkoutNotes" placeholder="How did it feel?" rows="3"></textarea>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Simple activities (football, bjj, weights, other)
+                    container.innerHTML = `
+                        <div class="card">
+                            <div class="card-header">Workout Details</div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Date & Time</div>
+                                <input type="datetime-local" class="builder-input" id="addWorkoutDate" value="${this.getCurrentDateTime()}">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Duration (minutes)</div>
+                                <input type="number" class="builder-input" id="addWorkoutDuration" placeholder="60">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Intensity (1-10)</div>
+                                <input type="number" class="builder-input" id="addWorkoutIntensity" min="1" max="10" placeholder="7">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Avg Heart Rate (optional)</div>
+                                <input type="number" class="builder-input" id="addWorkoutHR" placeholder="155">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Notes</div>
+                                <textarea class="builder-input" id="addWorkoutNotes" placeholder="What did you do?" rows="3"></textarea>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            getCurrentDateTime() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+
+            async saveManualWorkoutEntry() {
+                const type = document.getElementById('addWorkoutType').value;
+                if (!type) {
+                    this.showToast('Please select an activity type', 'error');
+                    return;
+                }
+
+                const date = document.getElementById('addWorkoutDate').value;
+                const notes = document.getElementById('addWorkoutNotes')?.value || '';
+                const avgHR = parseInt(document.getElementById('addWorkoutHR')?.value) || null;
+
+                let workout;
+
+                if (type === 'rowing') {
+                    const distance = parseInt(document.getElementById('addWorkoutDistance').value) || 0;
+                    const durationStr = document.getElementById('addWorkoutDuration').value;
+                    const paceStr = document.getElementById('addWorkoutPace').value;
+
+                    const duration = this.parseTimeToSeconds(durationStr);
+                    const avgPace = this.parsePaceToSeconds(paceStr);
+
+                    if (distance === 0) {
+                        this.showToast('Please enter distance', 'error');
+                        return;
+                    }
+
+                    workout = {
+                        id: Date.now().toString(),
+                        date: new Date(date).toISOString(),
+                        activityType: 'rowing',
+                        duration: duration,
+                        completed: true,
+                        description: notes || 'Rowing Session',
+                        metadata: {
+                            distance: distance,
+                            avgPace: avgPace,
+                            avgHR: avgHR
+                        }
+                    };
+
+                    // For backwards compatibility, also add at root level
+                    workout.distance = distance;
+                    workout.avgPace = avgPace;
+                    workout.avgHR = avgHR;
+
+                } else {
+                    // Simple activities
+                    const durationMins = parseInt(document.getElementById('addWorkoutDuration').value) || 0;
+                    const intensity = parseInt(document.getElementById('addWorkoutIntensity').value) || 5;
+
+                    if (durationMins === 0) {
+                        this.showToast('Please enter duration', 'error');
+                        return;
+                    }
+
+                    workout = {
+                        id: Date.now().toString(),
+                        date: new Date(date).toISOString(),
+                        activityType: type,
+                        duration: durationMins * 60,
+                        completed: true,
+                        description: notes || this.getActivityName(type),
+                        metadata: {
+                            intensity: intensity,
+                            avgHR: avgHR
+                        }
+                    };
+                }
+
+                // Save workout
+                this.workouts.unshift(workout);
+                await this.dataStore.saveWorkout(workout);
+
+                // Update DNA if rowing
+                if (type === 'rowing') {
+                    await this.updateDNAProfile(workout);
+                }
+
+                // Update displays
+                this.renderTrainingLog();
+                this.renderDNA();
+                this.updateStats();
+
+                // Close modal
+                this.closeAddWorkoutModal();
+
+                this.showToast('✓ Workout saved!', 'success');
             }
 
             // ========================================================================
@@ -4170,6 +4742,7 @@
 
                     this.renderHistory();
                     this.renderDNA();
+                    this.renderTrainingLog();
                     this.updateStats();
 
                     this.activeWorkout = null;
@@ -4616,7 +5189,8 @@ Would you like to:
                 
                 const topScreenMap = {
                     'screenSettings': 0,
-                    'screenHRM': 1
+                    'screenHRM': 1,
+                    'screenDNA': 2
                 };
                 
                 const topIndex = topScreenMap[screenId];
