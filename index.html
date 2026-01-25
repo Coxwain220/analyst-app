@@ -181,11 +181,15 @@
             background: transparent;
             border: 1px solid var(--border);
             color: var(--text);
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 11px;
+            padding: 12px 20px;
+            min-height: 44px;
+            border-radius: 8px;
+            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .scroll-content {
@@ -563,14 +567,24 @@
         .btn {
             width: 100%;
             padding: 16px;
+            min-height: 48px;
             border: none;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
+
+        .btn-sm {
+            padding: 10px 16px;
+            min-height: 44px;
+            font-size: 13px;
+        }
+
         .btn-primary { background: var(--accent); color: #000; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
         
@@ -1390,8 +1404,8 @@
             font-size: 32px;
             cursor: pointer;
             padding: 0;
-            width: 32px;
-            height: 32px;
+            min-width: 44px;
+            min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1480,6 +1494,7 @@
         .activity-card-stat-value {
             color: var(--accent);
             font-weight: bold;
+            font-size: 20px;
         }
 
         /* Date Dividers in Training Log */
@@ -1831,10 +1846,13 @@
             <div id="planContent">
                 <div class="empty-state">
                     <div class="empty-state-icon">📅</div>
-                    <div style="font-size:14px; line-height:1.6;">
+                    <div style="font-size:14px; line-height:1.6; margin-bottom: 24px;">
                         No training plan yet.<br>
-                        Create a plan to get started.
+                        Create a 12-week progressive plan tailored to your goals.
                     </div>
+                    <button class="btn btn-primary" onclick="app.createNewPlan()" style="max-width: 280px; margin: 0 auto;">
+                        Create 12-Week Plan
+                    </button>
                 </div>
             </div>
         </div>
@@ -3076,7 +3094,13 @@
 
                 } catch (error) {
                     console.error('CSV mapper error:', error);
-                    this.showToast('Failed to read CSV file: ' + error.message, 'error');
+                    if (error.name === 'NotReadableError') {
+                        this.showToast('Cannot read file - please check file permissions', 'error');
+                    } else if (error.message.includes('Unexpected end of data')) {
+                        this.showToast('CSV file is empty or corrupted', 'error');
+                    } else {
+                        this.showToast('Failed to read CSV: ' + (error.message || 'Invalid file format'), 'error');
+                    }
                 }
             }
 
@@ -3499,6 +3523,9 @@
             }
 
             createNewPlan() {
+                // Show loading state
+                this.showToast('Creating your 12-week plan...', 'info');
+
                 // Sample 12-week rowing plan with progressive volume
                 const startDate = new Date();
                 const weeks = [];
@@ -3637,10 +3664,13 @@
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📅</div>
-                            <div style="font-size:14px; line-height:1.6;">
+                            <div style="font-size:14px; line-height:1.6; margin-bottom: 24px;">
                                 No training plan yet.<br>
-                                Create a plan to get started.
+                                Create a 12-week progressive plan tailored to your goals.
                             </div>
+                            <button class="btn btn-primary" onclick="app.createNewPlan()" style="max-width: 280px; margin: 0 auto;">
+                                Create 12-Week Plan
+                            </button>
                         </div>
                     `;
                     return;
@@ -4467,7 +4497,13 @@
                     this.showToast('✓ Workout deleted', 'success');
                 } catch (error) {
                     console.error('Delete workout error:', error);
-                    this.showToast('Failed to delete workout', 'error');
+                    if (!navigator.onLine) {
+                        this.showToast('No internet connection - workout not deleted', 'error');
+                    } else if (error.code === 'permission-denied') {
+                        this.showToast('Permission denied - please sign in again', 'error');
+                    } else {
+                        this.showToast('Failed to delete workout: ' + (error.message || 'Unknown error'), 'error');
+                    }
                 }
             }
 
@@ -4743,7 +4779,15 @@
 
                 } catch (error) {
                     console.error('Save workout error:', error);
-                    this.showToast('Error saving workout: ' + error.message, 'error');
+                    if (!navigator.onLine) {
+                        this.showToast('No internet connection - workout not saved', 'error');
+                    } else if (error.code === 'permission-denied') {
+                        this.showToast('Permission denied - please sign in again', 'error');
+                    } else if (error.message.includes('validation')) {
+                        this.showToast('Invalid workout data - please check your inputs', 'error');
+                    } else {
+                        this.showToast('Failed to save workout: ' + (error.message || 'Unknown error'), 'error');
+                    }
                 }
             }
 
