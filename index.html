@@ -50,10 +50,28 @@
             --bg: #000;
             --text: #e0e0e0;
             --accent: #00FF99;
+            --accent-primary: #00FF99; /* Default theme accent */
             --danger: #FF4444;
             --panel: #111;
             --border: #222;
             --card-bg: #0a0a0a;
+        }
+
+        /* Theme Mode Color Palettes */
+        [data-theme="titanium"] {
+            --accent-primary: #2B59FF; /* Electric Cobalt Blue */
+        }
+
+        [data-theme="wellness"] {
+            --accent-primary: #C9ADA7; /* Dusty Rose */
+        }
+
+        [data-theme="warhol"] {
+            --accent-primary: #CCFF00; /* Acid Yellow */
+        }
+
+        [data-theme="pulse"] {
+            --accent-primary: #CCFF00; /* Cyber Lime */
         }
         
         * {
@@ -147,7 +165,52 @@
         
         .toast.success { border-color: var(--accent); color: var(--accent); }
         .toast.error { border-color: var(--danger); color: var(--danger); }
-        
+
+        /* SPLASH SCREEN */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            opacity: 1;
+            transition: opacity 0.6s ease-out;
+        }
+
+        .splash-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .cortex-logo {
+            width: 280px;
+            height: auto;
+            max-width: 85vw;
+        }
+
+        /* Warhol Mode - Black outline on X */
+        [data-theme="warhol"] .logo-x-stroke {
+            stroke: #000;
+            stroke-width: 3px;
+        }
+
+        /* Pulse Mode - Outer glow on X */
+        [data-theme="pulse"] .logo-x-path {
+            filter: drop-shadow(0 0 12px var(--accent-primary));
+        }
+
+        /* Responsive scaling for smaller devices */
+        @media (max-width: 375px) {
+            .cortex-logo {
+                width: 240px;
+            }
+        }
+
         .screen {
             display: none;
             flex-direction: column;
@@ -1079,6 +1142,70 @@
     </style>
 </head>
 <body>
+    <!-- SPLASH SCREEN -->
+    <div id="splashScreen" class="splash-screen">
+        <svg class="cortex-logo" viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- CORT E letters (standard font style) -->
+            <text x="10" y="65" font-family="'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+                  font-size="58" font-weight="800" fill="var(--text)" letter-spacing="2">
+                CORTE
+            </text>
+
+            <!-- THE HERO X - Custom Paintbrush Stroke -->
+            <g transform="translate(320, 50) rotate(15)">
+                <!-- Main X with paintbrush effect -->
+                <g class="logo-x-path">
+                    <!-- First stroke (top-left to bottom-right) -->
+                    <!-- Sharp right tip, thick left with droplets -->
+                    <path class="logo-x-stroke" d="
+                        M -25,-35
+                        Q -22,-32 -18,-28
+                        L 18,28
+                        Q 22,32 25,35
+                        L 23,36
+                        Q 18,32 15,28
+                        L -15,-20
+                        Q -20,-28 -28,-35
+                        Z
+                    " fill="var(--accent-primary)"/>
+
+                    <!-- Droplet 1 (trailing off left) -->
+                    <ellipse cx="-30" cy="-38" rx="2.5" ry="3.5"
+                             fill="var(--accent-primary)" opacity="0.8"/>
+
+                    <!-- Droplet 2 (trailing off left) -->
+                    <ellipse cx="-33" cy="-42" rx="2" ry="2.5"
+                             fill="var(--accent-primary)" opacity="0.6"/>
+
+                    <!-- Droplet 3 (small, far left) -->
+                    <ellipse cx="-35" cy="-45" rx="1.5" ry="2"
+                             fill="var(--accent-primary)" opacity="0.4"/>
+
+                    <!-- Second stroke (top-right to bottom-left) -->
+                    <!-- Sharp right tip, thick bottom-left with droplets -->
+                    <path class="logo-x-stroke" d="
+                        M 25,-35
+                        Q 22,-32 18,-28
+                        L -18,28
+                        Q -22,32 -25,35
+                        L -27,34
+                        Q -20,28 -15,22
+                        L 15,-25
+                        Q 20,-30 28,-35
+                        Z
+                    " fill="var(--accent-primary)"/>
+
+                    <!-- Bottom droplets (trailing from bottom stroke) -->
+                    <ellipse cx="-28" cy="38" rx="2.5" ry="3"
+                             fill="var(--accent-primary)" opacity="0.7"/>
+
+                    <ellipse cx="-30" cy="42" rx="2" ry="2.5"
+                             fill="var(--accent-primary)" opacity="0.5"/>
+                </g>
+            </g>
+        </svg>
+    </div>
+
     <div class="version-badge">v1.6 PRODUCTION</div>
     <div id="toast" class="toast"></div>
     
@@ -4363,6 +4490,20 @@ Would you like to:
         }
 
         const app = new AIRowingCoach();
+
+        // Hide splash screen after 2 seconds
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                if (splash) {
+                    splash.classList.add('fade-out');
+                    // Remove from DOM after animation completes
+                    setTimeout(() => {
+                        splash.remove();
+                    }, 600);
+                }
+            }, 2000);
+        });
     </script>
 </body>
 </html>
