@@ -1154,6 +1154,112 @@
         }
 
         /* ========================================
+           SETTINGS SCREEN
+           ======================================== */
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            padding: 0;
+        }
+
+        .settings-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-card:active {
+            transform: scale(0.98);
+            background: rgba(0,255,153,0.05);
+        }
+
+        .settings-card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .settings-card-title {
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 700;
+            color: #FFF;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-card-desc {
+            font-size: 10px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 10000;
+            overflow-y: auto;
+        }
+
+        .settings-modal-content {
+            max-width: 600px;
+            margin: 60px auto 20px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .settings-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .settings-modal-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-modal-body {
+            padding: 20px;
+        }
+
+        /* ========================================
            TRAINING PLAN - TIMELINE VIEW
            ======================================== */
 
@@ -1584,13 +1690,13 @@
             <span class="top-nav-icon">⚙️</span>
             <span class="top-nav-label">Settings</span>
         </button>
-        <button class="top-nav-item" onclick="app.navigate('screenHRM')">
-            <span class="top-nav-icon">❤️</span>
-            <span class="top-nav-label">HR Mon</span>
-        </button>
         <button class="top-nav-item" onclick="app.navigate('screenDNA')">
             <span class="top-nav-icon">🧬</span>
             <span class="top-nav-label">DNA</span>
+        </button>
+        <button class="top-nav-item" style="opacity:0.3; cursor:not-allowed;">
+            <span class="top-nav-icon">📍</span>
+            <span class="top-nav-label">TBD</span>
         </button>
         <button class="top-nav-item" style="opacity:0.3; cursor:not-allowed;">
             <span class="top-nav-icon">📍</span>
@@ -2203,42 +2309,175 @@
     <!-- SETTINGS SCREEN -->
     <div id="screenSettings" class="screen">
         <div class="screen-header">
-            <div class="screen-title">Settings</div>
+            <div class="screen-title">SETTINGS</div>
         </div>
         <div class="scroll-content">
-            <div class="card">
-                <div class="card-header">User Profile</div>
-                
-                <div class="editable-field">
-                    <div class="editable-label">Name</div>
-                    <input type="text" class="editable-input" id="editName" placeholder="Your name">
+            <div class="settings-grid">
+                <!-- Devices -->
+                <div class="settings-card" onclick="app.openSettingsModal('devices')">
+                    <span class="settings-card-icon">🔌</span>
+                    <div class="settings-card-title">Devices</div>
+                    <div class="settings-card-desc">PM5 & HRM connections</div>
                 </div>
-                
-                <div class="editable-field">
-                    <div class="editable-label">Age</div>
-                    <input type="number" class="editable-input" id="editAge" placeholder="30">
+
+                <!-- HR Zones -->
+                <div class="settings-card" onclick="app.openSettingsModal('hrzones')">
+                    <span class="settings-card-icon">❤️</span>
+                    <div class="settings-card-title">HR Zones</div>
+                    <div class="settings-card-desc">Training zone config</div>
                 </div>
-                
-                <div class="editable-field">
-                    <div class="editable-label">Weight (kg)</div>
-                    <input type="number" class="editable-input" id="editWeight" placeholder="75">
+
+                <!-- User Profile -->
+                <div class="settings-card" onclick="app.openSettingsModal('profile')">
+                    <span class="settings-card-icon">👤</span>
+                    <div class="settings-card-title">Profile</div>
+                    <div class="settings-card-desc">Age, height, weight</div>
                 </div>
-                
-                <div style="display:flex; gap:12px; margin-top:16px;">
-                    <button class="btn btn-primary" onclick="app.saveProfile()">Save Profile</button>
-                    <button class="btn btn-outline" onclick="app.loadProfile()">Cancel</button>
+
+                <!-- Account -->
+                <div class="settings-card" onclick="app.openSettingsModal('account')">
+                    <span class="settings-card-icon">🔑</span>
+                    <div class="settings-card-title">Account</div>
+                    <div class="settings-card-desc">Login & password</div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="settings-card" onclick="app.openSettingsModal('notifications')">
+                    <span class="settings-card-icon">🔔</span>
+                    <div class="settings-card-title">Alerts</div>
+                    <div class="settings-card-desc">Push & sound</div>
+                </div>
+
+                <!-- Appearance -->
+                <div class="settings-card" onclick="app.openSettingsModal('appearance')">
+                    <span class="settings-card-icon">🎨</span>
+                    <div class="settings-card-title">Appearance</div>
+                    <div class="settings-card-desc">Theme & colors</div>
+                </div>
+
+                <!-- Privacy -->
+                <div class="settings-card" onclick="app.openSettingsModal('privacy')">
+                    <span class="settings-card-icon">🔒</span>
+                    <div class="settings-card-title">Privacy</div>
+                    <div class="settings-card-desc">Data & permissions</div>
+                </div>
+
+                <!-- Support -->
+                <div class="settings-card" onclick="app.openSettingsModal('support')">
+                    <span class="settings-card-icon">ℹ️</span>
+                    <div class="settings-card-title">Support</div>
+                    <div class="settings-card-desc">Help & version</div>
                 </div>
             </div>
 
+            <!-- Cloud Storage Info -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">☁️ Cloud Storage</div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; font-weight:600;">User ID</div>
+                    <div style="color:#FFF; font-size:14px; font-family:monospace; word-break:break-all;" id="firebaseUserId">Loading...</div>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; font-weight:600;">Status</div>
+                    <div style="color:#FFF; font-size:14px;" id="firebaseStatus">Checking...</div>
+                </div>
+                <button class="btn btn-outline" onclick="app.testFirebaseSync()">
+                    Test Cloud Sync
+                </button>
+            </div>
+
+            <!-- Import CSV -->
             <div class="card">
-                <div class="card-header">Heart Rate Zones</div>
-                <div style="font-size:12px; color:#888; margin-bottom:16px;">Configure your training zones based on max HR</div>
-                
+                <div class="card-header">📊 Import Data</div>
+                <input type="file" id="csvUpload" accept=".csv" style="display:none;" onchange="app.importCSV(event)">
+                <button class="btn btn-outline" onclick="document.getElementById('csvUpload').click()" style="width: 100%;">
+                    Upload CSV File
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODALS -->
+
+    <!-- Devices Modal -->
+    <div id="settingsModalDevices" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-modal-title">
+                    <span>🔌</span>
+                    Devices
+                </div>
+                <button class="settings-modal-close" onclick="app.closeSettingsModal('devices')">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <!-- PM5 Connection -->
+                <div style="background:#050505; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div>
+                            <div style="font-size:14px; font-weight:700; margin-bottom:4px;">Concept2 PM5</div>
+                            <div style="font-size:12px; color:var(--text-secondary);" id="pm5StatusModal">Not connected</div>
+                        </div>
+                        <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="pm5IndicatorModal"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.connectPM5()" id="pm5ConnectBtnModal">Connect PM5</button>
+                </div>
+
+                <!-- HRM Connection -->
+                <div style="background:linear-gradient(135deg, #1a0a0a 0%, #0a0a0a 100%); border:2px solid #ff6b6b; border-radius:8px; padding:16px; margin-bottom:16px;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                        <div style="font-size:32px;">❤️</div>
+                        <div style="flex:1;">
+                            <div style="font-size:14px; font-weight:700; color:#ff6b6b;" id="hrmStatusModalText">Not Connected</div>
+                            <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Polar/Garmin/Wahoo HRM</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="background:#ff6b6b; width: 100%;" id="hrmConnectButtonModal" onclick="app.connectHRMDirect()">
+                        Connect Heart Rate Monitor
+                    </button>
+                </div>
+
+                <!-- HRM Live Display (Hidden until connected) -->
+                <div id="hrmLiveDisplayModal" style="display:none; background:var(--card-bg); border:2px solid #ff6b6b; border-radius:12px; padding:20px; text-align:center; margin-bottom:16px;">
+                    <div style="font-size:72px; font-weight:700; color:#ff6b6b; line-height:1; margin-bottom:8px; font-variant-numeric:tabular-nums; font-family:var(--font-base);" id="hrmCurrentBPMModal">--</div>
+                    <div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1.5px; font-family:var(--font-display); font-weight:700;">BEATS PER MINUTE</div>
+
+                    <div style="margin-top:16px; padding:12px; background:#050505; border-radius:8px;">
+                        <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">TRAINING ZONE</div>
+                        <div style="display:flex; height:40px; border-radius:8px; overflow:hidden;">
+                            <div id="hrZone1DisplayModal" style="flex:1; background:#4a90e2; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z1</div>
+                            <div id="hrZone2DisplayModal" style="flex:1; background:#50c878; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z2</div>
+                            <div id="hrZone3DisplayModal" style="flex:1; background:#ffa500; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z3</div>
+                            <div id="hrZone4DisplayModal" style="flex:1; background:#ff6347; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z4</div>
+                            <div id="hrZone5DisplayModal" style="flex:1; background:#dc143c; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#FFF;">
+                    💡 <strong>Tip:</strong> Connect PM5 first for rowing data, then connect HRM for heart rate monitoring.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HR Zones Modal -->
+    <div id="settingsModalHrzones" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-modal-title">
+                    <span>❤️</span>
+                    Heart Rate Zones
+                </div>
+                <button class="settings-modal-close" onclick="app.closeSettingsModal('hrzones')">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <p style="font-size:12px; color:var(--text-secondary); margin-bottom:16px;">Configure your training zones based on max HR</p>
+
                 <div class="editable-field">
                     <div class="editable-label">Max Heart Rate</div>
                     <input type="number" class="editable-input" id="editMaxHR" placeholder="190">
                 </div>
-                
+
                 <div style="margin-top:16px; padding:16px; background:#050505; border-radius:8px;">
                     <div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:12px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">Zones Preview</div>
                     <div style="display:flex; flex-direction:column; gap:8px;">
@@ -2279,70 +2518,170 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div style="display:flex; gap:12px; margin-top:16px;">
-                    <button class="btn btn-primary" onclick="app.saveHRZones()">Save Zones</button>
-                    <button class="btn btn-outline" onclick="app.loadHRZones()">Reset</button>
+                    <button class="btn btn-primary" onclick="app.saveHRZones(); app.closeSettingsModal('hrzones');">Save Zones</button>
+                    <button class="btn btn-outline" onclick="app.closeSettingsModal('hrzones')">Cancel</button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="card">
-                <div class="card-header">Firebase Cloud Storage</div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; font-weight:600;">User ID</div>
-                    <div style="color:#FFF; font-size:14px; font-family:monospace; word-break:break-all;" id="firebaseUserId">Loading...</div>
+    <!-- User Profile Modal -->
+    <div id="settingsModalProfile" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-modal-title">
+                    <span>👤</span>
+                    User Profile
                 </div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; font-weight:600;">Status</div>
-                    <div style="color:#FFF; font-size:14px;" id="firebaseStatus">Checking...</div>
+                <button class="settings-modal-close" onclick="app.closeSettingsModal('profile')">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <div class="editable-field">
+                    <div class="editable-label">Name</div>
+                    <input type="text" class="editable-input" id="editName" placeholder="Your name">
                 </div>
-                <button class="btn btn-outline" onclick="app.testFirebaseSync()">
-                    Test Cloud Sync
-                </button>
-                <div style="margin-top:12px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#FFF;">
-                    💡 <strong>Test without clearing cache:</strong> Click "Test Cloud Sync" to verify your data is saving to Firebase. Check console (F12) for detailed logs.
+
+                <div class="editable-field">
+                    <div class="editable-label">Age</div>
+                    <input type="number" class="editable-input" id="editAge" placeholder="30">
+                </div>
+
+                <div class="editable-field">
+                    <div class="editable-label">Height (cm)</div>
+                    <input type="number" class="editable-input" id="editHeight" placeholder="175">
+                </div>
+
+                <div class="editable-field">
+                    <div class="editable-label">Weight (kg)</div>
+                    <input type="number" class="editable-input" id="editWeight" placeholder="75">
+                </div>
+
+                <div class="editable-field">
+                    <div class="editable-label">Gender</div>
+                    <select class="editable-input" id="editGender">
+                        <option value="">Select</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:16px;">
+                    <button class="btn btn-primary" onclick="app.saveProfile(); app.closeSettingsModal('profile');">Save Profile</button>
+                    <button class="btn btn-outline" onclick="app.closeSettingsModal('profile')">Cancel</button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="card">
-                <div class="card-header">Connect Devices</div>
-                <div style="font-size:12px; color:#888; margin-bottom:16px;">Connect PM5 and Heart Rate Monitor via Bluetooth</div>
-                
-                <!-- PM5 Connection -->
-                <div style="background:#050505; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <div>
-                            <div style="font-size:14px; font-weight:700; margin-bottom:4px;">Concept2 PM5</div>
-                            <div style="font-size:12px; color:var(--text-secondary);" id="pm5StatusSettings">Not connected</div>
-                        </div>
-                        <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="pm5IndicatorSettings"></div>
-                    </div>
-                    <button class="btn btn-primary" onclick="app.connectPM5()" id="pm5ConnectBtnSettings">Connect PM5</button>
+    <!-- Account Modal (Placeholder) -->
+    <div id="settingsModalAccount" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-modal-title">
+                    <span>🔑</span>
+                    Account Settings
                 </div>
-                
-                <!-- HRM Connection -->
-                <div style="background:#050505; border:1px solid var(--border); border-radius:8px; padding:16px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <div>
-                            <div style="font-size:14px; font-weight:700; margin-bottom:4px;">Heart Rate Monitor</div>
-                            <div style="font-size:12px; color:var(--text-secondary);" id="hrmStatusSettings">Not connected</div>
-                        </div>
-                        <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="hrmIndicatorSettings"></div>
-                    </div>
-                    <button class="btn btn-outline" onclick="app.connectHRM()" id="hrmConnectBtnSettings">Connect HRM</button>
-                </div>
-                
-                <div style="margin-top:16px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#FFF;">
-                    💡 <strong>Tip:</strong> Connect PM5 first for rowing data, then connect HRM for heart rate monitoring.
+                <button class="settings-modal-close" onclick="app.closeSettingsModal('account')">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <div style="padding:40px 20px; text-align:center; color:var(--text-secondary);">
+                    <div style="font-size:48px; margin-bottom:16px;">🚧</div>
+                    <div style="font-size:14px; margin-bottom:8px;">Coming Soon</div>
+                    <div style="font-size:12px;">Login/Logout, profile photo, and password management will be available in a future update.</div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="card">
-                <div class="card-header">Import Data</div>
-                <label for="csvUpload" style="display:block; width:100%; padding:16px; border:2px dashed #222; border-radius:8px; text-align:center; cursor:pointer; color:#888;">
-                    📁 Import CSV
-                </label>
-                <input type="file" id="csvUpload" accept=".csv" style="display:none;" onchange="app.importCSV(event)">
+    <!-- Notifications Modal (Placeholder) -->
+    <div id="settingsModalNotifications" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-modal-title">
+                    <span>🔔</span>
+                    Notifications
+                </div>
+                <button class="settings-modal-close" onclick="app.closeSettingsModal('notifications')">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <div style="padding:40px 20px; text-align:center; color:var(--text-secondary);">
+                    <div style="font-size:48px; margin-bottom:16px;">🚧</div>
+                    <div style="font-size:14px; margin-bottom:8px;">Coming Soon</div>
+                    <div style="font-size:12px;">Push notifications and sound alerts will be available in a future update.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appearance Modal (Placeholder) -->
+    <div id="settingsModalAppearance" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-modal-title">
+                    <span>🎨</span>
+                    Appearance
+                </div>
+                <button class="settings-modal-close" onclick="app.closeSettingsModal('appearance')">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <div style="padding:40px 20px; text-align:center; color:var(--text-secondary);">
+                    <div style="font-size:48px; margin-bottom:16px;">🚧</div>
+                    <div style="font-size:14px; margin-bottom:8px;">Coming Soon</div>
+                    <div style="font-size:12px;">Theme customization, light mode, and language selection will be available in a future update.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Modal (Placeholder) -->
+    <div id="settingsModalPrivacy" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-modal-title">
+                    <span>🔒</span>
+                    Privacy & Data
+                </div>
+                <button class="settings-modal-close" onclick="app.closeSettingsModal('privacy')">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <div style="padding:40px 20px; text-align:center; color:var(--text-secondary);">
+                    <div style="font-size:48px; margin-bottom:16px;">🚧</div>
+                    <div style="font-size:14px; margin-bottom:8px;">Coming Soon</div>
+                    <div style="font-size:12px;">Data deletion requests, permissions management, and privacy policy will be available in a future update.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Modal (Placeholder) -->
+    <div id="settingsModalSupport" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-modal-title">
+                    <span>ℹ️</span>
+                    Support & Information
+                </div>
+                <button class="settings-modal-close" onclick="app.closeSettingsModal('support')">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <div style="margin-bottom:20px;">
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">App Version</div>
+                    <div style="font-size:14px; color:#FFF;">Cortex v1.3.0</div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Build</div>
+                    <div style="font-size:14px; color:#FFF;">2026.01.25</div>
+                </div>
+
+                <div style="padding:40px 20px; text-align:center; color:var(--text-secondary); background:var(--panel); border-radius:8px;">
+                    <div style="font-size:48px; margin-bottom:16px;">📧</div>
+                    <div style="font-size:14px; margin-bottom:8px;">Need Help?</div>
+                    <div style="font-size:12px; margin-bottom:16px;">Help center, FAQ, and contact support will be available in a future update.</div>
+                </div>
             </div>
         </div>
     </div>
@@ -5541,6 +5880,23 @@
                 document.getElementById('hrmLiveDisplay').style.display = 'block';
                 document.getElementById('hrmGraphContainer').style.display = 'block';
 
+                // Also update modal elements
+                const btnModal = document.getElementById('hrmConnectButtonModal');
+                const statusTextModal = document.getElementById('hrmStatusModalText');
+                const liveDisplayModal = document.getElementById('hrmLiveDisplayModal');
+
+                if (btnModal) {
+                    btnModal.textContent = 'Disconnect';
+                    btnModal.disabled = false;
+                    btnModal.onclick = () => this.disconnectHRMDirect();
+                }
+                if (statusTextModal) {
+                    statusTextModal.textContent = `Connected: ${device.name || 'HRM'}`;
+                }
+                if (liveDisplayModal) {
+                    liveDisplayModal.style.display = 'block';
+                }
+
                 // Initialize canvas
                 this.initHRMCanvas();
 
@@ -5576,6 +5932,22 @@
                 const btn = document.getElementById('hrmConnectButton');
                 btn.textContent = 'Connect Heart Rate Monitor';
                 btn.onclick = () => this.connectHRMDirect();
+
+                // Also update modal elements
+                const btnModal = document.getElementById('hrmConnectButtonModal');
+                const statusTextModal = document.getElementById('hrmStatusModalText');
+                const liveDisplayModal = document.getElementById('hrmLiveDisplayModal');
+
+                if (btnModal) {
+                    btnModal.textContent = 'Connect Heart Rate Monitor';
+                    btnModal.onclick = () => this.connectHRMDirect();
+                }
+                if (statusTextModal) {
+                    statusTextModal.textContent = 'Not Connected';
+                }
+                if (liveDisplayModal) {
+                    liveDisplayModal.style.display = 'none';
+                }
 
                 this.showToast('HRM disconnected', 'success');
             } catch (error) {
@@ -5619,14 +5991,21 @@
 
             updateHRMDisplay() {
                 const bpmElem = document.getElementById('hrmCurrentBPM');
+                const bpmElemModal = document.getElementById('hrmCurrentBPMModal');
+
                 if (bpmElem) {
                     bpmElem.textContent = this.currentHR;
                 }
-                
+                if (bpmElemModal) {
+                    bpmElemModal.textContent = this.currentHR;
+                }
+
                 // Update zone visualization
                 const zone = this.calculateHRZone(this.currentHR);
                 for (let i = 1; i <= 5; i++) {
                     const zoneElem = document.getElementById(`hrZone${i}Display`);
+                    const zoneElemModal = document.getElementById(`hrZone${i}DisplayModal`);
+
                     if (zoneElem) {
                         if (i === zone) {
                             zoneElem.style.opacity = '1';
@@ -5634,6 +6013,16 @@
                         } else {
                             zoneElem.style.opacity = '0.3';
                             zoneElem.style.transform = 'scale(1)';
+                        }
+                    }
+
+                    if (zoneElemModal) {
+                        if (i === zone) {
+                            zoneElemModal.style.opacity = '1';
+                            zoneElemModal.style.transform = 'scale(1.1)';
+                        } else {
+                            zoneElemModal.style.opacity = '0.3';
+                            zoneElemModal.style.transform = 'scale(1)';
                         }
                     }
                 }
@@ -7088,8 +7477,7 @@ Would you like to:
                 
                 const topScreenMap = {
                     'screenSettings': 0,
-                    'screenHRM': 1,
-                    'screenDNA': 2
+                    'screenDNA': 1
                 };
                 
                 const topIndex = topScreenMap[screenId];
@@ -7105,6 +7493,80 @@ Would you like to:
                 // Render training plan when opening plan screen
                 if (screenId === 'screenPlan') {
                     this.renderTrainingPlan();
+                }
+            }
+
+            // ========================================================================
+            // SETTINGS MODALS
+            // ========================================================================
+
+            openSettingsModal(modalType) {
+                const modalId = `settingsModal${modalType.charAt(0).toUpperCase() + modalType.slice(1)}`;
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'block';
+
+                    // Load data for specific modals
+                    if (modalType === 'profile') {
+                        this.loadProfile();
+                    } else if (modalType === 'hrzones') {
+                        this.loadHRZones();
+                    } else if (modalType === 'devices') {
+                        // Update device status in modal
+                        this.updateDeviceStatusInModal();
+                    }
+                }
+            }
+
+            closeSettingsModal(modalType) {
+                const modalId = `settingsModal${modalType.charAt(0).toUpperCase() + modalType.slice(1)}`;
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            }
+
+            updateDeviceStatusInModal() {
+                // Sync PM5 status
+                const pm5Status = document.getElementById('pm5Status');
+                const pm5StatusModal = document.getElementById('pm5StatusModal');
+                if (pm5Status && pm5StatusModal) {
+                    pm5StatusModal.textContent = pm5Status.textContent;
+                }
+
+                const pm5Indicator = document.getElementById('pm5Indicator');
+                const pm5IndicatorModal = document.getElementById('pm5IndicatorModal');
+                if (pm5Indicator && pm5IndicatorModal) {
+                    pm5IndicatorModal.style.background = pm5Indicator.style.background;
+                }
+
+                // Sync HRM status
+                const hrmStatusText = document.getElementById('hrmStatusText');
+                const hrmStatusModalText = document.getElementById('hrmStatusModalText');
+                if (hrmStatusText && hrmStatusModalText) {
+                    hrmStatusModalText.textContent = hrmStatusText.textContent;
+                }
+
+                const hrmLiveDisplay = document.getElementById('hrmLiveDisplay');
+                const hrmLiveDisplayModal = document.getElementById('hrmLiveDisplayModal');
+                if (hrmLiveDisplay && hrmLiveDisplayModal) {
+                    hrmLiveDisplayModal.style.display = hrmLiveDisplay.style.display;
+                }
+
+                // Sync BPM
+                const hrmCurrentBPM = document.getElementById('hrmCurrentBPM');
+                const hrmCurrentBPMModal = document.getElementById('hrmCurrentBPMModal');
+                if (hrmCurrentBPM && hrmCurrentBPMModal) {
+                    hrmCurrentBPMModal.textContent = hrmCurrentBPM.textContent;
+                }
+
+                // Sync zones
+                for (let i = 1; i <= 5; i++) {
+                    const zone = document.getElementById(`hrZone${i}Display`);
+                    const zoneModal = document.getElementById(`hrZone${i}DisplayModal`);
+                    if (zone && zoneModal) {
+                        zoneModal.style.opacity = zone.style.opacity;
+                    }
                 }
             }
 
