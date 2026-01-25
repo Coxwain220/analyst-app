@@ -2099,6 +2099,24 @@
         </div>
     </div>
 
+    <!-- DAY DETAILS MODAL -->
+    <div id="dayDetailsModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <div class="modal-title" id="dayDetailsTitle">Workout Details</div>
+                <button class="modal-close" onclick="app.closeDayDetails()">×</button>
+            </div>
+            <div class="modal-body" id="dayDetailsBody">
+                <!-- Filled by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="dayDetailsDeleteBtn" style="color: #FF0000; border-color: #FF0000;">Delete from Plan</button>
+                <button class="btn btn-outline" id="dayDetailsEditBtn">Edit Workout</button>
+                <button class="btn btn-primary" id="dayDetailsCompleteBtn">Mark Complete</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SETTINGS SCREEN -->
     <div id="screenSettings" class="screen">
         <div class="screen-header">
@@ -3691,29 +3709,139 @@
                 const day = week.days[dayIndex];
                 if (!day) return;
 
-                // TODO: Create day details modal with:
-                // - Full workout description
-                // - Mark as complete button
-                // - Log actual workout button
-                // - Reschedule option
+                // Build modal content
+                const modal = document.getElementById('dayDetailsModal');
+                const titleEl = document.getElementById('dayDetailsTitle');
+                const bodyEl = document.getElementById('dayDetailsBody');
+                const completeBtn = document.getElementById('dayDetailsCompleteBtn');
+                const editBtn = document.getElementById('dayDetailsEditBtn');
+                const deleteBtn = document.getElementById('dayDetailsDeleteBtn');
 
-                const message = `
-${day.title}
-${day.description || ''}
+                const date = new Date(day.date);
+                const dateStr = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-${day.distance ? `Distance: ${day.distance}m` : ''}
-${day.duration ? `Duration: ${this.formatTime(day.duration)}` : ''}
-${day.intensity ? `Intensity: ${day.intensity}` : ''}
+                titleEl.textContent = `${day.dayName} - ${day.title}`;
 
-Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
-                `.trim();
+                bodyEl.innerHTML = `
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">${dateStr}</div>
+                        <div style="font-size: 14px; line-height: 1.6; color: var(--text);">${day.description || 'No description'}</div>
+                    </div>
 
-                if (confirm(message + '\n\nMark as completed?')) {
-                    day.completed = true;
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        ${day.distance ? `
+                        <div style="background: var(--panel); padding: 12px; border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Distance</div>
+                            <div style="font-size: 18px; font-weight: bold; color: #00FF99;">${day.distance}m</div>
+                        </div>
+                        ` : ''}
+                        ${day.duration ? `
+                        <div style="background: var(--panel); padding: 12px; border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Duration</div>
+                            <div style="font-size: 18px; font-weight: bold; color: #00FF99;">${this.formatTime(day.duration)}</div>
+                        </div>
+                        ` : ''}
+                        ${day.intensity ? `
+                        <div style="background: var(--panel); padding: 12px; border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Intensity</div>
+                            <div style="font-size: 18px; font-weight: bold; color: #00FF99;">${day.intensity}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div style="background: ${day.completed ? 'rgba(0, 255, 153, 0.1)' : 'rgba(255, 0, 0, 0.05)'};
+                                border: 1px solid ${day.completed ? '#00FF99' : '#FF0000'};
+                                border-radius: 8px; padding: 12px; text-align: center;">
+                        <div style="font-size: 14px; font-weight: 600; color: ${day.completed ? '#00FF99' : '#FF0000'};">
+                            ${day.completed ? '✓ Completed' : 'Not Completed'}
+                        </div>
+                    </div>
+                `;
+
+                // Set up button handlers
+                completeBtn.onclick = () => {
+                    day.completed = !day.completed;
                     this.saveTrainingPlan(this.trainingPlan);
                     this.renderTrainingPlan();
-                    this.showToast('✓ Workout marked complete', 'success');
+                    this.closeDayDetails();
+                    this.showToast(day.completed ? '✓ Marked complete' : 'Marked incomplete', 'success');
+                };
+
+                completeBtn.textContent = day.completed ? 'Mark Incomplete' : 'Mark Complete';
+
+                editBtn.onclick = () => {
+                    this.editPlanDay(weekNumber, dayIndex);
+                };
+
+                deleteBtn.onclick = () => {
+                    this.deletePlanDay(weekNumber, dayIndex);
+                };
+
+                // Show modal
+                modal.style.display = 'flex';
+            }
+
+            closeDayDetails() {
+                document.getElementById('dayDetailsModal').style.display = 'none';
+            }
+
+            editPlanDay(weekNumber, dayIndex) {
+                const week = this.trainingPlan.weeks.find(w => w.weekNumber === weekNumber);
+                if (!week) return;
+
+                const day = week.days[dayIndex];
+                if (!day) return;
+
+                // Close day details modal
+                this.closeDayDetails();
+
+                // Prompt for new workout details
+                const newTitle = prompt('Workout title:', day.title);
+                if (!newTitle) return;
+
+                const newDescription = prompt('Description:', day.description);
+                const newDistance = day.distance ? prompt('Distance (meters):', day.distance) : null;
+                const newDuration = day.duration ? prompt('Duration (seconds):', day.duration) : null;
+                const newIntensity = day.intensity ? prompt('Intensity:', day.intensity) : null;
+
+                // Update day
+                day.title = newTitle;
+                if (newDescription !== null) day.description = newDescription;
+                if (newDistance) day.distance = parseInt(newDistance);
+                if (newDuration) day.duration = parseInt(newDuration);
+                if (newIntensity) day.intensity = newIntensity;
+
+                // Save and refresh
+                this.saveTrainingPlan(this.trainingPlan);
+                this.renderTrainingPlan();
+                this.showToast('✓ Workout updated', 'success');
+            }
+
+            deletePlanDay(weekNumber, dayIndex) {
+                if (!confirm('Delete this workout from the plan? This will make it a rest day.')) {
+                    return;
                 }
+
+                const week = this.trainingPlan.weeks.find(w => w.weekNumber === weekNumber);
+                if (!week) return;
+
+                const day = week.days[dayIndex];
+                if (!day) return;
+
+                // Convert to rest day
+                day.type = 'rest';
+                day.title = 'Rest Day';
+                day.description = 'Recovery';
+                day.distance = null;
+                day.duration = null;
+                day.intensity = null;
+                day.completed = false;
+
+                // Save and refresh
+                this.saveTrainingPlan(this.trainingPlan);
+                this.renderTrainingPlan();
+                this.closeDayDetails();
+                this.showToast('✓ Workout removed - now a rest day', 'success');
             }
 
             setPlanView(viewType) {
@@ -6346,18 +6474,6 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
                 }).join('');
 
                 container.innerHTML = html;
-            }
-
-            async deleteWorkout(index) {
-                if (confirm('Delete this workout?')) {
-                    const workout = this.workouts[index];
-                    await this.dataStore.deleteWorkout(workout.id);
-                    
-                    this.workouts.splice(index, 1);
-                    this.renderHistory();
-                    this.updateStats();
-                    this.showToast('Workout deleted', 'success');
-                }
             }
 
             updateStats() {
