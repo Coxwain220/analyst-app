@@ -1078,6 +1078,270 @@
         }
 
         /* ========================================
+           TRAINING PLAN - TIMELINE VIEW
+           ======================================== */
+
+        .plan-view-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: var(--panel);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .plan-view-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .plan-view-btn.active {
+            background: #00FF99;
+            color: #000;
+        }
+
+        .plan-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .plan-week-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .plan-week-card.completed {
+            border-color: #00FF99;
+            opacity: 0.7;
+        }
+
+        .plan-week-card.current {
+            border-color: #00FF99;
+            box-shadow: 0 0 20px rgba(0, 255, 153, 0.3);
+        }
+
+        .plan-week-header {
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .plan-week-header:hover {
+            background: rgba(0, 255, 153, 0.05);
+        }
+
+        .plan-week-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plan-week-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00FF99;
+        }
+
+        .plan-week-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .plan-week-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .plan-week-dates {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .plan-week-summary {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .plan-week-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .plan-week-expand {
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+
+        .plan-week-expand.expanded {
+            transform: rotate(180deg);
+        }
+
+        .plan-week-days {
+            display: none;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .plan-week-days.expanded {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .plan-day-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .plan-day-card:hover {
+            border-color: #00FF99;
+            background: rgba(0, 255, 153, 0.05);
+        }
+
+        .plan-day-card.completed {
+            border-color: #00FF99;
+            background: rgba(0, 255, 153, 0.1);
+        }
+
+        .plan-day-card.rest {
+            border-color: #FF0000;
+            background: rgba(255, 0, 0, 0.05);
+        }
+
+        .plan-day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .plan-day-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #00FF99;
+        }
+
+        .plan-day-date {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .plan-day-workout {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .plan-day-details {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+        }
+
+        .plan-day-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .plan-day-badge.rowing {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3B82F6;
+        }
+
+        .plan-day-badge.weights {
+            background: rgba(0, 255, 153, 0.2);
+            color: #00FF99;
+        }
+
+        .plan-day-badge.rest {
+            background: rgba(255, 0, 0, 0.2);
+            color: #FF0000;
+        }
+
+        .plan-day-badge.completed {
+            background: rgba(0, 255, 153, 0.3);
+            color: #00FF99;
+        }
+
+        .plan-adaptive-alert {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #FF0000;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .plan-adaptive-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .plan-adaptive-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .plan-adaptive-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .plan-calendar-sync {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .plan-calendar-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .plan-calendar-icon {
+            font-size: 20px;
+        }
+
+        /* ========================================
            TRAINING LOG & MODAL
            ======================================== */
 
@@ -1538,14 +1802,39 @@
     <div id="screenPlan" class="screen">
         <div class="screen-header">
             <div class="screen-title">Training Plan</div>
-            <button class="header-btn" onclick="app.generateNewPlan()">+ New Plan</button>
+            <button class="header-btn" onclick="app.createNewPlan()">+ New Plan</button>
         </div>
-        <div class="scroll-content" id="planContent">
-            <div class="empty-state">
-                <div class="empty-state-icon">📅</div>
-                <div style="font-size:14px; line-height:1.6;">
-                    No training plan yet.<br>
-                    Chat with AI to create a 4-week plan.
+        <div class="scroll-content">
+
+            <!-- Calendar Sync Status -->
+            <div class="plan-calendar-sync">
+                <div class="plan-calendar-status">
+                    <span class="plan-calendar-icon">📅</span>
+                    <span id="calendarSyncStatus">Not synced</span>
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="app.syncGoogleCalendar()">Sync Calendar</button>
+            </div>
+
+            <!-- Adaptive Alert (shown when DNA indicates poor recovery) -->
+            <div id="planAdaptiveAlert" style="display:none;">
+                <!-- Filled by JavaScript -->
+            </div>
+
+            <!-- View Toggle -->
+            <div class="plan-view-toggle">
+                <button class="plan-view-btn active" onclick="app.setPlanView('timeline')">Timeline</button>
+                <button class="plan-view-btn" onclick="app.setPlanView('week')">Week</button>
+                <button class="plan-view-btn" onclick="app.setPlanView('month')">Month</button>
+            </div>
+
+            <!-- Plan Content -->
+            <div id="planContent">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📅</div>
+                    <div style="font-size:14px; line-height:1.6;">
+                        No training plan yet.<br>
+                        Create a plan to get started.
+                    </div>
                 </div>
             </div>
         </div>
@@ -2255,6 +2544,7 @@
                 await this.loadData();
                 this.loadProfile();
                 await this.loadDNA();
+                await this.loadTrainingPlan();
                 this.initAudioCoach();
                 this.setupDashboardSwipe();
                 this.renderBuilderMode();
@@ -3158,6 +3448,392 @@
                 }
 
                 return 0;
+            }
+
+            // ========================================================================
+            // TRAINING PLAN
+            // ========================================================================
+
+            async loadTrainingPlan() {
+                try {
+                    // Load from Firebase or localStorage
+                    const planData = localStorage.getItem('trainingPlan');
+                    if (planData) {
+                        this.trainingPlan = JSON.parse(planData);
+                        console.log('✓ Training plan loaded:', this.trainingPlan.weeks.length, 'weeks');
+                    } else {
+                        this.trainingPlan = null;
+                    }
+                } catch (error) {
+                    console.error('Error loading training plan:', error);
+                    this.trainingPlan = null;
+                }
+            }
+
+            async saveTrainingPlan(plan) {
+                try {
+                    this.trainingPlan = plan;
+                    localStorage.setItem('trainingPlan', JSON.stringify(plan));
+                    console.log('✓ Training plan saved');
+                } catch (error) {
+                    console.error('Error saving training plan:', error);
+                }
+            }
+
+            createNewPlan() {
+                // Sample 12-week rowing plan with progressive volume
+                const startDate = new Date();
+                const weeks = [];
+
+                for (let weekNum = 1; weekNum <= 12; weekNum++) {
+                    const weekStart = new Date(startDate);
+                    weekStart.setDate(startDate.getDate() + (weekNum - 1) * 7);
+
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+
+                    const days = this.generateWeekDays(weekNum, weekStart);
+
+                    const week = {
+                        weekNumber: weekNum,
+                        startDate: weekStart.toISOString(),
+                        endDate: weekEnd.toISOString(),
+                        theme: this.getWeekTheme(weekNum),
+                        days: days,
+                        totalDistance: days.reduce((sum, d) => sum + (d.distance || 0), 0),
+                        totalDuration: days.reduce((sum, d) => sum + (d.duration || 0), 0),
+                        workoutCount: days.filter(d => d.type !== 'rest').length
+                    };
+
+                    weeks.push(week);
+                }
+
+                const plan = {
+                    id: 'plan_' + Date.now(),
+                    title: '12-Week Rowing Development',
+                    created: new Date().toISOString(),
+                    startDate: startDate.toISOString(),
+                    weeks: weeks,
+                    currentWeek: 1
+                };
+
+                this.saveTrainingPlan(plan);
+                this.renderTrainingPlan();
+                this.showToast('✓ 12-week plan created', 'success');
+            }
+
+            getWeekTheme(weekNum) {
+                const themes = [
+                    'Base Building',
+                    'Aerobic Development',
+                    'Technique Focus',
+                    'Volume Increase',
+                    'Recovery Week',
+                    'Threshold Work',
+                    'Lactate Tolerance',
+                    'Race Prep',
+                    'Taper Begin',
+                    'Peak Week',
+                    'Race Week',
+                    'Recovery & Reflection'
+                ];
+                return themes[(weekNum - 1) % themes.length];
+            }
+
+            generateWeekDays(weekNum, weekStart) {
+                // Progressive training structure
+                const isRecoveryWeek = weekNum % 4 === 0;
+                const baseDistance = 5000 + (weekNum * 200);
+
+                const days = [];
+                const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+                for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+                    const date = new Date(weekStart);
+                    date.setDate(weekStart.getDate() + dayIdx);
+
+                    let workout;
+
+                    if (isRecoveryWeek) {
+                        // Recovery week - lighter load
+                        workout = this.getRecoveryDayWorkout(dayIdx, Math.floor(baseDistance * 0.7));
+                    } else {
+                        // Normal training week
+                        workout = this.getRegularDayWorkout(dayIdx, weekNum, baseDistance);
+                    }
+
+                    days.push({
+                        ...workout,
+                        dayName: dayNames[dayIdx],
+                        date: date.toISOString(),
+                        completed: false
+                    });
+                }
+
+                return days;
+            }
+
+            getRecoveryDayWorkout(dayIdx, baseDistance) {
+                const workouts = {
+                    0: { type: 'rowing', title: 'Easy Steady State', distance: Math.floor(baseDistance * 0.8), duration: 1500, intensity: 'Zone 2', description: 'Easy aerobic rowing at conversational pace' },
+                    1: { type: 'rest', title: 'Active Recovery', description: 'Light stretching, walking, or yoga' },
+                    2: { type: 'rowing', title: 'Technique Focus', distance: Math.floor(baseDistance * 0.6), duration: 1200, intensity: 'Zone 1-2', description: 'Low rate (18-20spm), focus on form' },
+                    3: { type: 'rest', title: 'Rest Day', description: 'Full rest or light mobility work' },
+                    4: { type: 'rowing', title: 'Easy Distance', distance: baseDistance, duration: 2000, intensity: 'Zone 2', description: 'Comfortable steady state' },
+                    5: { type: 'rest', title: 'Rest Day', description: 'Full rest' },
+                    6: { type: 'rest', title: 'Rest Day', description: 'Full rest or very light activity' }
+                };
+                return workouts[dayIdx];
+            }
+
+            getRegularDayWorkout(dayIdx, weekNum, baseDistance) {
+                const workouts = {
+                    0: { type: 'rowing', title: 'Intervals 8x500m', distance: 4000, duration: 1500, intensity: 'Zone 4', description: `8x500m @ 2k+6s, 90s rest. Target: ${this.formatPace(this.convertPaceToSeconds(this.dnaProfile.performance_benchmarks['2k_split']) + 6)}` },
+                    1: { type: 'weights', title: 'Strength Training', duration: 2700, intensity: 'Moderate', description: 'Squats 3x8, Deadlifts 3x6, Core work' },
+                    2: { type: 'rowing', title: 'Steady State', distance: Math.floor(baseDistance * 1.2), duration: 2400, intensity: 'Zone 2', description: 'Conversational pace, focus on consistency' },
+                    3: { type: 'rest', title: 'Active Recovery', description: 'Light stretching, foam rolling' },
+                    4: { type: 'rowing', title: 'Pyramid Workout', distance: 5000, duration: 1800, intensity: 'Zone 3-4', description: '500-1000-1500-1000-500 @ 2k+8s with 2min rest' },
+                    5: { type: 'rowing', title: 'Long Slow Distance', distance: Math.floor(baseDistance * 1.5), duration: 3600, intensity: 'Zone 2', description: 'Build aerobic base, comfortable pace' },
+                    6: { type: 'rest', title: 'Rest Day', description: 'Full rest' }
+                };
+
+                const workout = workouts[dayIdx];
+
+                // Adjust distance for week progression (every 3 weeks increase)
+                if (workout.type === 'rowing' && weekNum > 3) {
+                    const multiplier = 1 + Math.floor(weekNum / 3) * 0.05;
+                    workout.distance = Math.floor(workout.distance * multiplier);
+                }
+
+                return workout;
+            }
+
+            renderTrainingPlan() {
+                const container = document.getElementById('planContent');
+                if (!container) return;
+
+                if (!this.trainingPlan) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <div style="font-size:14px; line-height:1.6;">
+                                No training plan yet.<br>
+                                Create a plan to get started.
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Check if adaptive alert should show
+                this.checkAdaptiveAlert();
+
+                // Render timeline view
+                let html = '<div class="plan-timeline">';
+
+                this.trainingPlan.weeks.forEach((week, idx) => {
+                    const isCurrent = idx + 1 === this.trainingPlan.currentWeek;
+                    const isCompleted = week.days.every(d => d.completed);
+                    const completedDays = week.days.filter(d => d.completed).length;
+
+                    const startDate = new Date(week.startDate);
+                    const endDate = new Date(week.endDate);
+                    const dateRange = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+                    html += `
+                        <div class="plan-week-card ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}" id="week_${week.weekNumber}">
+                            <div class="plan-week-header" onclick="app.toggleWeekExpansion(${week.weekNumber})">
+                                <div class="plan-week-title">
+                                    <div class="plan-week-number">W${week.weekNumber}</div>
+                                    <div class="plan-week-info">
+                                        <div class="plan-week-label">${week.theme}</div>
+                                        <div class="plan-week-dates">${dateRange}</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:16px;">
+                                    <div class="plan-week-summary">
+                                        <div class="plan-week-stat">
+                                            <span>🏋️</span>
+                                            <span>${week.workoutCount} workouts</span>
+                                        </div>
+                                        <div class="plan-week-stat">
+                                            <span>✓</span>
+                                            <span>${completedDays}/7</span>
+                                        </div>
+                                    </div>
+                                    <div class="plan-week-expand" id="expand_${week.weekNumber}">▼</div>
+                                </div>
+                            </div>
+                            <div class="plan-week-days" id="days_${week.weekNumber}">
+                                ${this.renderWeekDays(week)}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+            }
+
+            renderWeekDays(week) {
+                let html = '';
+                week.days.forEach((day, idx) => {
+                    const date = new Date(day.date);
+                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const isRest = day.type === 'rest';
+
+                    html += `
+                        <div class="plan-day-card ${isRest ? 'rest' : ''} ${day.completed ? 'completed' : ''}"
+                             onclick="app.showDayDetails(${week.weekNumber}, ${idx})">
+                            <div class="plan-day-header">
+                                <div>
+                                    <div class="plan-day-name">${day.dayName}</div>
+                                    <div class="plan-day-date">${dateStr}</div>
+                                </div>
+                                <div>
+                                    <span class="plan-day-badge ${day.type}">${day.type}</span>
+                                    ${day.completed ? '<span class="plan-day-badge completed">✓</span>' : ''}
+                                </div>
+                            </div>
+                            <div class="plan-day-workout">${day.title}</div>
+                            <div class="plan-day-details">
+                                ${day.distance ? `<span>📏 ${day.distance}m</span>` : ''}
+                                ${day.duration ? `<span>⏱️ ${this.formatTime(day.duration)}</span>` : ''}
+                                ${day.intensity ? `<span>💪 ${day.intensity}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                return html;
+            }
+
+            toggleWeekExpansion(weekNumber) {
+                const daysContainer = document.getElementById(`days_${weekNumber}`);
+                const expandIcon = document.getElementById(`expand_${weekNumber}`);
+
+                if (daysContainer.classList.contains('expanded')) {
+                    daysContainer.classList.remove('expanded');
+                    expandIcon.classList.remove('expanded');
+                } else {
+                    daysContainer.classList.add('expanded');
+                    expandIcon.classList.add('expanded');
+                }
+            }
+
+            showDayDetails(weekNumber, dayIndex) {
+                const week = this.trainingPlan.weeks.find(w => w.weekNumber === weekNumber);
+                if (!week) return;
+
+                const day = week.days[dayIndex];
+                if (!day) return;
+
+                // TODO: Create day details modal with:
+                // - Full workout description
+                // - Mark as complete button
+                // - Log actual workout button
+                // - Reschedule option
+
+                const message = `
+${day.title}
+${day.description || ''}
+
+${day.distance ? `Distance: ${day.distance}m` : ''}
+${day.duration ? `Duration: ${this.formatTime(day.duration)}` : ''}
+${day.intensity ? `Intensity: ${day.intensity}` : ''}
+
+Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
+                `.trim();
+
+                if (confirm(message + '\n\nMark as completed?')) {
+                    day.completed = true;
+                    this.saveTrainingPlan(this.trainingPlan);
+                    this.renderTrainingPlan();
+                    this.showToast('✓ Workout marked complete', 'success');
+                }
+            }
+
+            setPlanView(viewType) {
+                // Update button states
+                document.querySelectorAll('.plan-view-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+
+                // TODO: Implement week view and month view
+                if (viewType === 'timeline') {
+                    this.renderTrainingPlan();
+                } else {
+                    this.showToast(`${viewType} view coming soon`, 'info');
+                }
+            }
+
+            checkAdaptiveAlert() {
+                const alertContainer = document.getElementById('planAdaptiveAlert');
+                if (!alertContainer || !this.dnaProfile) return;
+
+                // Check DNA status for poor recovery indicators
+                const poorSleep = this.dnaProfile.lifestyle.sleep_quality < 6;
+                const highStress = this.dnaProfile.lifestyle.stress_level === 'high';
+
+                if (poorSleep || highStress) {
+                    const todayDate = new Date().toDateString();
+                    const currentWeek = this.trainingPlan?.weeks.find(w => w.weekNumber === this.trainingPlan.currentWeek);
+                    const todayWorkout = currentWeek?.days.find(d => new Date(d.date).toDateString() === todayDate);
+
+                    if (todayWorkout && todayWorkout.type === 'rowing' && todayWorkout.intensity?.includes('Zone 4')) {
+                        alertContainer.style.display = 'block';
+                        alertContainer.innerHTML = `
+                            <div class="plan-adaptive-header">
+                                <span>⚠️</span>
+                                <span>Recovery Alert</span>
+                            </div>
+                            <div class="plan-adaptive-message">
+                                Your DNA shows ${poorSleep ? 'poor sleep' : 'high stress'}. Today's high-intensity workout (${todayWorkout.title}) may be too much. Scale back to recovery pace?
+                            </div>
+                            <div class="plan-adaptive-actions">
+                                <button class="btn btn-sm btn-outline" onclick="app.dismissAdaptiveAlert()">Keep As Planned</button>
+                                <button class="btn btn-sm btn-primary" onclick="app.scaleWorkout()">Scale to Recovery</button>
+                            </div>
+                        `;
+                    } else {
+                        alertContainer.style.display = 'none';
+                    }
+                } else {
+                    alertContainer.style.display = 'none';
+                }
+            }
+
+            dismissAdaptiveAlert() {
+                document.getElementById('planAdaptiveAlert').style.display = 'none';
+            }
+
+            scaleWorkout() {
+                // Find today's workout and modify it
+                const todayDate = new Date().toDateString();
+                const currentWeek = this.trainingPlan?.weeks.find(w => w.weekNumber === this.trainingPlan.currentWeek);
+                const todayWorkout = currentWeek?.days.find(d => new Date(d.date).toDateString() === todayDate);
+
+                if (todayWorkout) {
+                    todayWorkout.title = 'Recovery Row (Modified)';
+                    todayWorkout.intensity = 'Zone 1-2';
+                    todayWorkout.description = 'Light recovery row. Listen to your body.';
+                    todayWorkout.distance = Math.floor(todayWorkout.distance * 0.6);
+
+                    this.saveTrainingPlan(this.trainingPlan);
+                    this.renderTrainingPlan();
+                    this.showToast('✓ Workout scaled to recovery pace', 'success');
+                }
+            }
+
+            syncGoogleCalendar() {
+                // TODO: Implement Google Calendar OAuth and sync
+                this.showToast('Google Calendar sync coming soon. Stay tuned!', 'info');
+
+                // Future implementation will:
+                // 1. OAuth with Google Calendar API
+                // 2. Create calendar events for each workout
+                // 3. Bi-directional sync (calendar changes update plan)
+                // 4. Set reminders and notifications
             }
 
             // ========================================================================
@@ -5691,6 +6367,11 @@ Would you like to:
                 // Update Firebase status when opening settings
                 if (screenId === 'screenSettings') {
                     this.updateFirebaseStatus();
+                }
+
+                // Render training plan when opening plan screen
+                if (screenId === 'screenPlan') {
+                    this.renderTrainingPlan();
                 }
             }
 
