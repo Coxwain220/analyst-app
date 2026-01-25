@@ -274,20 +274,6 @@
             letter-spacing: 0.5px;
         }
 
-        .version-badge {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 255, 153, 0.2);
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 700;
-            z-index: 10000;
-        }
-        
         /* TOP NAVIGATION */
         .top-nav-bar {
             background: var(--panel);
@@ -681,57 +667,134 @@
         }
         
         .builder-interval-item {
-            background: #050505;
+            background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 8px;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            position: relative;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            touch-action: pan-y;
         }
-        
+
+        /* Swipe-to-delete states */
+        .builder-interval-item.swiping {
+            transform: translateX(var(--swipe-distance, 0));
+        }
+
+        .builder-interval-item.delete-revealed {
+            transform: translateX(-80px);
+        }
+
+        .builder-interval-delete-action {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            background: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0 8px 8px 0;
+            font-size: 24px;
+            color: #FFF;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .builder-interval-item.delete-revealed .builder-interval-delete-action {
+            opacity: 1;
+        }
+
         .builder-interval-item.editable {
-            border-color: var(--accent);
-            background: #0a0a0a;
+            border-color: var(--accent-primary);
+            background: var(--card-bg);
+            box-shadow: 0 0 0 2px var(--accent-primary);
         }
-        
+
         .builder-interval-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
         }
-        
+
         .builder-interval-title {
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 700;
+            flex: 1;
+            color: var(--text-main);
         }
-        
+
         .builder-interval-actions {
             display: flex;
             gap: 8px;
         }
-        
-        .builder-icon-btn {
-            width: 32px;
-            height: 32px;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            color: var(--text);
-            font-size: 14px;
+
+        /* Edit button - larger and clearer */
+        .builder-edit-btn {
+            min-width: 44px;
+            min-height: 44px;
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 8px;
+            color: #FFF;
+            font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0 16px;
+            gap: 6px;
+            transition: all 0.2s;
         }
-        
+
+        .builder-edit-btn:active {
+            transform: scale(0.95);
+        }
+
+        .builder-interval-item.editable .builder-edit-btn {
+            background: var(--text-muted);
+        }
+
+        /* Add interval button */
+        .builder-add-btn {
+            width: 100%;
+            min-height: 56px;
+            background: transparent;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-size: 32px;
+            font-weight: 300;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .builder-add-btn:active {
+            transform: scale(0.98);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
         .builder-interval-edit {
             display: none;
-            margin-top: 12px;
-            padding-top: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
             border-top: 1px solid var(--border);
+            gap: 12px;
         }
-        
+
         .builder-interval-item.editable .builder-interval-edit {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
         
         /* REVIEW SCREEN */
@@ -2016,7 +2079,6 @@
         </svg>
     </div>
 
-    <div class="version-badge">v1.6 PRODUCTION</div>
     <div id="toast" class="toast"></div>
     
     <!-- TOP NAVIGATION BAR -->
@@ -6774,37 +6836,58 @@
                                 <input type="number" class="builder-time-input" id="varRestSecs" placeholder="00" min="0" max="59">
                             </div>
                         </div>
-                        <button class="btn btn-outline" onclick="app.addVariableInterval()">Add Interval</button>
-                        
                         <div class="builder-interval-list">
                             ${this.builderIntervals.map((interval, i) => `
-                                <div class="builder-interval-item ${i === this.editingInterval ? 'editable' : ''}" onclick="app.editInterval(${i})">
+                                <div class="builder-interval-item ${i === this.editingInterval ? 'editable' : ''}" data-interval-index="${i}">
+                                    <div class="builder-interval-delete-action" onclick="app.deleteInterval(${i})">
+                                        🗑️
+                                    </div>
                                     <div class="builder-interval-header">
                                         <div class="builder-interval-title">${i + 1}. ${interval.workValue}m / ${interval.restTime}s rest</div>
-                                        <div class="builder-interval-actions">
-                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.editInterval(${i})" title="Edit">✏️</button>
-                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.copyInterval(${i})" title="Copy">📋</button>
-                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.deleteInterval(${i})" title="Delete">🗑️</button>
-                                        </div>
+                                        <button class="builder-edit-btn" onclick="app.editInterval(${i}, event)">
+                                            ${i === this.editingInterval ? 'Done' : 'Edit'}
+                                        </button>
                                     </div>
                                     <div class="builder-interval-edit">
                                         <div class="builder-input-group">
                                             <div class="builder-label">Work Value (meters)</div>
-                                            <input type="number" class="builder-input" value="${interval.workValue}" onchange="app.updateInterval(${i}, 'workValue', this.value)">
+                                            <input type="number"
+                                                   class="builder-input"
+                                                   value="${interval.workValue}"
+                                                   onblur="app.updateInterval(${i}, 'workValue', this.value)"
+                                                   onclick="event.stopPropagation()">
                                         </div>
                                         <div class="builder-input-group">
                                             <div class="builder-label">Rest Time (seconds)</div>
-                                            <input type="number" class="builder-input" value="${interval.restTime}" onchange="app.updateInterval(${i}, 'restTime', this.value)">
+                                            <input type="number"
+                                                   class="builder-input"
+                                                   value="${interval.restTime}"
+                                                   onblur="app.updateInterval(${i}, 'restTime', this.value)"
+                                                   onclick="event.stopPropagation()">
                                         </div>
                                     </div>
                                 </div>
                             `).join('')}
+
+                            <button class="builder-add-btn" onclick="app.addVariableInterval()">
+                                + Add Interval
+                            </button>
                         </div>
                     `;
                 }
                 
                 html += '</div>';
                 container.innerHTML = html;
+
+                // Setup swipe-to-delete for each interval
+                if (this.builderMode === 'variable-intervals') {
+                    this.builderIntervals.forEach((interval, index) => {
+                        const element = document.querySelector(`[data-interval-index="${index}"]`);
+                        if (element) {
+                            this.setupSwipeToDelete(element, index);
+                        }
+                    });
+                }
             }
 
             toggleBuilderTarget(target) {
@@ -6842,25 +6925,90 @@
                 this.renderBuilderMode();
             }
 
-            editInterval(index) {
+            editInterval(index, event) {
+                if (event) event.stopPropagation();
                 this.editingInterval = this.editingInterval === index ? -1 : index;
                 this.renderBuilderMode();
             }
 
             updateInterval(index, field, value) {
+                // Update data without re-rendering to prevent edit panel from closing
                 this.builderIntervals[index][field] = parseInt(value);
-                this.renderBuilderMode();
+
+                // Update just the title display
+                const titleElem = document.querySelector(`[data-interval-index="${index}"] .builder-interval-title`);
+                if (titleElem) {
+                    const interval = this.builderIntervals[index];
+                    titleElem.textContent = `${index + 1}. ${interval.workValue}m / ${interval.restTime}s rest`;
+                }
             }
 
-            copyInterval(index) {
-                const interval = {...this.builderIntervals[index]};
-                this.builderIntervals.push(interval);
+            saveIntervalEdit(index) {
+                // Close edit panel and refresh display
+                this.editingInterval = -1;
                 this.renderBuilderMode();
             }
 
             deleteInterval(index) {
-                this.builderIntervals.splice(index, 1);
-                this.renderBuilderMode();
+                if (confirm('Delete this interval?')) {
+                    this.builderIntervals.splice(index, 1);
+                    this.editingInterval = -1;
+                    this.renderBuilderMode();
+                    this.showToast('Interval deleted', 'success');
+                }
+            }
+
+            setupSwipeToDelete(element, index) {
+                let startX = 0;
+                let currentX = 0;
+                let isSwiping = false;
+
+                element.addEventListener('touchstart', (e) => {
+                    // Don't swipe if in edit mode
+                    if (this.editingInterval === index) return;
+
+                    startX = e.touches[0].clientX;
+                    isSwiping = true;
+                });
+
+                element.addEventListener('touchmove', (e) => {
+                    if (!isSwiping) return;
+
+                    currentX = e.touches[0].clientX;
+                    const diff = currentX - startX;
+
+                    // Only allow left swipe (negative diff)
+                    if (diff < 0) {
+                        element.classList.add('swiping');
+                        element.style.setProperty('--swipe-distance', `${Math.max(diff, -80)}px`);
+                    }
+                });
+
+                element.addEventListener('touchend', () => {
+                    if (!isSwiping) return;
+                    isSwiping = false;
+
+                    const diff = currentX - startX;
+
+                    if (diff < -60) {
+                        // Reveal delete button
+                        element.classList.remove('swiping');
+                        element.classList.add('delete-revealed');
+                        element.style.setProperty('--swipe-distance', '0');
+                    } else {
+                        // Snap back
+                        element.classList.remove('swiping');
+                        element.style.setProperty('--swipe-distance', '0');
+                    }
+                });
+
+                // Click delete action
+                const deleteAction = element.querySelector('.builder-interval-delete-action');
+                if (deleteAction) {
+                    deleteAction.addEventListener('click', () => {
+                        this.deleteInterval(index);
+                    });
+                }
             }
 
             saveManualWorkout() {
