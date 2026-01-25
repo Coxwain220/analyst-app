@@ -1663,7 +1663,7 @@
                 <p style="font-size: 12px; color: #888; margin-bottom: 12px;">
                     Upload your Concept2 Logbook CSV to automatically update your PBs and training history.
                 </p>
-                <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="app.handleCSVUpload(event)">
+                <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="app.showCSVMapper(event)">
                 <button class="btn btn-outline" onclick="document.getElementById('csvFileInput').click()">
                     📊 Upload CSV File
                 </button>
@@ -1751,6 +1751,61 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="app.closeAddWorkoutModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="app.saveManualWorkoutEntry()">Save Workout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV COLUMN MAPPER MODAL -->
+    <div id="csvMapperModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <div class="modal-title">Map CSV Columns</div>
+                <button class="modal-close" onclick="app.closeCSVMapper()">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #888; font-size: 12px; margin-bottom: 16px;">
+                    Select which column in your CSV file corresponds to each field:
+                </p>
+
+                <!-- Preview Table -->
+                <div style="overflow-x: auto; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px;">
+                    <table id="csvPreviewTable" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                        <!-- Filled by JavaScript -->
+                    </table>
+                </div>
+
+                <!-- Column Mapping -->
+                <div class="card">
+                    <div class="card-header">Column Mapping</div>
+                    <div style="display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center;">
+
+                        <label style="color: #888;">Date:</label>
+                        <select id="csvMapDate" class="builder-input"></select>
+
+                        <label style="color: #888;">Description:</label>
+                        <select id="csvMapDescription" class="builder-input"></select>
+
+                        <label style="color: #888;">Work Time:</label>
+                        <select id="csvMapTime" class="builder-input"></select>
+
+                        <label style="color: #888;">Work Distance:</label>
+                        <select id="csvMapDistance" class="builder-input"></select>
+
+                        <label style="color: #888;">Pace (/500m):</label>
+                        <select id="csvMapPace" class="builder-input"></select>
+
+                        <label style="color: #888;">Avg Watts:</label>
+                        <select id="csvMapWatts" class="builder-input"></select>
+
+                        <label style="color: #888;">Avg Heart Rate:</label>
+                        <select id="csvMapHR" class="builder-input"></select>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="app.closeCSVMapper()">Cancel</button>
+                <button class="btn btn-primary" onclick="app.importWithMapping()">Import Workouts</button>
             </div>
         </div>
     </div>
@@ -2609,6 +2664,251 @@
 
             toggleInjuryDetails() {
                 this.showToast('Injury details: Hand numbness/weakness. C5-C7 disc replacement. Monitor during high-intensity efforts.', 'success');
+            }
+
+            async showCSVMapper(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                try {
+                    const text = await file.text();
+                    const lines = text.split('\n').filter(line => line.trim());
+
+                    if (lines.length < 2) {
+                        this.showToast('CSV file is empty or invalid', 'error');
+                        return;
+                    }
+
+                    // Store CSV data for later import
+                    this.pendingCSV = { text, lines };
+
+                    // Parse header
+                    const headerCols = this.parseCSVLine(lines[0]);
+                    console.log('📋 Found', headerCols.length, 'columns:', headerCols);
+
+                    // Build preview table (first 3 rows)
+                    const previewTable = document.getElementById('csvPreviewTable');
+                    let tableHTML = '<thead><tr>';
+                    headerCols.forEach((col, idx) => {
+                        tableHTML += `<th style="padding: 8px; border-bottom: 2px solid var(--border); text-align: left; white-space: nowrap;">${idx}: ${col}</th>`;
+                    });
+                    tableHTML += '</tr></thead><tbody>';
+
+                    // Add up to 3 data rows for preview
+                    for (let i = 1; i < Math.min(4, lines.length); i++) {
+                        const rowCols = this.parseCSVLine(lines[i]);
+                        tableHTML += '<tr>';
+                        rowCols.forEach(cell => {
+                            tableHTML += `<td style="padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap;">${cell}</td>`;
+                        });
+                        tableHTML += '</tr>';
+                    }
+                    tableHTML += '</tbody>';
+                    previewTable.innerHTML = tableHTML;
+
+                    // Fill dropdown selectors
+                    const dropdowns = ['csvMapDate', 'csvMapDescription', 'csvMapTime', 'csvMapDistance', 'csvMapPace', 'csvMapWatts', 'csvMapHR'];
+                    dropdowns.forEach(id => {
+                        const select = document.getElementById(id);
+                        select.innerHTML = '<option value="-1">-- Skip this field --</option>';
+                        headerCols.forEach((col, idx) => {
+                            select.innerHTML += `<option value="${idx}">${idx}: ${col}</option>`;
+                        });
+                    });
+
+                    // Apply smart defaults based on column names
+                    headerCols.forEach((name, idx) => {
+                        const lower = name.toLowerCase().trim();
+
+                        // Date - prefer "Date" over "Date Entered"
+                        if (lower === 'date' && document.getElementById('csvMapDate').value === '-1') {
+                            document.getElementById('csvMapDate').value = idx;
+                        } else if (lower.includes('date') && !lower.includes('entered') && document.getElementById('csvMapDate').value === '-1') {
+                            document.getElementById('csvMapDate').value = idx;
+                        }
+
+                        // Description
+                        if ((lower.includes('description') || lower === 'type') && document.getElementById('csvMapDescription').value === '-1') {
+                            document.getElementById('csvMapDescription').value = idx;
+                        }
+
+                        // Work Time - prefer "Work Time (Seconds)" over "Rest Time"
+                        if (lower.includes('work time') && lower.includes('seconds')) {
+                            document.getElementById('csvMapTime').value = idx;
+                        } else if (lower.includes('time') && lower.includes('seconds') && !lower.includes('rest') && document.getElementById('csvMapTime').value === '-1') {
+                            document.getElementById('csvMapTime').value = idx;
+                        }
+
+                        // Work Distance - prefer "Work Distance" over "Rest Distance"
+                        if (lower.includes('work distance')) {
+                            document.getElementById('csvMapDistance').value = idx;
+                        } else if (lower === 'distance' && document.getElementById('csvMapDistance').value === '-1') {
+                            document.getElementById('csvMapDistance').value = idx;
+                        }
+
+                        // Pace
+                        if ((lower.includes('pace') || lower.includes('avg pace')) && document.getElementById('csvMapPace').value === '-1') {
+                            document.getElementById('csvMapPace').value = idx;
+                        }
+
+                        // Watts
+                        if (lower.includes('watts') && document.getElementById('csvMapWatts').value === '-1') {
+                            document.getElementById('csvMapWatts').value = idx;
+                        }
+
+                        // Heart Rate
+                        if ((lower.includes('heart') || lower.includes('avg hr')) && document.getElementById('csvMapHR').value === '-1') {
+                            document.getElementById('csvMapHR').value = idx;
+                        }
+                    });
+
+                    // Show modal
+                    document.getElementById('csvMapperModal').style.display = 'flex';
+                    console.log('✓ Column mapper ready');
+
+                } catch (error) {
+                    console.error('CSV mapper error:', error);
+                    this.showToast('Failed to read CSV file: ' + error.message, 'error');
+                }
+            }
+
+            closeCSVMapper() {
+                document.getElementById('csvMapperModal').style.display = 'none';
+                this.pendingCSV = null;
+                // Reset file input
+                document.getElementById('csvFileInput').value = '';
+            }
+
+            async importWithMapping() {
+                if (!this.pendingCSV) {
+                    this.showToast('No CSV file loaded', 'error');
+                    return;
+                }
+
+                try {
+                    // Get user's column mapping
+                    const mapping = {
+                        date: parseInt(document.getElementById('csvMapDate').value),
+                        description: parseInt(document.getElementById('csvMapDescription').value),
+                        time: parseInt(document.getElementById('csvMapTime').value),
+                        distance: parseInt(document.getElementById('csvMapDistance').value),
+                        pace: parseInt(document.getElementById('csvMapPace').value),
+                        watts: parseInt(document.getElementById('csvMapWatts').value),
+                        hr: parseInt(document.getElementById('csvMapHR').value)
+                    };
+
+                    console.log('📊 User column mapping:', mapping);
+
+                    // Validate at least date is selected
+                    if (mapping.date === -1) {
+                        this.showToast('Please select a Date column', 'error');
+                        return;
+                    }
+
+                    const { lines } = this.pendingCSV;
+                    const headerCols = this.parseCSVLine(lines[0]);
+                    let importedCount = 0;
+                    let skippedCount = 0;
+
+                    // Parse each data row
+                    for (let i = 1; i < lines.length; i++) {
+                        try {
+                            const cols = this.parseCSVLine(lines[i]);
+
+                            // Extract values using user's mapping
+                            const dateStr = mapping.date !== -1 ? cols[mapping.date] : '';
+                            const description = mapping.description !== -1 ? cols[mapping.description] : 'Imported workout';
+                            const timeValue = mapping.time !== -1 ? cols[mapping.time] : '0';
+                            const distanceValue = mapping.distance !== -1 ? cols[mapping.distance] : '0';
+                            const paceValue = mapping.pace !== -1 ? cols[mapping.pace] : '0:00';
+                            const wattsValue = mapping.watts !== -1 ? cols[mapping.watts] : '0';
+                            const hrValue = mapping.hr !== -1 ? cols[mapping.hr] : '0';
+
+                            if (!dateStr) {
+                                skippedCount++;
+                                continue;
+                            }
+
+                            // Parse values
+                            const duration = this.parseTimeToSeconds(timeValue);
+                            const distance = parseInt(distanceValue) || 0;
+                            const pace = this.parsePaceToSeconds(paceValue);
+                            const watts = parseInt(wattsValue) || 0;
+                            const avgHR = parseInt(hrValue) || 0;
+
+                            // Parse date
+                            let workoutDate;
+                            try {
+                                workoutDate = new Date(dateStr);
+                                if (isNaN(workoutDate.getTime())) {
+                                    console.warn(`Invalid date on line ${i + 1}: ${dateStr}`);
+                                    skippedCount++;
+                                    continue;
+                                }
+                            } catch (e) {
+                                console.warn(`Date parse error on line ${i + 1}:`, e);
+                                skippedCount++;
+                                continue;
+                            }
+
+                            // Create workout object
+                            const workout = {
+                                id: 'csv_' + Date.now() + '_' + i,
+                                date: workoutDate.toISOString(),
+                                activityType: 'rowing',
+                                duration: duration,
+                                distance: distance,
+                                avgPace: pace || (duration && distance ? (duration / (distance / 500)) : 0),
+                                avgHR: avgHR,
+                                avgWatts: watts,
+                                description: description || 'Imported from CSV',
+                                metadata: {
+                                    distance: distance,
+                                    avgPace: pace || (duration && distance ? (duration / (distance / 500)) : 0),
+                                    avgHR: avgHR,
+                                    avgWatts: watts,
+                                    source: 'csv_import'
+                                }
+                            };
+
+                            console.log(`✓ Line ${i + 1}: ${distance}m, pace=${paceValue}, time=${timeValue}s`);
+                            await this.dataStore.saveWorkout(workout);
+                            importedCount++;
+
+                        } catch (rowError) {
+                            console.error(`Error parsing line ${i + 1}:`, rowError);
+                            skippedCount++;
+                        }
+                    }
+
+                    // Close modal
+                    this.closeCSVMapper();
+
+                    // Show results
+                    this.showToast(`✓ Imported ${importedCount} workouts${skippedCount > 0 ? ` (skipped ${skippedCount})` : ''}`, 'success');
+
+                    // Refresh Training Log
+                    this.renderTrainingLog();
+                    this.navigateTo('screenTrainingLog');
+
+                } catch (error) {
+                    console.error('Import error:', error);
+                    this.showToast('Import failed: ' + error.message, 'error');
+                }
+            }
+
+            parsePaceToSeconds(paceStr) {
+                if (!paceStr || paceStr === '--:--' || paceStr === '0:00') return 0;
+
+                // Handle format like "2:25.7" or "2:25"
+                const parts = paceStr.split(':');
+                if (parts.length === 2) {
+                    const mins = parseInt(parts[0]) || 0;
+                    const secs = parseFloat(parts[1]) || 0;
+                    return mins * 60 + secs;
+                }
+
+                return parseFloat(paceStr) || 0;
             }
 
             async handleCSVUpload(event) {
