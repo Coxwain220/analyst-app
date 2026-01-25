@@ -2619,65 +2619,85 @@
 
                 try {
                     const text = await file.text();
-                    const lines = text.split('\n');
+                    const lines = text.split('\n').filter(line => line.trim());
 
                     if (lines.length < 2) {
                         throw new Error('CSV file is empty or invalid');
                     }
 
-                    // Get header to understand column positions
-                    const header = lines[0].toLowerCase();
-                    console.log('CSV Header:', header);
+                    // Parse header to get column positions
+                    const headerCols = this.parseCSVLine(lines[0]);
+                    console.log('📋 CSV Columns found:', headerCols.length);
+                    console.log('📋 Column names:', headerCols);
 
-                    // Skip header row
-                    const dataLines = lines.slice(1).filter(line => line.trim());
+                    // Find column indexes dynamically
+                    const colMap = {};
+                    headerCols.forEach((name, idx) => {
+                        const lower = name.toLowerCase().trim();
+                        if (lower.includes('date')) colMap.date = idx;
+                        if (lower.includes('description') || lower.includes('type')) colMap.description = idx;
+                        if (lower.includes('work time') || lower.includes('time')) colMap.time = idx;
+                        if (lower.includes('work distance') || lower.includes('distance')) colMap.distance = idx;
+                        if (lower.includes('avg pace') || lower.includes('pace')) colMap.pace = idx;
+                        if (lower.includes('avg watts') || lower.includes('watts')) colMap.watts = idx;
+                        if (lower.includes('avg hr') || lower.includes('heart')) colMap.hr = idx;
+                    });
 
+                    console.log('📋 Column mapping:', colMap);
+
+                    if (!colMap.distance || !colMap.pace) {
+                        throw new Error('Could not find Distance or Pace columns. Please check your CSV format.');
+                    }
+
+                    // Process data rows
+                    const dataLines = lines.slice(1);
                     let imported = 0;
                     let skipped = 0;
 
+                    console.log(`📊 Processing ${dataLines.length} rows...`);
+
                     for (let i = 0; i < dataLines.length; i++) {
                         try {
-                            const line = dataLines[i];
+                            const cols = this.parseCSVLine(dataLines[i]);
 
-                            // Parse CSV line (handle quoted fields)
-                            const cols = this.parseCSVLine(line);
-
-                            if (cols.length < 6) {
+                            if (cols.length < 3) {
+                                console.log(`⏭️ Line ${i+2}: Too few columns (${cols.length})`);
                                 skipped++;
                                 continue;
                             }
 
-                            // Extract key fields (robust parsing)
-                            const dateStr = cols[0] || '';
-                            const description = cols[2] || 'Imported Workout';
-                            const workTimeStr = cols[3] || '0';
-                            const distanceStr = cols[5] || '0';
-                            const avgPaceStr = cols[7] || '';
-                            const avgWattsStr = cols[8] || '0';
-                            const avgHRStr = cols[9] || '';
+                            // Extract fields using column map
+                            const dateStr = cols[colMap.date] || '';
+                            const description = cols[colMap.description] || 'Imported Workout';
+                            const workTimeStr = cols[colMap.time] || '0';
+                            const distanceStr = cols[colMap.distance] || '0';
+                            const avgPaceStr = cols[colMap.pace] || '';
+                            const avgWattsStr = cols[colMap.watts] || '0';
+                            const avgHRStr = cols[colMap.hr] || '';
 
-                            // Parse distance
+                            console.log(`📝 Line ${i+2}: dist=${distanceStr}, pace=${avgPaceStr}, time=${workTimeStr}`);
+
+                            // Parse values
                             const distance = parseInt(distanceStr.replace(/[^0-9]/g, '')) || 0;
-                            if (distance === 0) {
-                                skipped++;
-                                continue;
-                            }
-
-                            // Parse time (flexible)
                             const workTime = this.parseTimeToSeconds(workTimeStr);
-
-                            // Parse pace (flexible)
                             const avgPace = this.parsePaceToSeconds(avgPaceStr);
-                            if (avgPace === 0) {
-                                skipped++;
-                                continue;
-                            }
-
-                            // Parse watts and HR
                             const avgWatts = parseInt(avgWattsStr.replace(/[^0-9]/g, '')) || 0;
                             const avgHR = parseInt(avgHRStr.replace(/[^0-9]/g, '')) || null;
 
-                            // Parse date (flexible)
+                            // Validate
+                            if (distance === 0) {
+                                console.log(`⏭️ Line ${i+2}: Distance is 0, skipping`);
+                                skipped++;
+                                continue;
+                            }
+
+                            if (avgPace === 0) {
+                                console.log(`⏭️ Line ${i+2}: Pace is 0, skipping`);
+                                skipped++;
+                                continue;
+                            }
+
+                            // Parse date
                             let workoutDate;
                             try {
                                 workoutDate = new Date(dateStr);
@@ -2688,10 +2708,11 @@
                                 workoutDate = new Date();
                             }
 
-                            // Create workout object
+                            // Create workout
                             const workout = {
                                 id: `import_${workoutDate.getTime()}_${imported}`,
                                 date: workoutDate.toISOString(),
+                                activityType: 'rowing',
                                 type: 'imported',
                                 description: description,
                                 duration: workTime,
@@ -2699,34 +2720,43 @@
                                 avgPace: avgPace,
                                 avgWatts: avgWatts,
                                 avgHR: avgHR,
-                                completed: true
+                                completed: true,
+                                metadata: {
+                                    distance: distance,
+                                    avgPace: avgPace,
+                                    avgHR: avgHR
+                                }
                             };
 
-                            // Save workout
+                            // Save
                             await this.dataStore.saveWorkout(workout);
                             this.workouts.unshift(workout);
                             imported++;
 
-                            // Update DNA profile with this workout data
+                            // Update DNA for rowing
                             await this.updateDNAProfile(workout);
 
+                            console.log(`✓ Line ${i+2}: Imported successfully`);
+
                         } catch (lineError) {
-                            console.warn(`Skipping line ${i + 2}:`, lineError.message);
+                            console.error(`❌ Line ${i + 2}:`, lineError.message);
                             skipped++;
                         }
                     }
 
+                    console.log(`✅ Import complete: ${imported} imported, ${skipped} skipped`);
+
                     if (imported > 0) {
-                        this.showToast(`✓ Imported ${imported} workouts!`, 'success');
+                        this.showToast(`✓ Imported ${imported} workouts! (${skipped} skipped)`, 'success');
                         this.renderDNA();
                         this.renderTrainingLog();
                         this.updateStats();
                     } else {
-                        throw new Error('No valid workouts found in CSV');
+                        throw new Error(`No valid workouts found. ${skipped} rows skipped. Check console for details.`);
                     }
 
                 } catch (error) {
-                    console.error('CSV import error:', error);
+                    console.error('❌ CSV import error:', error);
                     this.showToast('CSV import failed: ' + error.message, 'error');
                 }
 
