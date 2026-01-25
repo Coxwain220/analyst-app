@@ -759,6 +759,28 @@
             background: var(--text-muted);
         }
 
+        /* Copy button - icon-based but touch-friendly */
+        .builder-copy-btn {
+            min-width: 44px;
+            min-height: 44px;
+            background: transparent;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .builder-copy-btn:active {
+            transform: scale(0.95);
+            border-color: var(--accent-primary);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
         /* Add interval button */
         .builder-add-btn {
             width: 100%;
@@ -6844,9 +6866,14 @@
                                     </div>
                                     <div class="builder-interval-header">
                                         <div class="builder-interval-title">${i + 1}. ${interval.workValue}m / ${interval.restTime}s rest</div>
-                                        <button class="builder-edit-btn" onclick="app.editInterval(${i}, event)">
-                                            ${i === this.editingInterval ? 'Done' : 'Edit'}
-                                        </button>
+                                        <div style="display: flex; gap: 8px;">
+                                            <button class="builder-copy-btn" onclick="event.stopPropagation(); app.copyInterval(${i})" title="Copy">
+                                                📋
+                                            </button>
+                                            <button class="builder-edit-btn" onclick="event.stopPropagation(); app.editInterval(${i}, event)">
+                                                ${i === this.editingInterval ? 'Done' : 'Edit'}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="builder-interval-edit">
                                         <div class="builder-input-group">
@@ -6950,24 +6977,41 @@
             }
 
             deleteInterval(index) {
-                if (confirm('Delete this interval?')) {
-                    this.builderIntervals.splice(index, 1);
-                    this.editingInterval = -1;
-                    this.renderBuilderMode();
-                    this.showToast('Interval deleted', 'success');
-                }
+                // Show in-app confirmation modal
+                this.showDeleteConfirmation(index);
+            }
+
+            copyInterval(index) {
+                const interval = {...this.builderIntervals[index]};
+                this.builderIntervals.push(interval);
+                this.editingInterval = -1;
+                this.renderBuilderMode();
+                this.showToast('Interval copied', 'success');
             }
 
             setupSwipeToDelete(element, index) {
                 let startX = 0;
                 let currentX = 0;
+                let startY = 0;
+                let currentY = 0;
                 let isSwiping = false;
+                let hasMoved = false;
 
                 element.addEventListener('touchstart', (e) => {
                     // Don't swipe if in edit mode
                     if (this.editingInterval === index) return;
 
+                    // If already revealed, tap to dismiss
+                    if (element.classList.contains('delete-revealed')) {
+                        element.classList.remove('delete-revealed');
+                        return;
+                    }
+
                     startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    currentX = startX;
+                    currentY = startY;
+                    hasMoved = false;
                     isSwiping = true;
                 });
 
@@ -6975,22 +7019,36 @@
                     if (!isSwiping) return;
 
                     currentX = e.touches[0].clientX;
-                    const diff = currentX - startX;
+                    currentY = e.touches[0].clientY;
+                    const diffX = currentX - startX;
+                    const diffY = currentY - startY;
 
-                    // Only allow left swipe (negative diff)
-                    if (diff < 0) {
+                    // Only start swiping if horizontal movement exceeds threshold
+                    if (!hasMoved && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+                        hasMoved = true;
+                        // If more vertical than horizontal, don't swipe (allow scrolling)
+                        if (Math.abs(diffY) > Math.abs(diffX)) {
+                            isSwiping = false;
+                            return;
+                        }
+                    }
+
+                    // Only allow left swipe (negative diffX) and if we're in horizontal swipe mode
+                    if (hasMoved && diffX < 0) {
+                        e.preventDefault(); // Prevent scrolling while swiping
                         element.classList.add('swiping');
-                        element.style.setProperty('--swipe-distance', `${Math.max(diff, -80)}px`);
+                        element.style.setProperty('--swipe-distance', `${Math.max(diffX, -80)}px`);
                     }
                 });
 
-                element.addEventListener('touchend', () => {
+                element.addEventListener('touchend', (e) => {
                     if (!isSwiping) return;
                     isSwiping = false;
 
-                    const diff = currentX - startX;
+                    const diffX = currentX - startX;
 
-                    if (diff < -60) {
+                    // Only reveal if actually moved and swiped far enough
+                    if (hasMoved && diffX < -60) {
                         // Reveal delete button
                         element.classList.remove('swiping');
                         element.classList.add('delete-revealed');
@@ -6998,6 +7056,7 @@
                     } else {
                         // Snap back
                         element.classList.remove('swiping');
+                        element.classList.remove('delete-revealed');
                         element.style.setProperty('--swipe-distance', '0');
                     }
                 });
@@ -7005,10 +7064,80 @@
                 // Click delete action
                 const deleteAction = element.querySelector('.builder-interval-delete-action');
                 if (deleteAction) {
-                    deleteAction.addEventListener('click', () => {
-                        this.deleteInterval(index);
+                    deleteAction.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.showDeleteConfirmation(index);
                     });
                 }
+            }
+
+            showDeleteConfirmation(index) {
+                // Create in-app confirmation modal
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    z-index: 10001;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                `;
+
+                modal.innerHTML = `
+                    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-width: 320px; width: 100%;">
+                        <div style="font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; text-align: center;">
+                            Delete Interval?
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; text-align: center;">
+                            This action cannot be undone.
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <button id="cancelDelete" style="flex: 1; padding: 14px; background: transparent; border: 1px solid var(--border); color: var(--text-main); border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                                Cancel
+                            </button>
+                            <button id="confirmDelete" style="flex: 1; padding: 14px; background: var(--danger); border: none; color: #FFF; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Cancel button
+                modal.querySelector('#cancelDelete').addEventListener('click', () => {
+                    modal.remove();
+                    // Reset swipe state
+                    const element = document.querySelector(`[data-interval-index="${index}"]`);
+                    if (element) {
+                        element.classList.remove('delete-revealed');
+                    }
+                });
+
+                // Confirm delete button
+                modal.querySelector('#confirmDelete').addEventListener('click', () => {
+                    modal.remove();
+                    this.builderIntervals.splice(index, 1);
+                    this.editingInterval = -1;
+                    this.renderBuilderMode();
+                    this.showToast('Interval deleted', 'success');
+                });
+
+                // Click outside to cancel
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        const element = document.querySelector(`[data-interval-index="${index}"]`);
+                        if (element) {
+                            element.classList.remove('delete-revealed');
+                        }
+                    }
+                });
             }
 
             saveManualWorkout() {
