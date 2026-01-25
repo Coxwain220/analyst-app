@@ -2135,18 +2135,6 @@
                 </div>
             </div>
 
-            <!-- CSV Upload -->
-            <div class="card">
-                <div class="card-header">Import Workout Data</div>
-                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
-                    Upload your Concept2 Logbook CSV to automatically update your PBs and training history.
-                </p>
-                <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="app.showCSVMapper(event)">
-                <button class="btn btn-outline" onclick="document.getElementById('csvFileInput').click()">
-                    📊 Upload CSV File
-                </button>
-            </div>
-
         </div>
     </div>
 
@@ -3463,7 +3451,8 @@
                 document.getElementById('csvMapperModal').style.display = 'none';
                 this.pendingCSV = null;
                 // Reset file input
-                document.getElementById('csvFileInput').value = '';
+                const csvInput = document.getElementById('csvUpload');
+                if (csvInput) csvInput.value = '';
             }
 
             async importWithMapping() {
@@ -6412,8 +6401,9 @@
                                     <div class="builder-interval-header">
                                         <div class="builder-interval-title">${i + 1}. ${interval.workValue}m / ${interval.restTime}s rest</div>
                                         <div class="builder-interval-actions">
-                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.copyInterval(${i})">📋</button>
-                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.deleteInterval(${i})">🗑️</button>
+                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.editInterval(${i})" title="Edit">✏️</button>
+                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.copyInterval(${i})" title="Copy">📋</button>
+                                            <button class="builder-icon-btn" onclick="event.stopPropagation(); app.deleteInterval(${i})" title="Delete">🗑️</button>
                                         </div>
                                     </div>
                                     <div class="builder-interval-edit">
@@ -6478,6 +6468,7 @@
 
             updateInterval(index, field, value) {
                 this.builderIntervals[index][field] = parseInt(value);
+                this.renderBuilderMode();
             }
 
             copyInterval(index) {
