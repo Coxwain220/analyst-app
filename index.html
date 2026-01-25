@@ -2745,12 +2745,21 @@
                     }
 
                     console.log(`✅ Import complete: ${imported} imported, ${skipped} skipped`);
+                    console.log(`📊 Total workouts in memory: ${this.workouts.length}`);
 
                     if (imported > 0) {
                         this.showToast(`✓ Imported ${imported} workouts! (${skipped} skipped)`, 'success');
+
+                        console.log('🔄 Refreshing displays...');
                         this.renderDNA();
                         this.renderTrainingLog();
                         this.updateStats();
+                        console.log('✅ Displays refreshed');
+
+                        // Navigate to Training Log to show imported workouts
+                        setTimeout(() => {
+                            this.navigate('screenTrainingLog');
+                        }, 500);
                     } else {
                         throw new Error(`No valid workouts found. ${skipped} rows skipped. Check console for details.`);
                     }
@@ -2966,32 +2975,42 @@
                 const dateFilter = document.getElementById('dateFilter')?.value || 'all';
                 const searchQuery = document.getElementById('trainingLogSearch')?.value.toLowerCase() || '';
 
+                console.log(`🔍 Filter settings: activity=${activityFilter}, date=${dateFilter}, search="${searchQuery}"`);
+
                 let filtered = [...this.workouts];
+                console.log(`🔍 Starting with ${filtered.length} workouts`);
 
                 // Activity type filter
                 if (activityFilter !== 'all') {
+                    const beforeCount = filtered.length;
                     filtered = filtered.filter(w => {
                         const type = w.activityType || w.type || 'rowing';
                         return type === activityFilter;
                     });
+                    console.log(`🔍 After activity filter: ${filtered.length} (was ${beforeCount})`);
                 }
 
                 // Date filter
                 if (dateFilter !== 'all') {
+                    const beforeCount = filtered.length;
                     const days = parseInt(dateFilter);
                     const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
                     filtered = filtered.filter(w => new Date(w.date).getTime() >= cutoff);
+                    console.log(`🔍 After date filter: ${filtered.length} (was ${beforeCount}), cutoff: ${new Date(cutoff).toLocaleDateString()}`);
                 }
 
                 // Search filter
                 if (searchQuery) {
+                    const beforeCount = filtered.length;
                     filtered = filtered.filter(w => {
                         const desc = (w.description || '').toLowerCase();
                         const type = this.getActivityName(w.activityType || w.type || 'rowing').toLowerCase();
                         return desc.includes(searchQuery) || type.includes(searchQuery);
                     });
+                    console.log(`🔍 After search filter: ${filtered.length} (was ${beforeCount})`);
                 }
 
+                console.log(`🔍 Final filtered count: ${filtered.length}`);
                 return filtered;
             }
 
