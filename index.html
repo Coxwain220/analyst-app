@@ -4480,10 +4480,51 @@
             }
 
             async deleteWorkout(workoutId) {
-                if (!confirm('Delete this workout? This cannot be undone.')) {
+                // Show inline confirmation in modal instead of browser popup
+                const workout = this.workouts.find(w => w.id === workoutId);
+                if (!workout) {
+                    this.showToast('Workout not found', 'error');
                     return;
                 }
 
+                const modal = document.getElementById('dayDetailsModal');
+                const titleEl = document.getElementById('dayDetailsTitle');
+                const bodyEl = document.getElementById('dayDetailsBody');
+                const footerEl = document.getElementById('dayDetailsFooter');
+
+                titleEl.textContent = 'Delete Workout?';
+
+                const workoutDesc = workout.description || 'Workout';
+                const date = new Date(workout.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                bodyEl.innerHTML = `
+                    <div style="padding: 20px 0; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <div style="font-size: 16px; line-height: 1.6; margin-bottom: 12px;">
+                            Delete "${workoutDesc}"?
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">
+                            ${date}
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">
+                            This action cannot be undone.
+                        </div>
+                    </div>
+                `;
+
+                footerEl.innerHTML = `
+                    <button class="btn btn-outline" onclick="app.cancelDeleteWorkout()" style="min-height: 48px; flex: 1;">Cancel</button>
+                    <button class="btn btn-primary" onclick="app.confirmDeleteWorkout('${workoutId}')" style="min-height: 48px; flex: 1; background: #FF0000; border-color: #FF0000;">Delete Workout</button>
+                `;
+
+                modal.style.display = 'flex';
+            }
+
+            cancelDeleteWorkout() {
+                document.getElementById('dayDetailsModal').style.display = 'none';
+            }
+
+            async confirmDeleteWorkout(workoutId) {
                 try {
                     // Remove from local array
                     this.workouts = this.workouts.filter(w => w.id !== workoutId);
@@ -4491,12 +4532,17 @@
                     // Remove from storage
                     await this.dataStore.deleteWorkout(workoutId);
 
+                    // Close modal
+                    document.getElementById('dayDetailsModal').style.display = 'none';
+
                     // Refresh UI
                     this.renderTrainingLog();
                     this.updateStats();
                     this.showToast('✓ Workout deleted', 'success');
                 } catch (error) {
                     console.error('Delete workout error:', error);
+                    document.getElementById('dayDetailsModal').style.display = 'none';
+
                     if (!navigator.onLine) {
                         this.showToast('No internet connection - workout not deleted', 'error');
                     } else if (error.code === 'permission-denied') {
@@ -4530,22 +4576,62 @@
                 // Pre-fill values
                 setTimeout(() => {
                     const metadata = workout.metadata || workout;
-                    document.getElementById('addWorkoutDate').value = new Date(workout.date).toISOString().split('T')[0];
-                    document.getElementById('addWorkoutTime').value = new Date(workout.date).toTimeString().slice(0, 5);
-                    document.getElementById('addWorkoutDescription').value = workout.description || '';
+
+                    // Format datetime for datetime-local input (YYYY-MM-DDTHH:MM)
+                    const workoutDate = new Date(workout.date);
+                    const year = workoutDate.getFullYear();
+                    const month = String(workoutDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(workoutDate.getDate()).padStart(2, '0');
+                    const hours = String(workoutDate.getHours()).padStart(2, '0');
+                    const minutes = String(workoutDate.getMinutes()).padStart(2, '0');
+                    const datetimeValue = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+                    document.getElementById('addWorkoutDate').value = datetimeValue;
+
+                    if (document.getElementById('addWorkoutDescription')) {
+                        document.getElementById('addWorkoutDescription').value = workout.description || '';
+                    }
 
                     if (activityType === 'rowing') {
-                        document.getElementById('addWorkoutDistance').value = metadata.distance || '';
-                        document.getElementById('addWorkoutDuration').value = metadata.duration || '';
-                        document.getElementById('addWorkoutPace').value = this.formatPace(metadata.avgPace || 0);
-                        document.getElementById('addWorkoutHR').value = metadata.avgHR || '';
-                        document.getElementById('addWorkoutWatts').value = metadata.avgWatts || '';
+                        document.getElementById('addWorkoutDistance').value = metadata.distance || workout.distance || '';
+
+                        // Format duration from seconds to mm:ss
+                        const durationSeconds = metadata.duration || workout.duration || 0;
+                        const durationFormatted = this.formatTime(durationSeconds);
+                        document.getElementById('addWorkoutDuration').value = durationFormatted;
+
+                        document.getElementById('addWorkoutPace').value = this.formatPace(metadata.avgPace || workout.avgPace || 0);
+
+                        if (document.getElementById('addWorkoutWatts')) {
+                            document.getElementById('addWorkoutWatts').value = metadata.avgWatts || workout.avgWatts || '';
+                        }
+
+                        if (document.getElementById('addWorkoutHR')) {
+                            document.getElementById('addWorkoutHR').value = metadata.avgHR || workout.avgHR || '';
+                        }
+
+                        if (document.getElementById('addWorkoutNotes')) {
+                            document.getElementById('addWorkoutNotes').value = metadata.notes || '';
+                        }
                     } else if (activityType === 'weights' || activityType === 'bjj' || activityType === 'football') {
-                        document.getElementById('addWorkoutDuration').value = metadata.duration || '';
-                        document.getElementById('addWorkoutIntensity').value = metadata.intensity || '';
-                        document.getElementById('addWorkoutHR').value = metadata.avgHR || '';
-                        if (activityType === 'weights') {
+                        // Duration in minutes for non-rowing activities
+                        const durationMins = Math.floor((metadata.duration || workout.duration || 0) / 60);
+                        document.getElementById('addWorkoutDuration').value = durationMins;
+
+                        if (document.getElementById('addWorkoutIntensity')) {
+                            document.getElementById('addWorkoutIntensity').value = metadata.intensity || '';
+                        }
+
+                        if (document.getElementById('addWorkoutHR')) {
+                            document.getElementById('addWorkoutHR').value = metadata.avgHR || workout.avgHR || '';
+                        }
+
+                        if (document.getElementById('addWorkoutExercises')) {
                             document.getElementById('addWorkoutExercises').value = metadata.exercises || '';
+                        }
+
+                        if (document.getElementById('addWorkoutNotes')) {
+                            document.getElementById('addWorkoutNotes').value = metadata.notes || '';
                         }
                     }
 
@@ -4587,27 +4673,35 @@
                             <div class="card-header">Workout Details</div>
                             <div class="builder-input-group">
                                 <div class="builder-label">Date & Time</div>
-                                <input type="datetime-local" class="builder-input" id="addWorkoutDate" value="${this.getCurrentDateTime()}">
+                                <input type="datetime-local" class="builder-input" id="addWorkoutDate" value="${this.getCurrentDateTime()}" style="font-size: 16px;">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Description (optional)</div>
+                                <input type="text" class="builder-input" id="addWorkoutDescription" placeholder="e.g. 5k Steady State" style="font-size: 16px;">
                             </div>
                             <div class="builder-input-group">
                                 <div class="builder-label">Distance (meters)</div>
-                                <input type="number" class="builder-input" id="addWorkoutDistance" placeholder="5000">
+                                <input type="number" class="builder-input" id="addWorkoutDistance" placeholder="5000" style="font-size: 16px;">
                             </div>
                             <div class="builder-input-group">
                                 <div class="builder-label">Duration (mm:ss)</div>
-                                <input type="text" class="builder-input" id="addWorkoutDuration" placeholder="20:00">
+                                <input type="text" class="builder-input" id="addWorkoutDuration" placeholder="20:00" style="font-size: 16px;">
                             </div>
                             <div class="builder-input-group">
                                 <div class="builder-label">Avg Pace (/500m)</div>
-                                <input type="text" class="builder-input" id="addWorkoutPace" placeholder="2:00.0">
+                                <input type="text" class="builder-input" id="addWorkoutPace" placeholder="2:00.0" style="font-size: 16px;">
+                            </div>
+                            <div class="builder-input-group">
+                                <div class="builder-label">Avg Watts (optional)</div>
+                                <input type="number" class="builder-input" id="addWorkoutWatts" placeholder="200" style="font-size: 16px;">
                             </div>
                             <div class="builder-input-group">
                                 <div class="builder-label">Avg Heart Rate (optional)</div>
-                                <input type="number" class="builder-input" id="addWorkoutHR" placeholder="155">
+                                <input type="number" class="builder-input" id="addWorkoutHR" placeholder="155" style="font-size: 16px;">
                             </div>
                             <div class="builder-input-group">
                                 <div class="builder-label">Notes (optional)</div>
-                                <textarea class="builder-input" id="addWorkoutNotes" placeholder="How did it feel?" rows="3"></textarea>
+                                <textarea class="builder-input" id="addWorkoutNotes" placeholder="How did it feel?" rows="3" style="font-size: 16px;"></textarea>
                             </div>
                         </div>
                     `;
