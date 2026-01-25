@@ -3792,36 +3792,151 @@
                 const day = week.days[dayIndex];
                 if (!day) return;
 
-                // Close day details modal
-                this.closeDayDetails();
+                // Switch modal to edit mode
+                const modal = document.getElementById('dayDetailsModal');
+                const titleEl = document.getElementById('dayDetailsTitle');
+                const bodyEl = document.getElementById('dayDetailsBody');
+                const footerEl = document.getElementById('dayDetailsFooter');
 
-                // Prompt for new workout details
-                const newTitle = prompt('Workout title:', day.title);
-                if (!newTitle) return;
+                titleEl.textContent = 'Edit Workout';
 
-                const newDescription = prompt('Description:', day.description);
-                const newDistance = day.distance ? prompt('Distance (meters):', day.distance) : null;
-                const newDuration = day.duration ? prompt('Duration (seconds):', day.duration) : null;
-                const newIntensity = day.intensity ? prompt('Intensity:', day.intensity) : null;
+                // Build inline edit form
+                bodyEl.innerHTML = `
+                    <div class="builder-input-group">
+                        <div class="builder-label">Workout Title</div>
+                        <input type="text" class="builder-input" id="editDayTitle" value="${day.title || ''}" placeholder="e.g. 8x500m Intervals" style="font-size: 16px;">
+                    </div>
 
-                // Update day
-                day.title = newTitle;
-                if (newDescription !== null) day.description = newDescription;
-                if (newDistance) day.distance = parseInt(newDistance);
-                if (newDuration) day.duration = parseInt(newDuration);
-                if (newIntensity) day.intensity = newIntensity;
+                    <div class="builder-input-group">
+                        <div class="builder-label">Description</div>
+                        <textarea class="builder-input" id="editDayDescription" rows="3" placeholder="e.g. 8x500m @ 2k+6s with 90s rest" style="font-size: 16px;">${day.description || ''}</textarea>
+                    </div>
+
+                    ${day.type === 'rowing' ? `
+                    <div class="builder-input-group">
+                        <div class="builder-label">Distance (meters)</div>
+                        <input type="number" class="builder-input" id="editDayDistance" value="${day.distance || ''}" placeholder="5000" style="font-size: 16px;">
+                    </div>
+
+                    <div class="builder-input-group">
+                        <div class="builder-label">Duration (seconds)</div>
+                        <input type="number" class="builder-input" id="editDayDuration" value="${day.duration || ''}" placeholder="1200" style="font-size: 16px;">
+                    </div>
+
+                    <div class="builder-input-group">
+                        <div class="builder-label">Intensity Zone</div>
+                        <select class="builder-input" id="editDayIntensity" style="font-size: 16px;">
+                            <option value="Zone 1" ${day.intensity === 'Zone 1' ? 'selected' : ''}>Zone 1 (Recovery)</option>
+                            <option value="Zone 2" ${day.intensity === 'Zone 2' ? 'selected' : ''}>Zone 2 (Aerobic)</option>
+                            <option value="Zone 3" ${day.intensity === 'Zone 3' ? 'selected' : ''}>Zone 3 (Tempo)</option>
+                            <option value="Zone 4" ${day.intensity === 'Zone 4' ? 'selected' : ''}>Zone 4 (Threshold)</option>
+                            <option value="Zone 5" ${day.intensity === 'Zone 5' ? 'selected' : ''}>Zone 5 (VO2 Max)</option>
+                        </select>
+                    </div>
+                    ` : day.type === 'weights' || day.type === 'bjj' || day.type === 'football' ? `
+                    <div class="builder-input-group">
+                        <div class="builder-label">Duration (minutes)</div>
+                        <input type="number" class="builder-input" id="editDayDurationMins" value="${day.duration ? Math.floor(day.duration / 60) : ''}" placeholder="60" style="font-size: 16px;">
+                    </div>
+
+                    <div class="builder-input-group">
+                        <div class="builder-label">Intensity</div>
+                        <select class="builder-input" id="editDayIntensity" style="font-size: 16px;">
+                            <option value="Light" ${day.intensity === 'Light' ? 'selected' : ''}>Light</option>
+                            <option value="Moderate" ${day.intensity === 'Moderate' ? 'selected' : ''}>Moderate</option>
+                            <option value="Hard" ${day.intensity === 'Hard' ? 'selected' : ''}>Hard</option>
+                            <option value="Very Hard" ${day.intensity === 'Very Hard' ? 'selected' : ''}>Very Hard</option>
+                        </select>
+                    </div>
+                    ` : ''}
+                `;
+
+                // Change footer buttons
+                footerEl.innerHTML = `
+                    <button class="btn btn-outline" onclick="app.cancelEditPlanDay(${weekNumber}, ${dayIndex})" style="min-height: 48px; flex: 1;">Cancel</button>
+                    <button class="btn btn-primary" onclick="app.saveEditPlanDay(${weekNumber}, ${dayIndex})" style="min-height: 48px; flex: 1;">Save Changes</button>
+                `;
+            }
+
+            cancelEditPlanDay(weekNumber, dayIndex) {
+                // Return to view mode
+                this.showDayDetails(weekNumber, dayIndex);
+            }
+
+            saveEditPlanDay(weekNumber, dayIndex) {
+                const week = this.trainingPlan.weeks.find(w => w.weekNumber === weekNumber);
+                if (!week) return;
+
+                const day = week.days[dayIndex];
+                if (!day) return;
+
+                // Get values from form
+                const title = document.getElementById('editDayTitle').value.trim();
+                const description = document.getElementById('editDayDescription').value.trim();
+
+                if (!title) {
+                    this.showToast('Please enter a workout title', 'error');
+                    return;
+                }
+
+                day.title = title;
+                day.description = description;
+
+                if (day.type === 'rowing') {
+                    const distance = parseInt(document.getElementById('editDayDistance').value) || 0;
+                    const duration = parseInt(document.getElementById('editDayDuration').value) || 0;
+                    const intensity = document.getElementById('editDayIntensity').value;
+
+                    day.distance = distance;
+                    day.duration = duration;
+                    day.intensity = intensity;
+                } else if (day.type === 'weights' || day.type === 'bjj' || day.type === 'football') {
+                    const durationMins = parseInt(document.getElementById('editDayDurationMins').value) || 0;
+                    const intensity = document.getElementById('editDayIntensity').value;
+
+                    day.duration = durationMins * 60;
+                    day.intensity = intensity;
+                }
 
                 // Save and refresh
                 this.saveTrainingPlan(this.trainingPlan);
                 this.renderTrainingPlan();
+                this.closeDayDetails();
                 this.showToast('✓ Workout updated', 'success');
             }
 
             deletePlanDay(weekNumber, dayIndex) {
-                if (!confirm('Delete this workout from the plan? This will make it a rest day.')) {
-                    return;
-                }
+                // Show delete confirmation in modal
+                const bodyEl = document.getElementById('dayDetailsBody');
+                const footerEl = document.getElementById('dayDetailsFooter');
+                const titleEl = document.getElementById('dayDetailsTitle');
 
+                titleEl.textContent = 'Delete Workout?';
+
+                bodyEl.innerHTML = `
+                    <div style="padding: 20px 0; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <div style="font-size: 16px; line-height: 1.6; margin-bottom: 12px;">
+                            This will remove the workout and convert this day to a rest day.
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">
+                            This action cannot be undone.
+                        </div>
+                    </div>
+                `;
+
+                footerEl.innerHTML = `
+                    <button class="btn btn-outline" onclick="app.cancelDeletePlanDay(${weekNumber}, ${dayIndex})" style="min-height: 48px; flex: 1;">Cancel</button>
+                    <button class="btn btn-primary" onclick="app.confirmDeletePlanDay(${weekNumber}, ${dayIndex})" style="min-height: 48px; flex: 1; background: #FF0000; border-color: #FF0000;">Delete Workout</button>
+                `;
+            }
+
+            cancelDeletePlanDay(weekNumber, dayIndex) {
+                // Return to view mode
+                this.showDayDetails(weekNumber, dayIndex);
+            }
+
+            confirmDeletePlanDay(weekNumber, dayIndex) {
                 const week = this.trainingPlan.weeks.find(w => w.weekNumber === weekNumber);
                 if (!week) return;
 
