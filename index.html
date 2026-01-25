@@ -3587,8 +3587,11 @@
             }
 
             getRegularDayWorkout(dayIdx, weekNum, baseDistance) {
+                const pb2k = this.dnaProfile?.performance_benchmarks?.['2k_split'] || '1:51.0';
+                const targetPace = this.formatPace(this.convertPaceToSeconds(pb2k) + 6);
+
                 const workouts = {
-                    0: { type: 'rowing', title: 'Intervals 8x500m', distance: 4000, duration: 1500, intensity: 'Zone 4', description: `8x500m @ 2k+6s, 90s rest. Target: ${this.formatPace(this.convertPaceToSeconds(this.dnaProfile.performance_benchmarks['2k_split']) + 6)}` },
+                    0: { type: 'rowing', title: 'Intervals 8x500m', distance: 4000, duration: 1500, intensity: 'Zone 4', description: `8x500m @ 2k+6s, 90s rest. Target: ${targetPace}` },
                     1: { type: 'weights', title: 'Strength Training', duration: 2700, intensity: 'Moderate', description: 'Squats 3x8, Deadlifts 3x6, Core work' },
                     2: { type: 'rowing', title: 'Steady State', distance: Math.floor(baseDistance * 1.2), duration: 2400, intensity: 'Zone 2', description: 'Conversational pace, focus on consistency' },
                     3: { type: 'rest', title: 'Active Recovery', description: 'Light stretching, foam rolling' },
@@ -3625,54 +3628,15 @@
                     return;
                 }
 
-                // Check if adaptive alert should show
-                this.checkAdaptiveAlert();
-
-                // Render timeline view
-                let html = '<div class="plan-timeline">';
-
-                this.trainingPlan.weeks.forEach((week, idx) => {
-                    const isCurrent = idx + 1 === this.trainingPlan.currentWeek;
-                    const isCompleted = week.days.every(d => d.completed);
-                    const completedDays = week.days.filter(d => d.completed).length;
-
-                    const startDate = new Date(week.startDate);
-                    const endDate = new Date(week.endDate);
-                    const dateRange = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-
-                    html += `
-                        <div class="plan-week-card ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}" id="week_${week.weekNumber}">
-                            <div class="plan-week-header" onclick="app.toggleWeekExpansion(${week.weekNumber})">
-                                <div class="plan-week-title">
-                                    <div class="plan-week-number">W${week.weekNumber}</div>
-                                    <div class="plan-week-info">
-                                        <div class="plan-week-label">${week.theme}</div>
-                                        <div class="plan-week-dates">${dateRange}</div>
-                                    </div>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:16px;">
-                                    <div class="plan-week-summary">
-                                        <div class="plan-week-stat">
-                                            <span>🏋️</span>
-                                            <span>${week.workoutCount} workouts</span>
-                                        </div>
-                                        <div class="plan-week-stat">
-                                            <span>✓</span>
-                                            <span>${completedDays}/7</span>
-                                        </div>
-                                    </div>
-                                    <div class="plan-week-expand" id="expand_${week.weekNumber}">▼</div>
-                                </div>
-                            </div>
-                            <div class="plan-week-days" id="days_${week.weekNumber}">
-                                ${this.renderWeekDays(week)}
-                            </div>
-                        </div>
-                    `;
-                });
-
-                html += '</div>';
-                container.innerHTML = html;
+                // Render based on current view
+                const viewType = this.currentPlanView || 'timeline';
+                if (viewType === 'week') {
+                    this.renderWeekView();
+                } else if (viewType === 'month') {
+                    this.renderMonthView();
+                } else {
+                    this.renderTimelineView();
+                }
             }
 
             renderWeekDays(week) {
@@ -3759,11 +3723,232 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
                 });
                 event.target.classList.add('active');
 
-                // TODO: Implement week view and month view
+                this.currentPlanView = viewType;
+
                 if (viewType === 'timeline') {
-                    this.renderTrainingPlan();
-                } else {
-                    this.showToast(`${viewType} view coming soon`, 'info');
+                    this.renderTimelineView();
+                } else if (viewType === 'week') {
+                    this.renderWeekView();
+                } else if (viewType === 'month') {
+                    this.renderMonthView();
+                }
+            }
+
+            renderTimelineView() {
+                const container = document.getElementById('planContent');
+                if (!container || !this.trainingPlan) return;
+
+                // Check if adaptive alert should show
+                this.checkAdaptiveAlert();
+
+                // Render timeline view
+                let html = '<div class="plan-timeline">';
+
+                this.trainingPlan.weeks.forEach((week, idx) => {
+                    const isCurrent = idx + 1 === this.trainingPlan.currentWeek;
+                    const isCompleted = week.days.every(d => d.completed);
+                    const completedDays = week.days.filter(d => d.completed).length;
+
+                    const startDate = new Date(week.startDate);
+                    const endDate = new Date(week.endDate);
+                    const dateRange = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+                    html += `
+                        <div class="plan-week-card ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}" id="week_${week.weekNumber}">
+                            <div class="plan-week-header" onclick="app.toggleWeekExpansion(${week.weekNumber})">
+                                <div class="plan-week-title">
+                                    <div class="plan-week-number">W${week.weekNumber}</div>
+                                    <div class="plan-week-info">
+                                        <div class="plan-week-label">${week.theme}</div>
+                                        <div class="plan-week-dates">${dateRange}</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:16px;">
+                                    <div class="plan-week-summary">
+                                        <div class="plan-week-stat">
+                                            <span>🏋️</span>
+                                            <span>${week.workoutCount} workouts</span>
+                                        </div>
+                                        <div class="plan-week-stat">
+                                            <span>✓</span>
+                                            <span>${completedDays}/7</span>
+                                        </div>
+                                    </div>
+                                    <div class="plan-week-expand" id="expand_${week.weekNumber}">▼</div>
+                                </div>
+                            </div>
+                            <div class="plan-week-days" id="days_${week.weekNumber}">
+                                ${this.renderWeekDays(week)}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+            }
+
+            renderWeekView() {
+                const container = document.getElementById('planContent');
+                if (!container || !this.trainingPlan) return;
+
+                // Show current week only
+                const currentWeek = this.trainingPlan.weeks.find(w => w.weekNumber === this.trainingPlan.currentWeek);
+                if (!currentWeek) return;
+
+                const startDate = new Date(currentWeek.startDate);
+                const endDate = new Date(currentWeek.endDate);
+                const dateRange = `${startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+
+                let html = `
+                    <div style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <button class="btn btn-sm btn-outline" onclick="app.previousWeek()" ${this.trainingPlan.currentWeek === 1 ? 'disabled' : ''}>← Prev</button>
+                            <div>
+                                <div style="font-size: 18px; font-weight: bold; text-align: center;">Week ${currentWeek.weekNumber}: ${currentWeek.theme}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); text-align: center;">${dateRange}</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="app.nextWeek()" ${this.trainingPlan.currentWeek === this.trainingPlan.weeks.length ? 'disabled' : ''}>Next →</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        ${this.renderWeekDays(currentWeek)}
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            renderMonthView() {
+                const container = document.getElementById('planContent');
+                if (!container || !this.trainingPlan) return;
+
+                // Get current month from current week
+                const currentWeek = this.trainingPlan.weeks.find(w => w.weekNumber === this.trainingPlan.currentWeek);
+                const currentDate = currentWeek ? new Date(currentWeek.startDate) : new Date();
+
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+                // Get first and last day of month
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday
+
+                // Build calendar grid
+                let html = `
+                    <div style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <button class="btn btn-sm btn-outline" onclick="app.previousMonth()">← Prev</button>
+                            <div style="font-size: 18px; font-weight: bold;">${monthName}</div>
+                            <button class="btn btn-sm btn-outline" onclick="app.nextMonth()">Next →</button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px;">
+                        <div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; color: var(--text-secondary);">Sun</div>
+                        <div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; color: var(--text-secondary);">Mon</div>
+                        <div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; color: var(--text-secondary);">Tue</div>
+                        <div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; color: var(--text-secondary);">Wed</div>
+                        <div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; color: var(--text-secondary);">Thu</div>
+                        <div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; color: var(--text-secondary);">Fri</div>
+                        <div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; color: var(--text-secondary);">Sat</div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+                `;
+
+                // Add empty cells for days before month starts
+                for (let i = 0; i < startingDayOfWeek; i++) {
+                    html += '<div style="min-height: 80px;"></div>';
+                }
+
+                // Add days of the month
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const date = new Date(year, month, day);
+                    const dateStr = date.toISOString().split('T')[0];
+
+                    // Find workout for this day
+                    let workoutForDay = null;
+                    for (const week of this.trainingPlan.weeks) {
+                        const dayWorkout = week.days.find(d => d.date.split('T')[0] === dateStr);
+                        if (dayWorkout) {
+                            workoutForDay = dayWorkout;
+                            break;
+                        }
+                    }
+
+                    const isToday = date.toDateString() === new Date().toDateString();
+                    const hasWorkout = workoutForDay !== null;
+                    const isCompleted = workoutForDay?.completed;
+                    const isRest = workoutForDay?.type === 'rest';
+
+                    html += `
+                        <div style="
+                            min-height: 80px;
+                            border: 1px solid var(--border);
+                            border-radius: 4px;
+                            padding: 4px;
+                            background: ${isToday ? 'rgba(0, 255, 153, 0.1)' : 'var(--panel)'};
+                            border-color: ${isToday ? '#00FF99' : 'var(--border)'};
+                            ${hasWorkout ? 'cursor: pointer;' : ''}
+                        "
+                        ${hasWorkout ? `onclick="app.showMonthDayDetails('${dateStr}')"` : ''}>
+                            <div style="font-size: 12px; font-weight: ${isToday ? 'bold' : 'normal'}; color: ${isToday ? '#00FF99' : 'var(--text)'}; margin-bottom: 4px;">
+                                ${day}
+                            </div>
+                            ${hasWorkout ? `
+                                <div style="font-size: 9px; line-height: 1.3;">
+                                    <div style="color: ${isRest ? '#FF0000' : '#00FF99'}; font-weight: 600; margin-bottom: 2px;">
+                                        ${workoutForDay.title}
+                                    </div>
+                                    ${workoutForDay.distance ? `<div style="color: var(--text-secondary);">${workoutForDay.distance}m</div>` : ''}
+                                    ${isCompleted ? '<div style="color: #00FF99;">✓ Done</div>' : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+                container.innerHTML = html;
+            }
+
+            previousWeek() {
+                if (this.trainingPlan.currentWeek > 1) {
+                    this.trainingPlan.currentWeek--;
+                    this.saveTrainingPlan(this.trainingPlan);
+                    this.renderWeekView();
+                }
+            }
+
+            nextWeek() {
+                if (this.trainingPlan.currentWeek < this.trainingPlan.weeks.length) {
+                    this.trainingPlan.currentWeek++;
+                    this.saveTrainingPlan(this.trainingPlan);
+                    this.renderWeekView();
+                }
+            }
+
+            previousMonth() {
+                // TODO: Implement month navigation
+                this.showToast('Month navigation coming soon', 'info');
+            }
+
+            nextMonth() {
+                // TODO: Implement month navigation
+                this.showToast('Month navigation coming soon', 'info');
+            }
+
+            showMonthDayDetails(dateStr) {
+                // Find workout for this date
+                for (const week of this.trainingPlan.weeks) {
+                    const dayIndex = week.days.findIndex(d => d.date.split('T')[0] === dateStr);
+                    if (dayIndex !== -1) {
+                        this.showDayDetails(week.weekNumber, dayIndex);
+                        break;
+                    }
                 }
             }
 
@@ -3937,7 +4122,11 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
                     <div class="activity-card ${activityType}">
                         <div class="activity-card-header">
                             <div class="activity-card-title">${icon} ${description}</div>
-                            <div class="activity-card-date">${new Date(workout.date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="activity-card-date">${new Date(workout.date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
+                                <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); app.editWorkout('${workout.id}')" style="padding: 4px 8px; font-size: 11px;">Edit</button>
+                                <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); app.deleteWorkout('${workout.id}')" style="padding: 4px 8px; font-size: 11px; color: #FF0000; border-color: #FF0000;">Delete</button>
+                            </div>
                         </div>
                         <div class="activity-card-stats">
                             ${statsHtml}
@@ -4017,10 +4206,81 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
                 return names[type] || 'Workout';
             }
 
+            async deleteWorkout(workoutId) {
+                if (!confirm('Delete this workout? This cannot be undone.')) {
+                    return;
+                }
+
+                try {
+                    // Remove from local array
+                    this.workouts = this.workouts.filter(w => w.id !== workoutId);
+
+                    // Remove from storage
+                    await this.dataStore.deleteWorkout(workoutId);
+
+                    // Refresh UI
+                    this.renderTrainingLog();
+                    this.updateStats();
+                    this.showToast('✓ Workout deleted', 'success');
+                } catch (error) {
+                    console.error('Delete workout error:', error);
+                    this.showToast('Failed to delete workout', 'error');
+                }
+            }
+
+            editWorkout(workoutId) {
+                const workout = this.workouts.find(w => w.id === workoutId);
+                if (!workout) {
+                    this.showToast('Workout not found', 'error');
+                    return;
+                }
+
+                // Open modal with pre-filled data
+                const modal = document.getElementById('addWorkoutModal');
+                if (!modal) return;
+
+                modal.style.display = 'flex';
+
+                // Set activity type
+                const activityType = workout.activityType || workout.type || 'rowing';
+                document.getElementById('addWorkoutType').value = activityType;
+
+                // Update form with fields for this activity type
+                this.updateAddWorkoutForm();
+
+                // Pre-fill values
+                setTimeout(() => {
+                    const metadata = workout.metadata || workout;
+                    document.getElementById('addWorkoutDate').value = new Date(workout.date).toISOString().split('T')[0];
+                    document.getElementById('addWorkoutTime').value = new Date(workout.date).toTimeString().slice(0, 5);
+                    document.getElementById('addWorkoutDescription').value = workout.description || '';
+
+                    if (activityType === 'rowing') {
+                        document.getElementById('addWorkoutDistance').value = metadata.distance || '';
+                        document.getElementById('addWorkoutDuration').value = metadata.duration || '';
+                        document.getElementById('addWorkoutPace').value = this.formatPace(metadata.avgPace || 0);
+                        document.getElementById('addWorkoutHR').value = metadata.avgHR || '';
+                        document.getElementById('addWorkoutWatts').value = metadata.avgWatts || '';
+                    } else if (activityType === 'weights' || activityType === 'bjj' || activityType === 'football') {
+                        document.getElementById('addWorkoutDuration').value = metadata.duration || '';
+                        document.getElementById('addWorkoutIntensity').value = metadata.intensity || '';
+                        document.getElementById('addWorkoutHR').value = metadata.avgHR || '';
+                        if (activityType === 'weights') {
+                            document.getElementById('addWorkoutExercises').value = metadata.exercises || '';
+                        }
+                    }
+
+                    // Store the workout ID for updating
+                    modal.dataset.editingId = workoutId;
+                }, 100);
+            }
+
             showAddWorkoutModal() {
                 const modal = document.getElementById('addWorkoutModal');
                 if (modal) {
                     modal.style.display = 'flex';
+                    // Clear editing state
+                    delete modal.dataset.editingId;
                     // Reset form
                     document.getElementById('addWorkoutType').value = '';
                     document.getElementById('addWorkoutFormContent').innerHTML = '';
@@ -4029,7 +4289,11 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
 
             closeAddWorkoutModal() {
                 const modal = document.getElementById('addWorkoutModal');
-                if (modal) modal.style.display = 'none';
+                if (modal) {
+                    modal.style.display = 'none';
+                    // Clear editing state
+                    delete modal.dataset.editingId;
+                }
             }
 
             updateAddWorkoutForm() {
@@ -4110,13 +4374,32 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
 
             async saveManualWorkoutEntry() {
                 try {
+                    const modal = document.getElementById('addWorkoutModal');
+                    const editingId = modal?.dataset?.editingId;
+                    const isEditing = !!editingId;
+
                     const type = document.getElementById('addWorkoutType').value;
                     if (!type) {
                         this.showToast('Please select an activity type', 'error');
                         return;
                     }
 
-                    const date = document.getElementById('addWorkoutDate').value;
+                    // Parse date field (supports both datetime-local and separate date/time fields)
+                    let workoutDate;
+                    const dateInput = document.getElementById('addWorkoutDate');
+                    const timeInput = document.getElementById('addWorkoutTime');
+
+                    if (timeInput && timeInput.value) {
+                        // Separate date and time fields
+                        const dateStr = dateInput.value;
+                        const timeStr = timeInput.value;
+                        workoutDate = new Date(`${dateStr}T${timeStr}`);
+                    } else {
+                        // datetime-local field
+                        workoutDate = new Date(dateInput.value);
+                    }
+
+                    const description = document.getElementById('addWorkoutDescription')?.value || '';
                     const notes = document.getElementById('addWorkoutNotes')?.value || '';
                     const avgHR = parseInt(document.getElementById('addWorkoutHR')?.value) || null;
 
@@ -4126,6 +4409,7 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
                         const distance = parseInt(document.getElementById('addWorkoutDistance').value) || 0;
                         const durationStr = document.getElementById('addWorkoutDuration').value;
                         const paceStr = document.getElementById('addWorkoutPace').value;
+                        const watts = parseInt(document.getElementById('addWorkoutWatts')?.value) || 0;
 
                         const duration = this.parseTimeToSeconds(durationStr);
                         const avgPace = this.parsePaceToSeconds(paceStr);
@@ -4136,16 +4420,18 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
                         }
 
                         workout = {
-                            id: Date.now().toString(),
-                            date: new Date(date).toISOString(),
+                            id: isEditing ? editingId : Date.now().toString(),
+                            date: workoutDate.toISOString(),
                             activityType: 'rowing',
                             duration: duration,
+                            avgWatts: watts,
                             completed: true,
-                            description: notes || 'Rowing Session',
+                            description: description || notes || 'Rowing Session',
                             metadata: {
                                 distance: distance,
                                 avgPace: avgPace,
-                                avgHR: avgHR
+                                avgHR: avgHR,
+                                avgWatts: watts
                             }
                         };
 
@@ -4158,6 +4444,7 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
                         // Simple activities
                         const durationMins = parseInt(document.getElementById('addWorkoutDuration').value) || 0;
                         const intensity = parseInt(document.getElementById('addWorkoutIntensity').value) || 5;
+                        const exercises = document.getElementById('addWorkoutExercises')?.value || '';
 
                         if (durationMins === 0) {
                             this.showToast('Please enter duration', 'error');
@@ -4165,24 +4452,38 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
                         }
 
                         workout = {
-                            id: Date.now().toString(),
-                            date: new Date(date).toISOString(),
+                            id: isEditing ? editingId : Date.now().toString(),
+                            date: workoutDate.toISOString(),
                             activityType: type,
                             duration: durationMins * 60,
                             completed: true,
-                            description: notes || this.getActivityName(type),
+                            description: description || notes || this.getActivityName(type),
                             metadata: {
                                 intensity: intensity,
-                                avgHR: avgHR
+                                avgHR: avgHR,
+                                exercises: exercises,
+                                duration: durationMins * 60
                             }
                         };
                     }
 
-                    console.log('Saving workout:', workout);
+                    console.log(isEditing ? 'Updating workout:' : 'Saving workout:', workout);
 
-                    // Save workout
-                    this.workouts.unshift(workout);
-                    await this.dataStore.saveWorkout(workout);
+                    // Save or update workout
+                    if (isEditing) {
+                        // Update existing workout
+                        const index = this.workouts.findIndex(w => w.id === editingId);
+                        if (index !== -1) {
+                            this.workouts[index] = workout;
+                        }
+                        await this.dataStore.saveWorkout(workout);
+                        this.showToast('✓ Workout updated!', 'success');
+                    } else {
+                        // Create new workout
+                        this.workouts.unshift(workout);
+                        await this.dataStore.saveWorkout(workout);
+                        this.showToast('✓ Workout saved!', 'success');
+                    }
 
                     // Update DNA if rowing
                     if (type === 'rowing') {
@@ -4196,8 +4497,6 @@ Status: ${day.completed ? 'Completed ✓' : 'Not completed'}
 
                     // Close modal
                     this.closeAddWorkoutModal();
-
-                    this.showToast('✓ Workout saved!', 'success');
 
                 } catch (error) {
                     console.error('Save workout error:', error);
