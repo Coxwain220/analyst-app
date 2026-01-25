@@ -137,15 +137,15 @@
         /* Theme 4: Electric Warhol (Pop Art)
            Rule-breaking Maximalist. Bold branding. */
         [data-theme="warhol"] {
-            --base-bg: #2B59FF;
-            --card-bg: #FF00FF;
-            --accent-primary: #CCFF00;
-            --accent-secondary: #FF00FF;
-            --text-main: #FFFFFF;
-            --text-muted: #FFD700;
+            --base-bg: #F5F3E7;
+            --card-bg: #FFB6C1;
+            --accent-primary: #FF6B35;
+            --accent-secondary: #6FCDCD;
+            --text-main: #1A1A1A;
+            --text-muted: #5A5A5A;
             --border: #000000;
             --border-radius: 4px;
-            --card-shadow: 8px 8px 0 rgba(0, 0, 0, 1);
+            --card-shadow: 6px 6px 0 rgba(0, 0, 0, 0.8);
             --metric-glow: none;
             --metric-outline: 3px solid #000000;
         }
@@ -1857,56 +1857,69 @@
                 CORTE
             </text>
 
-            <!-- THE HERO X - Custom Paintbrush Stroke -->
+            <!-- THE HERO X - Thick Paintbrush Stroke -->
             <g transform="translate(320, 50) rotate(15)">
-                <!-- Main X with paintbrush effect -->
+                <!-- Main X with bold paintbrush effect -->
                 <g class="logo-x-path">
-                    <!-- First stroke (top-left to bottom-right) -->
-                    <!-- Sharp right tip, thick left with droplets -->
+                    <!-- First stroke (top-left to bottom-right) - THICK -->
+                    <!-- Sharp right tip, heavy thick left with droplets -->
                     <path class="logo-x-stroke" d="
-                        M -25,-35
-                        Q -22,-32 -18,-28
-                        L 18,28
-                        Q 22,32 25,35
-                        L 23,36
-                        Q 18,32 15,28
-                        L -15,-20
-                        Q -20,-28 -28,-35
+                        M -30,-38
+                        Q -26,-34 -20,-30
+                        L 20,30
+                        Q 24,34 28,38
+                        L 26,40
+                        Q 20,36 16,30
+                        L 12,24
+                        L -12,-18
+                        Q -18,-26 -24,-32
+                        L -32,-40
+                        Q -35,-42 -38,-40
+                        L -34,-36
                         Z
                     " fill="var(--accent-primary)"/>
 
-                    <!-- Droplet 1 (trailing off left) -->
-                    <ellipse cx="-30" cy="-38" rx="2.5" ry="3.5"
-                             fill="var(--accent-primary)" opacity="0.8"/>
+                    <!-- Droplet 1 (trailing off left) - BIGGER -->
+                    <ellipse cx="-36" cy="-42" rx="4" ry="5"
+                             fill="var(--accent-primary)" opacity="0.85"/>
 
-                    <!-- Droplet 2 (trailing off left) -->
-                    <ellipse cx="-33" cy="-42" rx="2" ry="2.5"
-                             fill="var(--accent-primary)" opacity="0.6"/>
-
-                    <!-- Droplet 3 (small, far left) -->
-                    <ellipse cx="-35" cy="-45" rx="1.5" ry="2"
-                             fill="var(--accent-primary)" opacity="0.4"/>
-
-                    <!-- Second stroke (top-right to bottom-left) -->
-                    <!-- Sharp right tip, thick bottom-left with droplets -->
-                    <path class="logo-x-stroke" d="
-                        M 25,-35
-                        Q 22,-32 18,-28
-                        L -18,28
-                        Q -22,32 -25,35
-                        L -27,34
-                        Q -20,28 -15,22
-                        L 15,-25
-                        Q 20,-30 28,-35
-                        Z
-                    " fill="var(--accent-primary)"/>
-
-                    <!-- Bottom droplets (trailing from bottom stroke) -->
-                    <ellipse cx="-28" cy="38" rx="2.5" ry="3"
+                    <!-- Droplet 2 (trailing off left) - BIGGER -->
+                    <ellipse cx="-40" cy="-48" rx="3" ry="4"
                              fill="var(--accent-primary)" opacity="0.7"/>
 
-                    <ellipse cx="-30" cy="42" rx="2" ry="2.5"
+                    <!-- Droplet 3 (small, far left) - BIGGER -->
+                    <ellipse cx="-43" cy="-52" rx="2.5" ry="3"
                              fill="var(--accent-primary)" opacity="0.5"/>
+
+                    <!-- Second stroke (top-right to bottom-left) - THICK -->
+                    <!-- Sharp right tip, heavy thick bottom-left with droplets -->
+                    <path class="logo-x-stroke" d="
+                        M 30,-38
+                        Q 26,-34 20,-30
+                        L -20,30
+                        Q -24,34 -28,38
+                        L -30,40
+                        Q -36,38 -38,36
+                        L -32,32
+                        Q -24,28 -18,22
+                        L -12,16
+                        L 12,-22
+                        Q 18,-28 24,-34
+                        L 32,-40
+                        Q 34,-42 36,-40
+                        Z
+                    " fill="var(--accent-primary)"/>
+
+                    <!-- Bottom droplets (trailing from bottom stroke) - BIGGER -->
+                    <ellipse cx="-32" cy="42" rx="4" ry="4.5"
+                             fill="var(--accent-primary)" opacity="0.8"/>
+
+                    <ellipse cx="-36" cy="48" rx="3" ry="3.5"
+                             fill="var(--accent-primary)" opacity="0.6"/>
+
+                    <!-- Extra small droplet for character -->
+                    <ellipse cx="-39" cy="52" rx="2" ry="2.5"
+                             fill="var(--accent-primary)" opacity="0.4"/>
                 </g>
             </g>
         </svg>
@@ -2872,8 +2885,8 @@
 
                         <!-- Theme 4: Electric Warhol -->
                         <div class="theme-tile" data-theme="warhol" onclick="app.setTheme('warhol')">
-                            <div class="theme-preview" style="background:linear-gradient(135deg, #2B59FF 0%, #FF00FF 100%); border:3px solid #000;">
-                                <div style="position:absolute; top:8px; right:8px; width:20px; height:20px; border-radius:2px; background:#CCFF00; border:3px solid #000;"></div>
+                            <div class="theme-preview" style="background:linear-gradient(135deg, #F5F3E7 0%, #FFB6C1 100%); border:3px solid #000;">
+                                <div style="position:absolute; top:8px; right:8px; width:20px; height:20px; border-radius:2px; background:#FF6B35; border:3px solid #000;"></div>
                             </div>
                             <div class="theme-name">Warhol</div>
                             <div class="theme-desc">Pop Art</div>
