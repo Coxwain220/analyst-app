@@ -1818,7 +1818,7 @@
             <div class="screen-title">AI Coach</div>
         </div>
         <div style="display:flex; flex-direction:column; height:100%;">
-            <div class="scroll-content" id="chatMessages" style="flex:1; padding-bottom:20px;">
+            <div class="scroll-content" id="chatMessages" style="flex:1; padding-bottom:100px;">
                 <!-- Chat messages will appear here -->
             </div>
             <div class="typing-indicator" id="typingIndicator" style="display:none; padding:16px;">
@@ -2145,16 +2145,6 @@
                 <button class="btn btn-outline" onclick="document.getElementById('csvFileInput').click()">
                     📊 Upload CSV File
                 </button>
-            </div>
-
-            <!-- Workout History -->
-            <div class="card">
-                <div class="card-header">Recent Workouts (<span id="dnaWorkoutCount">0</span>)</div>
-                <div id="dnaWorkoutList">
-                    <p style="font-size: 12px; color: #FFF; text-align: center; padding: 20px;">
-                        No workouts yet. Complete a workout or upload your Concept2 CSV to see your history.
-                    </p>
-                </div>
             </div>
 
         </div>
@@ -3254,45 +3244,6 @@
 
                 // Update AI insight
                 set('dnaAIInsight', this.dnaProfile.ai_summary);
-
-                // Update workout history list
-                const workoutList = document.getElementById('dnaWorkoutList');
-                const workoutCount = document.getElementById('dnaWorkoutCount');
-
-                if (workoutCount) {
-                    workoutCount.textContent = this.workouts.length;
-                }
-
-                if (workoutList && this.workouts.length > 0) {
-                    // Show last 10 workouts
-                    const recentWorkouts = this.workouts.slice(0, 10);
-                    workoutList.innerHTML = recentWorkouts.map(w => `
-                        <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <div style="font-size: 14px; font-weight: bold; color: var(--text);">
-                                    ${w.description || 'Workout'}
-                                </div>
-                                <div style="font-size: 11px; color: var(--text-secondary);">
-                                    ${new Date(w.date).toLocaleDateString()}
-                                </div>
-                            </div>
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px;">
-                                <div>
-                                    <div style="color: var(--text-secondary); font-weight: 600;">Distance</div>
-                                    <div style="color: #00FF99; font-weight: 700; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${w.distance}m</div>
-                                </div>
-                                <div>
-                                    <div style="color: var(--text-secondary); font-weight: 600;">Avg Pace</div>
-                                    <div style="color: #00FF99; font-weight: 700; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${this.formatPace(w.avgPace)}</div>
-                                </div>
-                                <div>
-                                    <div style="color: var(--text-secondary); font-weight: 600;">Avg HR</div>
-                                    <div style="color: #FF6B6B; font-weight: 700; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${w.avgHR || '--'}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                }
             }
 
             async updateDNAProfile(workoutData) {
