@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Rowing Coach v1.6</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+
     <!-- Capacitor Core -->
     <script src="capacitor.js"></script>
-    
+
     <!-- Firebase SDK v9+ (Modular) -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
@@ -48,29 +54,57 @@
     <style>
         :root {
             --bg: #000;
-            --text: #e0e0e0;
+            --text: #FFF;
+            --text-secondary: #b0b0b0;
             --accent: #00FF99;
             --danger: #FF4444;
             --panel: #111;
             --border: #222;
             --card-bg: #0a0a0a;
+
+            /* Typography */
+            --font-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-display: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: var(--font-base);
             background: var(--bg);
             color: var(--text);
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        /* Typography System */
+        .cortex-brand,
+        .screen-title,
+        .modal-title,
+        .card-header {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: #FFF;
+            letter-spacing: 0.5px;
+        }
+
+        /* Numerical Data - Inter Bold */
+        .metric-value,
+        .stat-value,
+        .activity-card-stat-value,
+        .dna-benchmark-value {
+            font-family: var(--font-base);
+            font-weight: 700;
+            color: var(--accent);
         }
         
         .version-badge {
@@ -100,7 +134,7 @@
             flex: 1;
             background: transparent;
             border: none;
-            color: #666;
+            color: var(--text-secondary);
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -168,10 +202,11 @@
         }
         
         .screen-title {
-            font-size: 12px;
+            font-family: var(--font-display);
+            font-size: 13px;
             font-weight: 700;
-            letter-spacing: 1.5px;
-            color: #666;
+            letter-spacing: 2px;
+            color: #FFF;
             text-transform: uppercase;
             flex: 1;
             text-align: center;
@@ -312,19 +347,23 @@
         }
         
         .metric-label {
+            font-family: var(--font-base);
             font-size: 10px;
-            color: #666;
-            font-weight: 700;
+            color: var(--text-secondary);
+            font-weight: 600;
             margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        
+
         .metric-value {
+            font-family: var(--font-base);
             font-size: 28px;
-            font-weight: 900;
-            color: var(--text);
+            font-weight: 700;
+            color: #FFF;
             font-variant-numeric: tabular-nums;
         }
-        
+
         .metric-value.accent {
             color: var(--accent);
         }
@@ -345,15 +384,20 @@
         }
         
         .large-print-label {
+            font-family: var(--font-base);
             font-size: 14px;
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
         }
-        
+
         .large-print-value {
+            font-family: var(--font-base);
             font-size: 72px;
-            font-weight: 900;
-            line-height: 1;
+            font-weight: 700;
+            line-height: 1.2;
             color: var(--accent);
         }
         
@@ -404,7 +448,7 @@
         
         .builder-label {
             font-size: 12px;
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 6px;
             font-weight: 700;
         }
@@ -555,7 +599,7 @@
         
         .review-interval-desc {
             font-size: 12px;
-            color: #666;
+            color: var(--text-secondary);
         }
         
         .review-actions {
@@ -598,10 +642,12 @@
         }
         
         .card-header {
-            font-size: 11px;
+            font-family: var(--font-display);
+            font-size: 12px;
             font-weight: 700;
             color: var(--accent);
             text-transform: uppercase;
+            letter-spacing: 1.5px;
             margin-bottom: 16px;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--border);
@@ -615,9 +661,11 @@
         }
         
         .editable-label {
+            font-family: var(--font-base);
             font-size: 12px;
-            color: #666;
+            color: var(--text-secondary);
             width: 80px;
+            font-weight: 500;
         }
         
         .editable-input {
@@ -656,7 +704,7 @@
         
         .history-date {
             font-size: 11px;
-            color: #666;
+            color: var(--text-secondary);
             font-weight: 700;
             margin-bottom: 4px;
         }
@@ -695,16 +743,21 @@
         }
         
         .stat-item-value {
-            font-size: 20px;
-            font-weight: 900;
+            font-family: var(--font-base);
+            font-size: 24px;
+            font-weight: 700;
             color: var(--accent);
+            font-variant-numeric: tabular-nums;
         }
-        
+
         .stat-item-label {
+            font-family: var(--font-base);
             font-size: 10px;
-            color: #666;
+            color: var(--text-secondary);
             margin-top: 4px;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
         
         /* NAVIGATION */
@@ -720,7 +773,7 @@
             flex: 1;
             background: transparent;
             border: none;
-            color: #666;
+            color: var(--text-secondary);
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -742,7 +795,7 @@
         .empty-state {
             text-align: center;
             padding: 40px 20px;
-            color: #666;
+            color: #FFF;
         }
         
         .empty-state-icon {
@@ -775,7 +828,7 @@
         
         .plan-week-focus {
             font-size: 11px;
-            color: #666;
+            color: var(--text-secondary);
             text-transform: uppercase;
         }
         
@@ -803,7 +856,7 @@
         
         .plan-day-desc {
             font-size: 11px;
-            color: #666;
+            color: var(--text-secondary);
         }
         
         .plan-day-status {
@@ -811,7 +864,7 @@
             padding: 4px 8px;
             border-radius: 12px;
             background: #222;
-            color: #666;
+            color: var(--text-secondary);
         }
         
         .plan-day-status.completed {
@@ -987,24 +1040,30 @@
         }
 
         .dna-benchmark-label {
-            color: #888;
-            font-size: 12px;
+            font-family: var(--font-base);
+            color: var(--text-secondary);
+            font-size: 11px;
             margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            font-weight: 600;
         }
 
         .dna-benchmark-value {
+            font-family: var(--font-base);
             color: #00FF99;
             font-size: 36px;
-            font-weight: bold;
-            line-height: 1;
+            font-weight: 700;
+            line-height: 1.2;
             margin-bottom: 4px;
+            font-variant-numeric: tabular-nums;
         }
 
         .dna-benchmark-total {
-            color: #666;
-            font-size: 14px;
+            font-family: var(--font-base);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
         }
 
         /* Lifestyle & Recovery */
@@ -1021,10 +1080,11 @@
         }
 
         .dna-lifestyle-label {
-            color: #888;
+            color: var(--text-secondary);
             font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            font-weight: 600;
         }
 
         .dna-lifestyle-bar {
@@ -1048,7 +1108,8 @@
         .dna-lifestyle-value {
             color: #00FF99;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 700;
+            font-family: var(--font-base);
         }
 
         .dna-lifestyle-text {
@@ -1069,10 +1130,11 @@
         .dna-ai-header {
             color: #00FF99;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            font-family: var(--font-display);
         }
 
         .dna-ai-content {
@@ -1167,8 +1229,10 @@
 
         .plan-week-number {
             font-size: 24px;
-            font-weight: bold;
+            font-weight: 700;
             color: #00FF99;
+            font-family: var(--font-base);
+            font-variant-numeric: tabular-nums;
         }
 
         .plan-week-info {
@@ -1394,7 +1458,7 @@
 
         .modal-title {
             font-size: 18px;
-            font-weight: bold;
+            font-weight: 700;
         }
 
         .modal-close {
@@ -1453,7 +1517,7 @@
         }
 
         .activity-card.other {
-            border-left-color: #666;
+            border-left-color: var(--text-secondary);
         }
 
         .activity-card-header {
@@ -1471,7 +1535,7 @@
 
         .activity-card-date {
             font-size: 11px;
-            color: #666;
+            color: var(--text-secondary);
         }
 
         .activity-card-stats {
@@ -1487,25 +1551,26 @@
         }
 
         .activity-card-stat-label {
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 2px;
         }
 
         .activity-card-stat-value {
             color: var(--accent);
-            font-weight: bold;
+            font-weight: 700;
             font-size: 20px;
         }
 
         /* Date Dividers in Training Log */
         .training-log-date-divider {
             font-size: 12px;
-            color: #888;
+            color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             margin: 20px 0 12px 0;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--border);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -1585,7 +1650,7 @@
                 <!-- View 2: Force Curve -->
                 <div class="dashboard-view">
                     <div style="padding:20px;">
-                        <div style="font-size:12px; color:#666; text-align:center; margin-bottom:16px;">FORCE CURVE</div>
+                        <div style="font-size:12px; color:var(--text-secondary); text-align:center; margin-bottom:16px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">FORCE CURVE</div>
                         <canvas id="forceCanvas" style="width:100%; height:300px; background:#000; border-radius:8px;"></canvas>
                     </div>
                 </div>
@@ -1593,7 +1658,7 @@
                 <!-- View 3: Paceboat -->
                 <div class="dashboard-view">
                     <div style="padding:20px;">
-                        <div style="font-size:12px; color:#666; text-align:center; margin-bottom:16px;">PACEBOAT</div>
+                        <div style="font-size:12px; color:var(--text-secondary); text-align:center; margin-bottom:16px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">PACEBOAT</div>
                         <canvas id="paceboatCanvas" style="width:100%; height:400px; background:#000; border-radius:8px;"></canvas>
                     </div>
                 </div>
@@ -1601,7 +1666,7 @@
                 <!-- View 4: Bar Chart -->
                 <div class="dashboard-view">
                     <div style="padding:20px;">
-                        <div style="font-size:12px; color:#666; text-align:center; margin-bottom:16px;">PACE OVER TIME</div>
+                        <div style="font-size:12px; color:var(--text-secondary); text-align:center; margin-bottom:16px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">PACE OVER TIME</div>
                         <canvas id="barCanvas" style="width:100%; height:300px; background:#000; border-radius:8px;"></canvas>
                     </div>
                 </div>
@@ -1765,7 +1830,7 @@
                     <div style="font-size:32px;">❤️</div>
                     <div style="flex:1;">
                         <div style="font-size:14px; font-weight:700; color:#ff6b6b;" id="hrmStatusText">Not Connected</div>
-                        <div style="font-size:12px; color:#666; margin-top:4px;" id="hrmStatusDesc">Connect your Polar/Garmin/Wahoo HRM</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;" id="hrmStatusDesc">Connect your Polar/Garmin/Wahoo HRM</div>
                     </div>
                 </div>
                 <button class="btn btn-primary" style="background:#ff6b6b;" id="hrmConnectButton" onclick="app.connectHRMDirect()">
@@ -1775,11 +1840,11 @@
 
             <!-- Live Display (Hidden until connected) -->
             <div id="hrmLiveDisplay" style="display:none; background:var(--card-bg); border:2px solid #ff6b6b; border-radius:12px; padding:20px; text-align:center; margin-bottom:20px;">
-                <div style="font-size:72px; font-weight:900; color:#ff6b6b; line-height:1; margin-bottom:8px; font-variant-numeric:tabular-nums;" id="hrmCurrentBPM">--</div>
-                <div style="font-size:11px; color:#666; text-transform:uppercase; letter-spacing:1px;">BEATS PER MINUTE</div>
+                <div style="font-size:72px; font-weight:700; color:#ff6b6b; line-height:1; margin-bottom:8px; font-variant-numeric:tabular-nums; font-family:var(--font-base);" id="hrmCurrentBPM">--</div>
+                <div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1.5px; font-family:var(--font-display); font-weight:700;">BEATS PER MINUTE</div>
                 
                 <div style="margin-top:16px; padding:12px; background:#050505; border-radius:8px;">
-                    <div style="font-size:10px; color:#666; text-transform:uppercase; margin-bottom:6px;">TRAINING ZONE</div>
+                    <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">TRAINING ZONE</div>
                     <div style="display:flex; height:40px; border-radius:8px; overflow:hidden;">
                         <div id="hrZone1Display" style="flex:1; background:#4a90e2; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z1</div>
                         <div id="hrZone2Display" style="flex:1; background:#50c878; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; opacity:0.3; transition:all 0.3s;">Z2</div>
@@ -1792,21 +1857,21 @@
 
             <!-- Graph -->
             <div id="hrmGraphContainer" style="display:none; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:20px;">
-                <div style="font-size:11px; color:#666; text-transform:uppercase; margin-bottom:12px; text-align:center;">Heart Rate Over Time</div>
+                <div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:12px; text-align:center; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">Heart Rate Over Time</div>
                 <canvas id="hrmCanvas" style="width:100%; height:200px; background:#000; border-radius:8px;"></canvas>
                 
                 <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:16px;">
                     <div style="text-align:center;">
-                        <div style="font-size:20px; font-weight:900; color:#ff6b6b;" id="hrmAvg">--</div>
-                        <div style="font-size:9px; color:#666; text-transform:uppercase; margin-top:4px;">Average</div>
+                        <div style="font-size:20px; font-weight:700; color:#ff6b6b; font-family:var(--font-base); font-variant-numeric:tabular-nums;" id="hrmAvg">--</div>
+                        <div style="font-size:9px; color:var(--text-secondary); text-transform:uppercase; margin-top:4px; font-weight:600;">Average</div>
                     </div>
                     <div style="text-align:center;">
-                        <div style="font-size:20px; font-weight:900; color:#ff6b6b;" id="hrmMax">--</div>
-                        <div style="font-size:9px; color:#666; text-transform:uppercase; margin-top:4px;">Max</div>
+                        <div style="font-size:20px; font-weight:700; color:#ff6b6b; font-family:var(--font-base); font-variant-numeric:tabular-nums;" id="hrmMax">--</div>
+                        <div style="font-size:9px; color:var(--text-secondary); text-transform:uppercase; margin-top:4px; font-weight:600;">Max</div>
                     </div>
                     <div style="text-align:center;">
-                        <div style="font-size:20px; font-weight:900; color:#ff6b6b;" id="hrmMin">--</div>
-                        <div style="font-size:9px; color:#666; text-transform:uppercase; margin-top:4px;">Min</div>
+                        <div style="font-size:20px; font-weight:700; color:#ff6b6b; font-family:var(--font-base); font-variant-numeric:tabular-nums;" id="hrmMin">--</div>
+                        <div style="font-size:9px; color:var(--text-secondary); text-transform:uppercase; margin-top:4px; font-weight:600;">Min</div>
                     </div>
                 </div>
             </div>
@@ -1967,7 +2032,7 @@
             <!-- CSV Upload -->
             <div class="card">
                 <div class="card-header">Import Workout Data</div>
-                <p style="font-size: 12px; color: #888; margin-bottom: 12px;">
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
                     Upload your Concept2 Logbook CSV to automatically update your PBs and training history.
                 </p>
                 <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="app.showCSVMapper(event)">
@@ -1980,7 +2045,7 @@
             <div class="card">
                 <div class="card-header">Recent Workouts (<span id="dnaWorkoutCount">0</span>)</div>
                 <div id="dnaWorkoutList">
-                    <p style="font-size: 12px; color: #666; text-align: center; padding: 20px;">
+                    <p style="font-size: 12px; color: #FFF; text-align: center; padding: 20px;">
                         No workouts yet. Complete a workout or upload your Concept2 CSV to see your history.
                     </p>
                 </div>
@@ -2020,7 +2085,7 @@
 
             <!-- Workout List -->
             <div id="trainingLogList">
-                <p style="font-size: 12px; color: #666; text-align: center; padding: 40px 20px;">
+                <p style="font-size: 12px; color: #FFF; text-align: center; padding: 40px 20px;">
                     No workouts yet.<br>
                     Connect your PM5 and row, or click <strong>+ Add</strong> to log a workout.
                 </p>
@@ -2070,7 +2135,7 @@
                 <button class="modal-close" onclick="app.closeCSVMapper()">×</button>
             </div>
             <div class="modal-body">
-                <p style="color: #888; font-size: 12px; margin-bottom: 16px;">
+                <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">
                     Select which column in your CSV file corresponds to each field:
                 </p>
 
@@ -2086,25 +2151,25 @@
                     <div class="card-header">Column Mapping</div>
                     <div style="display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center;">
 
-                        <label style="color: #888;">Date:</label>
+                        <label style="color: var(--text-secondary); font-weight: 600;">Date:</label>
                         <select id="csvMapDate" class="builder-input"></select>
 
-                        <label style="color: #888;">Description:</label>
+                        <label style="color: var(--text-secondary); font-weight: 600;">Description:</label>
                         <select id="csvMapDescription" class="builder-input"></select>
 
-                        <label style="color: #888;">Work Time:</label>
+                        <label style="color: var(--text-secondary); font-weight: 600;">Work Time:</label>
                         <select id="csvMapTime" class="builder-input"></select>
 
-                        <label style="color: #888;">Work Distance:</label>
+                        <label style="color: var(--text-secondary); font-weight: 600;">Work Distance:</label>
                         <select id="csvMapDistance" class="builder-input"></select>
 
-                        <label style="color: #888;">Pace (/500m):</label>
+                        <label style="color: var(--text-secondary); font-weight: 600;">Pace (/500m):</label>
                         <select id="csvMapPace" class="builder-input"></select>
 
-                        <label style="color: #888;">Avg Watts:</label>
+                        <label style="color: var(--text-secondary); font-weight: 600;">Avg Watts:</label>
                         <select id="csvMapWatts" class="builder-input"></select>
 
-                        <label style="color: #888;">Avg Heart Rate:</label>
+                        <label style="color: var(--text-secondary); font-weight: 600;">Avg Heart Rate:</label>
                         <select id="csvMapHR" class="builder-input"></select>
 
                     </div>
@@ -2175,41 +2240,41 @@
                 </div>
                 
                 <div style="margin-top:16px; padding:16px; background:#050505; border-radius:8px;">
-                    <div style="font-size:11px; color:#666; text-transform:uppercase; margin-bottom:12px;">Zones Preview</div>
+                    <div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:12px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">Zones Preview</div>
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="width:40px; height:30px; background:#4a90e2; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z1</div>
                             <div style="flex:1; font-size:12px;">
-                                <div style="color:#e0e0e0;">Recovery (50-60%)</div>
-                                <div style="color:#666; font-size:11px;" id="zone1Range">95-114 bpm</div>
+                                <div style="color:#FFF;">Recovery (50-60%)</div>
+                                <div style="color:var(--text-secondary); font-size:11px; font-family:var(--font-base); font-weight:600;" id="zone1Range">95-114 bpm</div>
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="width:40px; height:30px; background:#50c878; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z2</div>
                             <div style="flex:1; font-size:12px;">
-                                <div style="color:#e0e0e0;">Aerobic (60-70%)</div>
-                                <div style="color:#666; font-size:11px;" id="zone2Range">114-133 bpm</div>
+                                <div style="color:#FFF;">Aerobic (60-70%)</div>
+                                <div style="color:var(--text-secondary); font-size:11px; font-family:var(--font-base); font-weight:600;" id="zone2Range">114-133 bpm</div>
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="width:40px; height:30px; background:#ffa500; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z3</div>
                             <div style="flex:1; font-size:12px;">
-                                <div style="color:#e0e0e0;">Tempo (70-80%)</div>
-                                <div style="color:#666; font-size:11px;" id="zone3Range">133-152 bpm</div>
+                                <div style="color:#FFF;">Tempo (70-80%)</div>
+                                <div style="color:var(--text-secondary); font-size:11px; font-family:var(--font-base); font-weight:600;" id="zone3Range">133-152 bpm</div>
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="width:40px; height:30px; background:#ff6347; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z4</div>
                             <div style="flex:1; font-size:12px;">
-                                <div style="color:#e0e0e0;">Threshold (80-90%)</div>
-                                <div style="color:#666; font-size:11px;" id="zone4Range">152-171 bpm</div>
+                                <div style="color:#FFF;">Threshold (80-90%)</div>
+                                <div style="color:var(--text-secondary); font-size:11px; font-family:var(--font-base); font-weight:600;" id="zone4Range">152-171 bpm</div>
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="width:40px; height:30px; background:#dc143c; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">Z5</div>
                             <div style="flex:1; font-size:12px;">
-                                <div style="color:#e0e0e0;">Max (90-100%)</div>
-                                <div style="color:#666; font-size:11px;" id="zone5Range">171-190 bpm</div>
+                                <div style="color:#FFF;">Max (90-100%)</div>
+                                <div style="color:var(--text-secondary); font-size:11px; font-family:var(--font-base); font-weight:600;" id="zone5Range">171-190 bpm</div>
                             </div>
                         </div>
                     </div>
@@ -2224,17 +2289,17 @@
             <div class="card">
                 <div class="card-header">Firebase Cloud Storage</div>
                 <div style="margin-bottom:12px;">
-                    <div style="font-size:12px; color:#666; margin-bottom:4px;">User ID</div>
-                    <div style="color:#e0e0e0; font-size:14px; font-family:monospace; word-break:break-all;" id="firebaseUserId">Loading...</div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; font-weight:600;">User ID</div>
+                    <div style="color:#FFF; font-size:14px; font-family:monospace; word-break:break-all;" id="firebaseUserId">Loading...</div>
                 </div>
                 <div style="margin-bottom:12px;">
-                    <div style="font-size:12px; color:#666; margin-bottom:4px;">Status</div>
-                    <div style="color:#e0e0e0; font-size:14px;" id="firebaseStatus">Checking...</div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; font-weight:600;">Status</div>
+                    <div style="color:#FFF; font-size:14px;" id="firebaseStatus">Checking...</div>
                 </div>
                 <button class="btn btn-outline" onclick="app.testFirebaseSync()">
                     Test Cloud Sync
                 </button>
-                <div style="margin-top:12px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#ccc;">
+                <div style="margin-top:12px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#FFF;">
                     💡 <strong>Test without clearing cache:</strong> Click "Test Cloud Sync" to verify your data is saving to Firebase. Check console (F12) for detailed logs.
                 </div>
             </div>
@@ -2248,7 +2313,7 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <div>
                             <div style="font-size:14px; font-weight:700; margin-bottom:4px;">Concept2 PM5</div>
-                            <div style="font-size:12px; color:#666;" id="pm5StatusSettings">Not connected</div>
+                            <div style="font-size:12px; color:var(--text-secondary);" id="pm5StatusSettings">Not connected</div>
                         </div>
                         <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="pm5IndicatorSettings"></div>
                     </div>
@@ -2260,14 +2325,14 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <div>
                             <div style="font-size:14px; font-weight:700; margin-bottom:4px;">Heart Rate Monitor</div>
-                            <div style="font-size:12px; color:#666;" id="hrmStatusSettings">Not connected</div>
+                            <div style="font-size:12px; color:var(--text-secondary);" id="hrmStatusSettings">Not connected</div>
                         </div>
                         <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="hrmIndicatorSettings"></div>
                     </div>
                     <button class="btn btn-outline" onclick="app.connectHRM()" id="hrmConnectBtnSettings">Connect HRM</button>
                 </div>
                 
-                <div style="margin-top:16px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#ccc;">
+                <div style="margin-top:16px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:11px; color:#FFF;">
                     💡 <strong>Tip:</strong> Connect PM5 first for rowing data, then connect HRM for heart rate monitoring.
                 </div>
             </div>
@@ -2311,7 +2376,7 @@
         <div style="max-width:500px; margin:80px auto; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h2 style="font-size:18px; font-weight:700; color:var(--accent);">Connect Devices</h2>
-                <button onclick="app.closeDevicesModal()" style="background:transparent; border:none; color:#666; font-size:24px; cursor:pointer;">×</button>
+                <button onclick="app.closeDevicesModal()" style="background:transparent; border:none; color:var(--text-secondary); font-size:24px; cursor:pointer;">×</button>
             </div>
             
             <!-- PM5 Connection -->
@@ -2319,7 +2384,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                     <div>
                         <div style="font-size:15px; font-weight:700; margin-bottom:4px;">Concept2 PM5</div>
-                        <div style="font-size:12px; color:#666;" id="pm5Status">Not connected</div>
+                        <div style="font-size:12px; color:var(--text-secondary);" id="pm5Status">Not connected</div>
                     </div>
                     <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="pm5Indicator"></div>
                 </div>
@@ -2331,14 +2396,14 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                     <div>
                         <div style="font-size:15px; font-weight:700; margin-bottom:4px;">Heart Rate Monitor</div>
-                        <div style="font-size:12px; color:#666;" id="hrmStatus">Not connected</div>
+                        <div style="font-size:12px; color:var(--text-secondary);" id="hrmStatus">Not connected</div>
                     </div>
                     <div style="width:12px; height:12px; border-radius:50%; background:#666;" id="hrmIndicator"></div>
                 </div>
                 <button class="btn btn-outline" onclick="app.connectHRM()" id="hrmConnectBtn">Connect HRM</button>
             </div>
             
-            <div style="margin-top:20px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:12px; color:#ccc;">
+            <div style="margin-top:20px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent); border-radius:8px; font-size:12px; color:#FFF;">
                 💡 <strong>Tip:</strong> Connect PM5 first, then connect your chest strap HRM if you want separate HR monitoring.
             </div>
         </div>
@@ -2868,22 +2933,22 @@
                                 <div style="font-size: 14px; font-weight: bold; color: var(--text);">
                                     ${w.description || 'Workout'}
                                 </div>
-                                <div style="font-size: 11px; color: #666;">
+                                <div style="font-size: 11px; color: var(--text-secondary);">
                                     ${new Date(w.date).toLocaleDateString()}
                                 </div>
                             </div>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px;">
                                 <div>
-                                    <div style="color: #666;">Distance</div>
-                                    <div style="color: #00FF99; font-weight: bold;">${w.distance}m</div>
+                                    <div style="color: var(--text-secondary); font-weight: 600;">Distance</div>
+                                    <div style="color: #00FF99; font-weight: 700; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${w.distance}m</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666;">Avg Pace</div>
-                                    <div style="color: #00FF99; font-weight: bold;">${this.formatPace(w.avgPace)}</div>
+                                    <div style="color: var(--text-secondary); font-weight: 600;">Avg Pace</div>
+                                    <div style="color: #00FF99; font-weight: 700; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${this.formatPace(w.avgPace)}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666;">Avg HR</div>
-                                    <div style="color: #FF6B6B; font-weight: bold;">${w.avgHR || '--'}</div>
+                                    <div style="color: var(--text-secondary); font-weight: 600;">Avg HR</div>
+                                    <div style="color: #FF6B6B; font-weight: 700; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${w.avgHR || '--'}</div>
                                 </div>
                             </div>
                         </div>
@@ -3762,19 +3827,19 @@
                         ${day.distance ? `
                         <div style="background: var(--panel); padding: 12px; border-radius: 8px;">
                             <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Distance</div>
-                            <div style="font-size: 18px; font-weight: bold; color: #00FF99;">${day.distance}m</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #00FF99; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${day.distance}m</div>
                         </div>
                         ` : ''}
                         ${day.duration ? `
                         <div style="background: var(--panel); padding: 12px; border-radius: 8px;">
                             <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Duration</div>
-                            <div style="font-size: 18px; font-weight: bold; color: #00FF99;">${this.formatTime(day.duration)}</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #00FF99; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${this.formatTime(day.duration)}</div>
                         </div>
                         ` : ''}
                         ${day.intensity ? `
                         <div style="background: var(--panel); padding: 12px; border-radius: 8px;">
                             <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Intensity</div>
-                            <div style="font-size: 18px; font-weight: bold; color: #00FF99;">${day.intensity}</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #00FF99; font-family: var(--font-base); font-variant-numeric: tabular-nums;">${day.intensity}</div>
                         </div>
                         ` : ''}
                     </div>
@@ -4314,7 +4379,7 @@
 
                 if (filtered.length === 0) {
                     container.innerHTML = `
-                        <p style="font-size: 12px; color: #666; text-align: center; padding: 40px 20px;">
+                        <p style="font-size: 12px; color: #FFF; text-align: center; padding: 40px 20px;">
                             No workouts found (${this.workouts.length} total).<br>
                             Try adjusting your filters or add a new workout.
                         </p>
@@ -5946,7 +6011,7 @@
                             <div class="builder-label">Total Time</div>
                             <div class="builder-time-picker">
                                 <input type="number" class="builder-time-input" id="totalMins" placeholder="30" min="0">
-                                <span style="color:#666;">:</span>
+                                <span style="color:var(--text-secondary);">:</span>
                                 <input type="number" class="builder-time-input" id="totalSecs" placeholder="00" min="0" max="59">
                             </div>
                         </div>
@@ -5954,7 +6019,7 @@
                             <div class="builder-label">Split Time</div>
                             <div class="builder-time-picker">
                                 <input type="number" class="builder-time-input" id="splitMins" placeholder="5" min="0">
-                                <span style="color:#666;">:</span>
+                                <span style="color:var(--text-secondary);">:</span>
                                 <input type="number" class="builder-time-input" id="splitSecs" placeholder="00" min="0" max="59">
                             </div>
                         </div>
@@ -5980,7 +6045,7 @@
                             <div class="builder-label">Rest Time</div>
                             <div class="builder-time-picker">
                                 <input type="number" class="builder-time-input" id="restMins" placeholder="1" min="0">
-                                <span style="color:#666;">:</span>
+                                <span style="color:var(--text-secondary);">:</span>
                                 <input type="number" class="builder-time-input" id="restSecs" placeholder="00" min="0" max="59">
                             </div>
                         </div>
@@ -5995,7 +6060,7 @@
                             <div class="builder-label">Rest Time</div>
                             <div class="builder-time-picker">
                                 <input type="number" class="builder-time-input" id="varRestMins" placeholder="1" min="0">
-                                <span style="color:#666;">:</span>
+                                <span style="color:var(--text-secondary);">:</span>
                                 <input type="number" class="builder-time-input" id="varRestSecs" placeholder="00" min="0" max="59">
                             </div>
                         </div>
@@ -6180,7 +6245,7 @@
                 
                 if (!this.reviewWorkout || !this.reviewWorkout.intervals || this.reviewWorkout.intervals.length === 0) {
                     html = `
-                        <div style="text-align:center; padding:40px 20px; color:#666;">
+                        <div style="text-align:center; padding:40px 20px; color:#FFF;">
                             <div style="font-size:48px; margin-bottom:12px;">📋</div>
                             <div style="font-size:14px;">No workout data to review</div>
                         </div>
@@ -6189,7 +6254,7 @@
                     // Workout Summary Card
                     html += `
                         <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px;">
-                            <div style="font-size:12px; color:#666; text-transform:uppercase; margin-bottom:12px;">Workout Summary</div>
+                            <div style="font-size:12px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:12px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">Workout Summary</div>
                     `;
                     
                     // Mode
@@ -6295,7 +6360,7 @@
                     if (intervalCount > 1) {
                         html += `
                             <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:20px;">
-                                <div style="font-size:12px; color:#666; text-transform:uppercase; margin-bottom:12px;">Intervals Breakdown</div>
+                                <div style="font-size:12px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:12px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">Intervals Breakdown</div>
                         `;
                         
                         this.reviewWorkout.intervals.forEach((interval, i) => {
@@ -6315,7 +6380,7 @@
                                 <div style="background:#050505; border:1px solid #222; border-radius:8px; padding:16px; margin-bottom:12px;">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                         <div style="font-weight:700; font-size:14px;">Set ${i + 1}</div>
-                                        <div style="font-size:18px; font-weight:900; color:var(--accent);">${displayValue}${workUnit === 's' ? '' : workUnit}</div>
+                                        <div style="font-size:18px; font-weight:700; color:var(--accent); font-family:var(--font-base); font-variant-numeric:tabular-nums;">${displayValue}${workUnit === 's' ? '' : workUnit}</div>
                                     </div>
                                     ${restValue > 0 ? `
                                         <div style="display:flex; justify-content:space-between; font-size:12px; color:#888;">
@@ -6919,16 +6984,16 @@
                 let html = `
                     <div style="background:linear-gradient(135deg, rgba(0,255,153,0.1) 0%, rgba(0,255,153,0.02) 100%); border:2px solid var(--accent); border-radius:12px; padding:20px; margin-bottom:20px;">
                         <div style="font-size:16px; font-weight:700; color:var(--accent); margin-bottom:12px;">🎯 Your 4-Week Training Plan</div>
-                        <div style="font-size:13px; line-height:1.6; color:#ccc; margin-bottom:16px;">
+                        <div style="font-size:13px; line-height:1.6; color:#FFF; margin-bottom:16px;">
                             This progressive program is designed to build your aerobic base, increase training intensity, reach peak volume, and then taper for a final test. Each week builds on the previous one, gradually preparing you for peak performance.
                         </div>
                         <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
                             <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:12px;">
-                                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Objective</div>
+                                <div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:4px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">Objective</div>
                                 <div style="font-size:13px; font-weight:700;">2000m Time Trial</div>
                             </div>
                             <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:12px;">
-                                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Duration</div>
+                                <div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:4px; font-family:var(--font-display); font-weight:700; letter-spacing:1.5px;">Duration</div>
                                 <div style="font-size:13px; font-weight:700;">4 Weeks</div>
                             </div>
                         </div>
