@@ -46,32 +46,97 @@
     </script>
     
     <style>
+        /* ======================================================================
+           CORTEX THEME SYSTEM
+           Four Visual Personalities with Dynamic CSS Variables
+           ====================================================================== */
+
         :root {
-            --bg: #000;
-            --text: #e0e0e0;
-            --accent: #00FF99;
-            --accent-primary: #00FF99; /* Default theme accent */
+            /* Default Theme: Titanium & Slate (Elite Precision) */
+            --base-bg: #121212;
+            --card-bg: rgba(30, 30, 30, 0.8);
+            --accent-primary: #E63946;
+            --accent-secondary: #457B9D;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
             --danger: #FF4444;
-            --panel: #111;
-            --border: #222;
-            --card-bg: #0a0a0a;
+            --border: #2a2a2a;
+
+            /* Legacy compatibility */
+            --bg: var(--base-bg);
+            --text: var(--text-main);
+            --accent: var(--accent-primary);
+            --panel: var(--card-bg);
+
+            /* Theme-specific styling properties */
+            --border-radius: 12px;
+            --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            --metric-glow: none;
+            --metric-outline: none;
         }
 
-        /* Theme Mode Color Palettes */
+        /* Theme 1: Titanium & Slate (DEFAULT)
+           Elite Precision. Cockpit aesthetic. */
         [data-theme="titanium"] {
-            --accent-primary: #2B59FF; /* Electric Cobalt Blue */
+            --base-bg: #121212;
+            --card-bg: rgba(30, 30, 30, 0.8);
+            --accent-primary: #E63946;
+            --accent-secondary: #457B9D;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --border: #2a2a2a;
+            --border-radius: 12px;
+            --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            --metric-glow: none;
+            --metric-outline: none;
         }
 
+        /* Theme 2: Wellness Bloom (Pastel)
+           Calm & Approachable. Longevity focus. */
         [data-theme="wellness"] {
-            --accent-primary: #C9ADA7; /* Dusty Rose */
+            --base-bg: #FCF9F2;
+            --card-bg: #FFFFFF;
+            --accent-primary: #C9ADA7;
+            --accent-secondary: #84A59D;
+            --text-main: #2c2c2c;
+            --text-muted: #6b6b6b;
+            --border: #e8e8e8;
+            --border-radius: 24px;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            --metric-glow: none;
+            --metric-outline: none;
         }
 
-        [data-theme="warhol"] {
-            --accent-primary: #CCFF00; /* Acid Yellow */
-        }
-
+        /* Theme 3: Midnight Pulse (High Energy)
+           Tech HUD. Built for dark rooms. */
         [data-theme="pulse"] {
-            --accent-primary: #CCFF00; /* Cyber Lime */
+            --base-bg: #0B0C10;
+            --card-bg: #1a1c23;
+            --accent-primary: #CCFF00;
+            --accent-secondary: #45A29E;
+            --text-main: #C5C6C7;
+            --text-muted: #66FCF1;
+            --border: #1f2937;
+            --border-radius: 12px;
+            --card-shadow: 0 4px 20px rgba(204, 255, 0, 0.1);
+            --metric-glow: drop-shadow(0 0 16px var(--accent-primary));
+            --metric-outline: none;
+        }
+
+        /* Theme 4: Electric Warhol (Pop Art)
+           Rule-breaking Maximalist. Bold branding. */
+        [data-theme="warhol"] {
+            --base-bg: #2B59FF;
+            --card-bg: #FF00FF;
+            --accent-primary: #CCFF00;
+            --accent-secondary: #FF00FF;
+            --text-main: #FFFFFF;
+            --text-muted: #FFD700;
+            --border: #000000;
+            --border-radius: 4px;
+            --card-shadow: 8px 8px 0 rgba(0, 0, 0, 1);
+            --metric-glow: none;
+            --metric-outline: 3px solid #000000;
         }
         
         * {
@@ -365,27 +430,40 @@
         }
         
         .metric-item {
-            background: #0a0a0a;
+            background: var(--card-bg);
             padding: 20px 16px;
             text-align: center;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
         }
-        
+
         .metric-label {
             font-size: 10px;
-            color: #666;
+            color: var(--text-muted);
             font-weight: 700;
             margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        
+
         .metric-value {
             font-size: 28px;
             font-weight: 900;
-            color: var(--text);
+            color: var(--text-main);
             font-variant-numeric: tabular-nums;
+            filter: var(--metric-glow);
         }
-        
+
         .metric-value.accent {
-            color: var(--accent);
+            color: var(--accent-primary);
+            filter: var(--metric-glow);
+        }
+
+        /* Warhol theme specific metric styling */
+        [data-theme="warhol"] .metric-value {
+            -webkit-text-stroke: var(--metric-outline);
+            text-stroke: var(--metric-outline);
         }
         
         /* LARGE PRINT VIEW */
@@ -641,15 +719,16 @@
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: var(--border-radius);
             padding: 20px;
             margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
         }
-        
+
         .card-header {
             font-size: 11px;
             font-weight: 700;
-            color: var(--accent);
+            color: var(--accent-primary);
             text-transform: uppercase;
             margin-bottom: 16px;
             padding-bottom: 8px;
@@ -665,20 +744,64 @@
         
         .editable-label {
             font-size: 12px;
-            color: #666;
+            color: var(--text-muted);
             width: 80px;
         }
-        
+
         .editable-input {
             flex: 1;
-            background: #000;
+            background: var(--base-bg);
             border: 1px solid var(--border);
-            color: var(--text);
+            color: var(--text-main);
             padding: 10px;
             border-radius: 6px;
             font-size: 15px;
         }
+
+        .editable-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
         
+        /* THEME SELECTOR */
+        .theme-tile {
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+
+        .theme-tile:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .theme-tile.active {
+            opacity: 1;
+        }
+
+        .theme-preview {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .theme-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .theme-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         /* HISTORY */
         .history-item {
             background: var(--card-bg);
@@ -1773,8 +1896,58 @@
             </div>
 
             <div class="card">
+                <div class="card-header">Appearance</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">
+                    Choose your visual personality. Each theme changes colors, styling, and the CORTEX logo.
+                </div>
+
+                <!-- Theme Selector Grid -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <!-- Theme 1: Titanium & Slate -->
+                    <div class="theme-tile" data-theme="titanium" onclick="app.setTheme('titanium')">
+                        <div class="theme-preview" style="background:linear-gradient(135deg, #121212 0%, #1e1e1e 100%); border:3px solid #E63946;">
+                            <div style="position:absolute; top:8px; right:8px; width:20px; height:20px; border-radius:50%; background:#E63946; border:2px solid #fff;"></div>
+                        </div>
+                        <div class="theme-name">Titanium</div>
+                        <div class="theme-desc">Elite Precision</div>
+                    </div>
+
+                    <!-- Theme 2: Wellness Bloom -->
+                    <div class="theme-tile" data-theme="wellness" onclick="app.setTheme('wellness')">
+                        <div class="theme-preview" style="background:linear-gradient(135deg, #FCF9F2 0%, #FFFFFF 100%); border:3px solid #C9ADA7;">
+                            <div style="position:absolute; top:8px; right:8px; width:20px; height:20px; border-radius:50%; background:#C9ADA7; border:2px solid #fff;"></div>
+                        </div>
+                        <div class="theme-name">Wellness</div>
+                        <div class="theme-desc">Calm & Light</div>
+                    </div>
+
+                    <!-- Theme 3: Midnight Pulse -->
+                    <div class="theme-tile" data-theme="pulse" onclick="app.setTheme('pulse')">
+                        <div class="theme-preview" style="background:linear-gradient(135deg, #0B0C10 0%, #1a1c23 100%); border:3px solid #CCFF00;">
+                            <div style="position:absolute; top:8px; right:8px; width:20px; height:20px; border-radius:50%; background:#CCFF00; border:2px solid #fff; box-shadow:0 0 12px #CCFF00;"></div>
+                        </div>
+                        <div class="theme-name">Pulse</div>
+                        <div class="theme-desc">High Energy</div>
+                    </div>
+
+                    <!-- Theme 4: Electric Warhol -->
+                    <div class="theme-tile" data-theme="warhol" onclick="app.setTheme('warhol')">
+                        <div class="theme-preview" style="background:linear-gradient(135deg, #2B59FF 0%, #FF00FF 100%); border:3px solid #000;">
+                            <div style="position:absolute; top:8px; right:8px; width:20px; height:20px; border-radius:2px; background:#CCFF00; border:3px solid #000;"></div>
+                        </div>
+                        <div class="theme-name">Warhol</div>
+                        <div class="theme-desc">Pop Art</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:16px; padding:12px; background:rgba(0,255,153,0.05); border:1px solid var(--accent-primary); border-radius:8px; font-size:11px; color:var(--text-muted);">
+                    💡 <strong>Tip:</strong> Your theme preference is saved automatically and persists across sessions.
+                </div>
+            </div>
+
+            <div class="card">
                 <div class="card-header">Import Data</div>
-                <label for="csvUpload" style="display:block; width:100%; padding:16px; border:2px dashed #222; border-radius:8px; text-align:center; cursor:pointer; color:#888;">
+                <label for="csvUpload" style="display:block; width:100%; padding:16px; border:2px dashed var(--border); border-radius:8px; text-align:center; cursor:pointer; color:var(--text-muted);">
                     📁 Import CSV
                 </label>
                 <input type="file" id="csvUpload" accept=".csv" style="display:none;" onchange="app.importCSV(event)">
@@ -2083,6 +2256,7 @@
                 await this.loadData();
                 this.loadProfile();
                 await this.loadDNA();
+                this.loadTheme();
                 this.initAudioCoach();
                 this.setupDashboardSwipe();
                 this.renderBuilderMode();
@@ -4286,6 +4460,55 @@
                         statusElem.style.color = '#FFA500';
                     }
                 }
+            }
+
+            // ========================================================================
+            // THEME SYSTEM
+            // ========================================================================
+
+            loadTheme() {
+                // Load saved theme from localStorage (default: titanium)
+                const savedTheme = localStorage.getItem('cortexTheme') || 'titanium';
+                this.setTheme(savedTheme, false); // false = don't save again
+            }
+
+            setTheme(themeName, saveToStorage = true) {
+                // Validate theme name
+                const validThemes = ['titanium', 'wellness', 'pulse', 'warhol'];
+                if (!validThemes.includes(themeName)) {
+                    console.warn(`Invalid theme: ${themeName}, defaulting to titanium`);
+                    themeName = 'titanium';
+                }
+
+                // Apply theme to document
+                document.documentElement.setAttribute('data-theme', themeName);
+
+                // Update active state on theme tiles
+                document.querySelectorAll('.theme-tile').forEach(tile => {
+                    if (tile.getAttribute('data-theme') === themeName) {
+                        tile.classList.add('active');
+                    } else {
+                        tile.classList.remove('active');
+                    }
+                });
+
+                // Save to localStorage
+                if (saveToStorage) {
+                    localStorage.setItem('cortexTheme', themeName);
+                    this.showToast(`Theme changed to ${this.getThemeDisplayName(themeName)}`, 'success');
+                }
+
+                console.log(`✓ Theme set to: ${themeName}`);
+            }
+
+            getThemeDisplayName(themeName) {
+                const names = {
+                    'titanium': 'Titanium & Slate',
+                    'wellness': 'Wellness Bloom',
+                    'pulse': 'Midnight Pulse',
+                    'warhol': 'Electric Warhol'
+                };
+                return names[themeName] || themeName;
             }
 
             // ========================================================================
