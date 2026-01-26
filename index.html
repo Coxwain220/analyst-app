@@ -6977,8 +6977,11 @@
             }
 
             deleteInterval(index) {
-                // Show in-app confirmation modal
-                this.showDeleteConfirmation(index);
+                // Delete immediately without confirmation
+                this.builderIntervals.splice(index, 1);
+                this.editingInterval = -1;
+                this.renderBuilderMode();
+                this.showToast('Interval deleted', 'success');
             }
 
             copyInterval(index) {
@@ -7066,78 +7069,9 @@
                 if (deleteAction) {
                     deleteAction.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        this.showDeleteConfirmation(index);
+                        this.deleteInterval(index);
                     });
                 }
-            }
-
-            showDeleteConfirmation(index) {
-                // Create in-app confirmation modal
-                const modal = document.createElement('div');
-                modal.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.8);
-                    z-index: 10001;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                `;
-
-                modal.innerHTML = `
-                    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-width: 320px; width: 100%;">
-                        <div style="font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; text-align: center;">
-                            Delete Interval?
-                        </div>
-                        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; text-align: center;">
-                            This action cannot be undone.
-                        </div>
-                        <div style="display: flex; gap: 12px;">
-                            <button id="cancelDelete" style="flex: 1; padding: 14px; background: transparent; border: 1px solid var(--border); color: var(--text-main); border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
-                                Cancel
-                            </button>
-                            <button id="confirmDelete" style="flex: 1; padding: 14px; background: var(--danger); border: none; color: #FFF; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                document.body.appendChild(modal);
-
-                // Cancel button
-                modal.querySelector('#cancelDelete').addEventListener('click', () => {
-                    modal.remove();
-                    // Reset swipe state
-                    const element = document.querySelector(`[data-interval-index="${index}"]`);
-                    if (element) {
-                        element.classList.remove('delete-revealed');
-                    }
-                });
-
-                // Confirm delete button
-                modal.querySelector('#confirmDelete').addEventListener('click', () => {
-                    modal.remove();
-                    this.builderIntervals.splice(index, 1);
-                    this.editingInterval = -1;
-                    this.renderBuilderMode();
-                    this.showToast('Interval deleted', 'success');
-                });
-
-                // Click outside to cancel
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        modal.remove();
-                        const element = document.querySelector(`[data-interval-index="${index}"]`);
-                        if (element) {
-                            element.classList.remove('delete-revealed');
-                        }
-                    }
-                });
             }
 
             saveManualWorkout() {
@@ -8094,6 +8028,26 @@ Would you like to:
                 if (screenId === 'screenPlan') {
                     this.renderTrainingPlan();
                 }
+
+                // Scroll handling: Chat to bottom, all others to top
+                setTimeout(() => {
+                    if (screenId === 'screenChat') {
+                        // Scroll chat to bottom (latest message)
+                        const chatMessages = document.getElementById('chatMessages');
+                        if (chatMessages) {
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+                    } else {
+                        // Scroll all other screens to top
+                        const screen = document.getElementById(screenId);
+                        if (screen) {
+                            const scrollContent = screen.querySelector('.scroll-content');
+                            if (scrollContent) {
+                                scrollContent.scrollTop = 0;
+                            }
+                        }
+                    }
+                }, 50);
             }
 
             // ========================================================================
