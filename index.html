@@ -1817,8 +1817,8 @@
         <div class="screen-header">
             <div class="screen-title">AI Coach</div>
         </div>
-        <div style="display:flex; flex-direction:column; height:100%;">
-            <div class="scroll-content" id="chatMessages" style="flex:1; padding-bottom:100px;">
+        <div style="display:flex; flex-direction:column; flex:1;">
+            <div class="scroll-content" id="chatMessages" style="flex:1; padding-bottom:140px;">
                 <!-- Chat messages will appear here -->
             </div>
             <div class="typing-indicator" id="typingIndicator" style="display:none; padding:16px;">
@@ -1828,9 +1828,9 @@
                     <div style="width:8px; height:8px; background:var(--accent); border-radius:50%; animation:typing 1.4s infinite 0.4s;"></div>
                 </div>
             </div>
-            <div style="position:sticky; bottom:0; border-top:1px solid var(--border); background:var(--panel); padding:12px; display:flex; gap:12px; align-items:flex-end;">
-                <textarea 
-                    id="chatInput" 
+            <div style="position:absolute; bottom:0; left:0; right:0; border-top:1px solid var(--border); background:var(--panel); padding:12px; display:flex; gap:12px; align-items:flex-end; z-index:10;">
+                <textarea
+                    id="chatInput"
                     placeholder="Type your message..."
                     style="flex:1; background:#0a0a0a; border:1px solid var(--border); color:var(--text); padding:12px; border-radius:20px; font-size:15px; font-family:inherit; resize:none; max-height:120px; min-height:44px;"
                     onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();app.sendMessage();}"
