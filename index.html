@@ -8,7 +8,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Capacitor Core -->
     <script src="capacitor.js"></script>
@@ -148,6 +148,50 @@
             --card-shadow: 6px 6px 0 rgba(0, 0, 0, 0.8);
             --metric-glow: none;
             --metric-outline: 3px solid #000000;
+        }
+
+        /* Theme 5: Vanguard (Military/Vietnam Era)
+           Tactical Field Manual. Mil-Spec Precision. */
+        [data-theme="vanguard"] {
+            --base-bg: #3B3F2F;
+            --card-bg: #C2B280;
+            --accent-primary: #FF6700;
+            --accent-secondary: #4B5320;
+            --text-main: #F5F5DC;
+            --text-muted: #8B8970;
+            --border: #4B5320;
+            --border-radius: 2px;
+            --card-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.4), inset -1px -1px 2px rgba(255, 255, 255, 0.1);
+            --metric-glow: none;
+            --metric-outline: none;
+
+            /* Vanguard-specific */
+            --font-data: 'Roboto Mono', 'Courier New', monospace;
+            --border-tactical: 1px dashed #4B5320;
+        }
+
+        /* Vanguard theme - Monospace for all numbers and data */
+        [data-theme="vanguard"] .metric-value,
+        [data-theme="vanguard"] .metric-label,
+        [data-theme="vanguard"] .builder-interval-title,
+        [data-theme="vanguard"] input[type="number"],
+        [data-theme="vanguard"] .nav-item,
+        [data-theme="vanguard"] .top-nav-label {
+            font-family: 'Roboto Mono', 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Vanguard theme - Dashed borders on secondary elements */
+        [data-theme="vanguard"] .card,
+        [data-theme="vanguard"] .builder-interval-item,
+        [data-theme="vanguard"] .editable-input {
+            border-style: dashed;
+        }
+
+        /* Vanguard theme - Stenciled logo X effect */
+        [data-theme="vanguard"] .logo-x-path {
+            filter: drop-shadow(2px 2px 1px rgba(0, 0, 0, 0.8));
         }
 
         * {
@@ -1130,7 +1174,31 @@
                 inset 2px 2px 3px rgba(255, 255, 255, 0.3),
                 inset -2px -2px 3px rgba(0, 0, 0, 0.7);
         }
-        
+
+        /* Vanguard theme - Brass/Steel mil-spec button */
+        [data-theme="vanguard"] .ai-spark-button {
+            background: radial-gradient(circle at 30% 30%, #B8956A 0%, #8B7355 50%, #6B5D4F 100%);
+            border: 2px solid #4B5320;
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, 0.6),
+                0 2px 6px rgba(0, 0, 0, 0.4),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.2),
+                inset -1px -1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="vanguard"] .ai-spark-button:active {
+            transform: translateX(-50%) scale(0.95);
+            box-shadow:
+                0 3px 8px rgba(0, 0, 0, 0.5),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.15),
+                inset -1px -1px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        [data-theme="vanguard"] .ai-spark-icon {
+            color: #FF6700;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -3065,6 +3133,15 @@
                             </div>
                             <div class="theme-name">Warhol</div>
                             <div class="theme-desc">Pop Art</div>
+                        </div>
+
+                        <!-- Theme 5: Vanguard -->
+                        <div class="theme-tile" data-theme="vanguard" onclick="app.setTheme('vanguard')">
+                            <div class="theme-preview" style="background:linear-gradient(135deg, #3B3F2F 0%, #4B5320 100%); border:2px dashed #8B8970;">
+                                <div style="position:absolute; top:8px; right:8px; width:20px; height:20px; border-radius:2px; background:#FF6700; border:2px solid #F5F5DC; box-shadow: 2px 2px 1px rgba(0,0,0,0.8);"></div>
+                            </div>
+                            <div class="theme-name">Vanguard</div>
+                            <div class="theme-desc">Tactical</div>
                         </div>
                     </div>
 
@@ -8092,7 +8169,7 @@ Would you like to:
 
             setTheme(themeName, saveToStorage = true) {
                 // Validate theme name
-                const validThemes = ['titanium', 'wellness', 'pulse', 'warhol'];
+                const validThemes = ['titanium', 'wellness', 'pulse', 'warhol', 'vanguard'];
                 if (!validThemes.includes(themeName)) {
                     console.warn(`Invalid theme: ${themeName}, defaulting to titanium`);
                     themeName = 'titanium';
@@ -8124,7 +8201,8 @@ Would you like to:
                     'titanium': 'Titanium & Slate',
                     'wellness': 'Wellness Bloom',
                     'pulse': 'Midnight Pulse',
-                    'warhol': 'Electric Warhol'
+                    'warhol': 'Electric Warhol',
+                    'vanguard': 'Vanguard'
                 };
                 return names[themeName] || themeName;
             }
